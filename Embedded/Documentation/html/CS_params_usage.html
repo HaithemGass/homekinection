@@ -1,0 +1,282 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>BitCloud Stack API Reference: CS parameters usage</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+<style>
+	li > span {
+		font-style:italic;
+		display:block;
+		margin-bottom:5px;
+	}
+	li {
+		margin-bottom:5px;
+	}
+	code {
+		font-style:normal;
+	}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="headertitle">
+    <div class="title">ConfigServer parameters usage</div>
+  </div>
+</div>
+
+<div class="contents">
+
+<p>
+This pages describes some most commonly used groups of ConfigServer parameters. The
+aim is to provide more structured overview of the parameters that it can be obtained
+from descriptions on the <a href="cs_defaults_8h.html" class="el">CS parameters defaults</a>
+page.
+</p>
+
+<span class="table_of_contents">Contents</span>
+<ul class="table_of_contents">
+  <li>
+    <a href="#cs_nwk_start">Using parameters influencing network start</a>
+	<ul>
+		<li><a href="#cs_device_type">Choosing device type</a></li>
+		<li><a href="#cs_nwk_panid">Handling the network PANID</a></li>
+		<li><a href="#cs_stoch_static_addr">Stochastic and static addressing</a></li>
+	</ul>
+  </li>
+  <li><a href="#cs_sleep_time">Sleeping end device time spans</a></li>
+  <li><a href="#cs_fragment">Configuring fragmentation</a></li>
+  <li><a href="#cs_tables">Understanding table sizes</a></li>
+  <li><a href="#cs_sec_keys">Security keys</a></li>
+</ul>
+
+
+<a name="cs_nwk_start"></a><span class="to_top"><a href="#">Back to top</a></span>
+<h2>Using parameters influencing network start</h2>
+<p>
+Certain CS parameters are used to achieve an appropriate form of network start. 
+This helps choose a proper network by predefining the network PANID or set
+either static or stochastic addressing scheme, etc. 
+</p>
+
+<a name="cs_device_type"></a>
+<h3>Choosing device type</h3>
+<p>
+In addition to the 
+<a class="el" href="cs_defaults_8h.html#a02e2ff3a28ff0075a45faa96f720fd56"><code>CS_DEVICE_TYPE</code></a>
+parameter which specifies the type of a device
+according to ZigBee specification, another parameter, called <code>CS_RX_ON_WHEN_IDLE</code>
+should be taken into consideration to determine the device type. <code>CS_RX_ON_WHEN_IDLE</code>
+indicates whether the radio is turned on permanently. Therefore on routers and the coordinator
+its value must always be <code>true</code>. If parameter's value is <code>false</code> which must
+happen on end devices only, the radio is turned on to transmit data only and to wait for response
+from a parent for a certain short period of time. Besides, being set to false 
+the parameter enables polling mechanism allowing sleeping end devices to 
+receive deferred messages stored by its parent while the end device slept. For that reason,
+on sleeping end devices <code>CS_RX_ON_WHEN_IDLE</code> shall be set to <code>false</code>.
+
+</p>
+<p>
+For example, suppose that the device type is to be specified at run-time, then a typical
+way to configure a sleeping end device is as follows:
+</p>
+<div class="fragment"><pre class="fragment">
+<span class="comment">//Prepare variables</span>
+DeviceType_t deviceType = DEVICE_TYPE_END_DEVICE;
+<span class="keywork">bool</span> rxOnWhenIdle = false;
+
+<span class="comment">//Set parameters</span>
+CS_WriteParameter(CS_DEVICE_TYPE_ID,&deviceType);
+CS_WriteParameter(CS_RX_ON_WHEN_IDLE_ID, &rxOnWhenIdle);
+</pre></div>
+
+<a name="cs_nwk_panid"></a>
+<h3>Handling the network PANID</h3>
+<p>
+There are two identifier for the network: extended PANID and short (also called network) PANID. 
+The first taking 64-bit values is the main idetifier, while a 16-bit value for the second 
+in most cases is generated randomely and is used in frame headers instead
+of the extended PANID to reduce overhead. The extended PANID is predefined with the 
+<a class="el" href="cs_defaults_8h.html#ad913e01b52dd44a469260af694c6fd84"><code>CS_EXT_PANID</code></a>
+parameter causing the coordinator to
+form a network with the PANID equal to this paramater and other nodes to join
+the network with the PANID equal to this paramater. If a router or an end device specifies 
+<code>0x0</code> for <code>CS_EXT_PANID</code>, then it will join the first suitable network.
+</p>
+<p>
+The short PANID can also be predefined on the coordinator, for example, when it
+has to be reset and restore connection to the same network after is powers on.
+In this case 
+<a class="el" href="cs_defaults_8h.html#a5d5e2761565becd39271d0169b239056"><code>CS_NWK_PREDEFINED_PANID</code></a>
+shall be set to 1. The parameters
+can be configured either in compile or run time. The following example shows the
+latter case:
+</p>
+<div class="fragment"><pre class="fragment">
+<span class="comment">//Prepare variables</span>
+<span class="keywork">bool</span> predefPANID = true;
+uint16_t nwkPANID = CPU_TO_LE16(0x1111); <span class="comment">//Set to 16-bit value converted to little endian format</span>
+
+CS_WriteParameter(CS_NWK_PREDEFINED_PANID_ID,&predefPANID); <span class="comment">//Indicate that the PANID is predefined</span>
+CS_WriteParameter(CS_NWK_PANID_ID, &nwkPANID); <span class="comment">//Set the PANID value</span>
+</pre></div>
+
+<a name="cs_stoch_static_addr"></a>
+<h3>Stochastic and static addressing</h3>
+<p>
+The user can choose between stochastic and static addressing schemes to address nodes in 
+the network by specifying the 
+<a class="el" href="cs_defaults_8h.html#a61ca65434a24b29c36a157f1e7fbf848"><code>CS_NWK_UNIQUE_ADDR</code></a> 
+parameter's value with
+<code>false</code> or <code>true</code>, respectively. 
+Addressing scheme determines the method used for assigning a short (network)
+address for the device in the following way: in stochastic scheme a short address
+is chosen by the stack automatically during network start different from all existing
+addresses in the network, while in static addressing the value provided by the
+<a class="el" href="cs_defaults_8h.html#a2df225a416b19f639fb9b3bcf1ca8d8a"><code>CS_NWK_ADDR</code></a> 
+parameter is used. In the latter case it is up to the
+user to ensure that all addresses assigned to nodes in the network are unique.
+</p>
+
+
+<a name="cs_sleep_time"></a><span class="to_top"><a href="#">Back to top</a></span>
+<h2>Sleeping end device's time spans</h2>
+<p>
+For correct communications between routers and sleeping end devices special attention
+should be given to a set of CS parameters. The 
+<a class="el" href="cs_defaults_8h.html#af9a5ae0ebfa0d1b3edb25e8acb8738fc"><code>CS_END_DEVICE_SLEEP_PERIOD</code></a> parameter
+serves exactly as it is named, that is, on an end device it specifies the length
+of a time span for which the end device falls asleep when the 
+<a class="el" href="zdo_8h.html#ac14909eed15722fb312708ef60c51f41"><code>ZDO_SleepReq()</code></a>
+request is executed and confirmed. The end of a sleep period is indicated by 
+<a class="el" href="zdo_8h.html#a380de225cf020fe8e9ea521f98571c73"><code>ZDO_WakeUpInd()</code></a>.
+</p>
+<p>
+An end device's parent also uses <code>CS_END_DEVICE_SLEEP_PERIOD</code> to determine whether
+it should keep or drop a message addressed to the end device and to decide that the end device
+is lost if it does not send a poll request for a sufficiently long time. Upon receiving the
+frame for an end device child its parent saves the message if the 
+<a class="el" href="cs_defaults_8h.html#a67955e6ce37ae632e7248b425cca5e71"><code>CS_MAC_TRANSACTION_TIME</code></a>
+is greater than the estimated time remaining till 
+the next poll request is received from the child. The time of receiving the next  poll
+request is estimated by adding <code>CS_END_DEVICE_SLEEP_PERIOD</code> to the moment of receiving
+the last poll request.
+</p>
+<p>
+An end device sends poll requests with a period specified in the 
+<a class="el" href="cs_defaults_8h.html#a2ad3c01aef62e31bdd6fe297c52b7dc1"><code>CS_INDIRECT_POLL_RATE</code></a>
+parameter, which is also used to calculate the default value for <code>CS_MAC_TRANSACTION_TIME</code>.
+See <a href="cs_defaults_8h.html">CS parameters defaults</a> for details.
+</p>
+<p>
+Note that all time periods are measured in milliseconds.
+</p>
+
+<a name="cs_fragment"></a><span class="to_top"><a href="#">Back to top</a></span>
+<h2>Configuring fragmentation</h2>
+<p>
+The fragmentation feature allows to send larger amounts of data than it fits into
+a single frame, delegating all implementation details to the stack components. However,
+the maximum length of data that can be sent with one APS request is limited by
+the choice of certain CS parameters which are described in the list below:
+</p>
+<ul>
+  <li>
+    <span><a class="el" href="cs_defaults_8h.html#ad79c6b4b58baf08f4320c6ba4dc6664b"><code>CS_APS_MAX_BLOCKS_AMOUNT</code></a></span>
+    <div>Specifies the maximum amount of blocks to which request payload can be split.</div>
+  </li>
+  <li>
+    <span><a class="el" href="cs_defaults_8h.html#ae9971222d320331827ff6eb9c9633f5c"><code>CS_APS_BLOCK_SIZE</code></a></span>
+	<div>Specifies the size of a block. If the value is 0, then the maximum possible size is used.</div>
+  </li>
+  <li>
+    <span><a class="el" href="cs_defaults_8h.html#a5699e12566d7ec5227b32868ad718436"><code>CS_APS_MAX_TRANSMISSION_WINDOW_SIZE</code></a></span>
+	<div>The number of frames sent by the stack at once before waiting for acknowledgement. Once
+	the delevery of these frames is acknowledged the next portion of frames is sent.</div>
+  </li>
+</ul>
+
+<a name="cs_tables"></a><span class="to_top"><a href="#">Back to top</a></span>
+<h2>Understanding table sizes</h2>
+<p>
+The stack keeps a set of buffer tables for various purposes. Configuration Server 
+provides a parameter for the size of each table. Since the table are initialized 
+statically these parameters are used to determine an amount of memory that has 
+to be allocated during the compilation and therefore they are not configurable
+at run time. The tables of particular interest for the application include
+</p>
+<ul>
+  <li>
+    <span>neighbor table - <a class="el" href="cs_defaults_8h.html#ac177d516f6be1bacc13cdd5b87690e41"><code>CS_NEIB_TABLE_SIZE</code></a></span>
+	<div>Stores information about closely located devices from the same network.</div>
+  </li>
+  <li>
+    <span>routing table - <a class="el" href="cs_defaults_8h.html#a2ab30b60c24b985b1f136557356db835"><code>CS_ROUTE_TABLE_SIZE</code></a></span>
+	<div>Stores next-hop addresses for routes towards certain remote nodes if the best such routes
+	are already established. If the stack fails to find a route in this table it launches
+	route discovery procedure which employ the route discovery table.</div>
+  </li>
+  <li>
+    <span>route discovery table - <a class="el" href="cs_defaults_8h.html#a618dd729b44fb2d986ffe94f3a244674"><code>CS_ROUTE_DISCOVERY_TABLE_SIZE</code></a></span>
+	<div>Is used by route discovery procedures if the route towards a remote node, which should be
+	reached by a data frame, has not yet found. If the route discovery will be performed 
+	frequently, for example, if the routing table size is small, consider whether the size of
+	the route discovery table is enough.</div>
+  </li>
+  <li>
+    <span>binding table - <a class="el" href="cs_defaults_8h.html#a1d68ea073247972683e40fe0b1d7898a"><code>CS_APS_BINDING_TABLE_SIZE</code></a></span>
+	<div>Stores entries for binding links with remote nodes. Each entry contains source extended
+	address and endpoint and destination extended address and endpoint.</div>
+  </li>
+  <li>
+    <span>address map table - <a class="el" href="cs_defaults_8h.html#a139c14e0fdbd943f76634f03dbcf04ca"><code>CS_ADDRESS_MAP_TABLE_SIZE</code></a></span>
+	<div>Contains pairs of corresponding short and extended addresses found out during
+	network operation or by device discovery requests.</div>
+  </li>
+  <li>
+    <span>group table - <a class="el" href="cs_defaults_8h.html#a114e13f815606128dd2bdf761143a33c"><code>CS_GROUP_TABLE_SIZE</code></a></span>
+	<div>Stores pairs of a group address and an endpoint. Each group address identifies a group to
+	which the node is subscribed, an endpoint being the destination for data frames
+	addressed to the groups.</div>
+  </li>
+</ul>
+<p>
+The application developers should consider properly the sizes for the buffers for
+it can help reduce the amount of Flash memory consumed by the application.
+</p>
+
+
+<a name="cs_sec_keys"></a><span class="to_top"><a href="#">Back to top</a></span>
+<h2>Security keys</h2>
+<p>
+BitCloud makes use of three types of security keys: network key, 
+link key, and master key. The first is used in both standard and
+high security modes, while the link key and the master key are valid for
+the high security mode only.
+</p>
+<p>
+All network keys take 16-byte values. A typical way to set up a value in code in
+to use an array of <code>uint8_t</code>:
+</p>
+<div class="fragment"><pre class="fragment">
+uint8_t[] securityKey = {0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa};
+</pre></div>
+<p>
+When the 
+<a class="el" href="cs_defaults_8h.html#adf4737f2e4cd911b116993bff74ba74b"><code>CS_NETWORK_KEY</code></a> 
+parameter is specified in <code>configuration.h</code>, 
+the same array notation should be used to point out a value, for example:
+</p>
+<div class="fragment"><pre class="fragment">
+<span class="keyword">#define</span> CS_NETWORK_KEY   {0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa}
+</pre></div>
+
+<p></p>
+<div><i>See also:</i></div>
+<div><a href="ConfigServer.html" class="el">ConfigServer overview</a></div>
+<div><a href="cs_defaults_8h.html" class="el">CS parameters defaults</a></div>
+
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>

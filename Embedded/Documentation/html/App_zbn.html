@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>WSNDemo Application</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+
+<div class="header">
+  <div class="headertitle">
+    <div class="title">WSNDemo Application</div>
+  </div>
+</div>
+
+<div class="contents">
+
+<p>The WSNDemo application demonstrates wireless sensor network (WSN) organization and 
+sensor data collection from network devices on the central coordinator node.The WSNMonitor GUI 
+application can be used on a PC to display the network topology and sensor data 
+in an easy-to-interpret graphical form.
+
+<p>The device type is defined by the <tt>APP_DEVICE_TYPE</tt> parameter thus firmware for each device 
+type shall be recompiled with updated value of the <tt>APP_DEVICE_TYPE</tt> parameter.</p>
+
+<p>Network start procedure is initiated automatically after the device powers up. The coordinator 
+organizes the wireless network according to settings in the <tt>configuration.h</tt> file while 
+routers and end devices try to join the network with specified parameters. </p>
+
+<p>After the network join each node starts periodically sending data packets containing node information 
+and sensor measurements with the <tt>APP_TIMER_SENDING_PERIOD</tt> interval to the coordinator.
+The coordinator receives data frames and forwards them to a PC via the USART interface. It also 
+periodically sends own sensor data directly to the serial port.</p>
+
+<p>To observe WSN activities graphically the WSN Monitor GUI application should be started on the PC 
+the coordinator is connected to.</p>
+
+<p>In order to use standard security mechanism described in ZigBee specification, WSNDemo shall be 
+compiled with properly configured <a href="Sample_app.html#Security">security-related parameters</a>.</p>
+
+<h2>LED Indications</h2>
+<p>If LEDs are present on the board, then they are used by the application:</p>
+<ul>
+  <li>The red/D2/blue LED is periodically blinking with the 500ms interval when the device is joining the network 
+    and is ON if it is in the network. Once the device enters the network, the red/D2/blue LED stops blinking and
+    becomes constantly ON while the node is in the network and awake.
+  <li>The green/D4/red LED flashes during wireless transmission.</li>
+  <li>The yellow/D3 LED indicates data frame reception.</li>
+</ul>
+
+<h2>Important Configuration Parameters</h2>
+<table>
+ 	<tr><td class="indexkey"><tt>APP_DEVICE_TYPE</tt></td><td class="indexvalue">Specifies the device type.</td></tr>
+	<tr><td class="indexkey"><tt>APP_TIMER_SENDING_PERIOD</tt></td><td class="indexvalue">The time interval used for periodic sensor data transmissions.</td></tr>
+	<tr><td class="indexkey"><tt>APP_THRESHOLD_FAILED_TRANSMISSION</tt></td><td class="indexvalue">The number of failed transmissions after which the node leaves the network.</td></tr>	
+	<tr><td class="indexkey"><tt>CS_NWK_ADDR</tt></td><td class="indexvalue">Specifies the node's short address. Can be used only with <tt>CS_NWK_UNIQUE_ADDR</tt> set to <tt>true</tt>.</td></tr>
+	<tr><td class="indexkey"><tt>CS_NWK_UNIQUE_ADDR</tt></td><td class="indexvalue">Specifies whether the short address is set to a predefined value or to a random value; is set to <tt>true by the application.</tt> </td></tr>
+	<tr><td class="indexkey"><tt>CS_END_DEVICE_SLEEP_PERIOD</tt></td><td class="indexvalue">The duration of the end device sleep period given in milliseconds. Should be the same on parent and children nodes.</td></tr>
+	<tr><td class="indexkey"><tt>CS_CHANNEL_MASK</tt></td><td class="indexvalue">Specifies a channel mask to be used for network operation.</td></tr>
+  <tr><td class="indexkey"><tt>CS_CHANNEL_PAGE</tt></td><td class="indexvalue">Specifies a channel page to be used.</td></tr>
+  <tr><td class="indexkey"><tt>CS_EXT_PANID</tt></td><td class="indexvalue">Specifies the network extended PANID. Should be unique at a given location.</td></tr>
+  <tr><td class="indexkey"><tt>CS_UID</tt></td><td class="indexvalue">The extended address for platforms where it is not available via the special UID chip or an external EEPROM.</td></tr>
+</table>
+
+<p>The description of parameters common for all applications can be found in <a href="Sample_app.html#ConfigParam">Sample Applications Overview</a>.
+ConfigServer parameters are described in the <a href="ConfigServer.html">Configuration Server</a> section.</p>
+
+<p>The source code of the WSNDemo application is located in yhe
+<tt><nobr>[SDK]\Sample&nbsp;Applications\WSNDemo</nobr></tt> directory.</p>
+
+<a name="WSN_Monitor"></a><h2>WSNMonitor</h2>
+
+<p>WSNMonitor is a PC-based GUI diagnostic application for WSNDemo used to 
+display network topology and other information about the network.
+To install the program run <tt>WSNMonitorSetup.exe</tt> 
+located at <tt><nobr>[SDK]\Evaluation&nbsp;Tools\WSNDemo&nbsp;(WSN&nbsp;Monitor)\</nobr></tt>.</p>
+
+<p>WSNMonitor displays the network topology in real time and updates it automatically 
+as the nodes join or leave. The nodes are represented by icons with the node data tips. 
+The links between the nodes are tipped with the link quality data. Sensor data for each 
+node is recorded and may be visualized in graphical and table formats.</p>
+
+<p>On WSNMonitor startup a proper communication port should be selected using the 
+serial port settings button from the toolbar. Other program menu and toolbar items 
+can be used to control the node and topology outlook.</p>
+
+<p>A typical WSN Monitor screen is shown in the figure below.</p>
+
+<p><img border="0" src="wsnmon.jpg" width="690" height="590"><p>&nbsp;
+
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>

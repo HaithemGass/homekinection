@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>BitCloud Stack API Reference: ZigBee Device Objects</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+
+<h2>Device and Service Discovery</h2>
+<p>Device and Service Discovery are distributed operations where devices 
+respond to discovery requests. Device Discovery provides the ability for a 
+device to determine the other devices on the network. Device Discovery is 
+supported for both the 64-bit IEEE address and the 16-bit Network address. 
+Service Discovery provides the ability to determine services offered by other 
+devices.</p>
+<p>The existing commands for device and service discovery
+are listed below (some with the example code fragments):</p>
+<ul>
+<li><a href="struct_z_d_o___nwk_addr_req__t.html" class="el">16-bit Network 
+address</a> <ACRONYM title="message transmission to a single device in a network" style=" CURSOR: help; BORDER-BOTTOM: red 1px dashed">unicast</ACRONYM> or <ACRONYM title="message transmission to every device in a network" style=" CURSOR: help; BORDER-BOTTOM: red 1px dashed">broadcast</ACRONYM> addressed command permits a local device to inquire as to the 16-bit address of the Remote Device based on its known IEEE address. Upon receipt of this command, remote devices shall return the <a 
+href="struct_z_d_o___nwk_addr_resp__t.html" class="el">NWK address</a>.</li>
+<li><a href="struct_z_d_o___ieee_addr_req__t.html" class="el">64-bit IEEE address</a> <ACRONYM title="message transmission to a single device in a network" style=" CURSOR: help; BORDER-BOTTOM: red 1px dashed">unicast</ACRONYM> addressed command permits a local device to inquire as to the 64-bit IEEE address of the Remote Device based on their known 16-bit address. Upon receipt of this command, remote device shall return the <a href="struct_z_d_o___ieee_addr_resp__t.html" class="el">64-bit IEEE address</a>.</li> 
+<li><a href="struct_z_d_o___node_desc_req__t.html" class="el">Node Descriptor</a> <ACRONYM title="message transmission to a single device in a network" style=" CURSOR: help; BORDER-BOTTOM: red 1px dashed">unicast</ACRONYM> addressed command permits a local device to inquire as to the node descriptor of a remote device. Upon receipt of this command, remote device shall return the <a href="struct_z_d_o___node_desc_resp__t.html" class="el">Node Descriptor</a>. 
+The node descriptor contains information about the capabilities of the node.</li>
+<li><a href="struct_z_d_o___power_desc_req__t.html" class="el">Power Descriptor</a> <ACRONYM title="message transmission to a single device in a network" style=" CURSOR: help; BORDER-BOTTOM: red 1px dashed">unicast</ACRONYM> addressed command permits a local device to inquire as to the power descriptor of a remote device. Upon receipt of this command, remote device shall return the <a href="struct_z_d_o___power_desc_resp__t.html" class="el">Power Descriptor</a>. The power descriptor gives a dynamic indication of the power status of the node.</li>
+<li><a href="struct_z_d_o___simple_desc_req__t.html" class="el">Simple_Desc_req</a> <ACRONYM title="message transmission to a single device in a network" style=" CURSOR: help; BORDER-BOTTOM: red 1px dashed">unicast</ACRONYM> addressed command permits a local device to inquire as to the simple descriptor of a remote device on a specified endpoint. Upon receipt of this command, remote device shall return the <a href="struct_z_d_o___simple_desc_resp__t.html" class="el">Simple Descriptor</a>. The simple descriptor contains information specific to each endpoint contained in this node.</li>
+<li><a href="struct_z_d_o___active_e_p_req__t.html" class="el">Active Endpoint</a> <ACRONYM title="message transmission to a single device in a network" style=" CURSOR: help; BORDER-BOTTOM: red 1px dashed">unicast</ACRONYM> addressed command permits a local device to acquire the list of endpoints on a remote device with simple descriptors. Upon receipt of this command, the recipient device shall generate a <a href="struct_z_d_o___active_e_p_resp__t.html" class="el">responce</a>. An active endpoint is one with an application supporting a single profile, described by a Simple Descriptor.</li>
+<li><a href="struct_z_d_o___complex_desc_req__t.html" class="el">Complex Descriptor</a> <ACRONYM title="message transmission to a single device in a network" style=" CURSOR: help; BORDER-BOTTOM: red 1px dashed">unicast</ACRONYM> addressed command permits an enquiring device to return the <a href="struct_z_d_o___complex_desc_resp__t.html" class="el">Complex Descriptor</a> from the specified device. The complex descriptor contains extended information for each of the device descriptions contained in this node.
+</li>
+<li><a href="struct_z_d_o___user_desc_req__t.html" class="el">User Descriptor</a> <ACRONYM title="message transmission to a single device in a network" style=" CURSOR: help; BORDER-BOTTOM: red 1px dashed">unicast</ACRONYM> addressed command permits a local device to inquire as to the user descriptor of a remote device. Upon receipt of this command, the recipient device shall return the <a href="struct_z_d_o___user_desc_resp__t.html" class="el">User Descriptor</a>. 
+The user descriptor contains information that allows the user to identify the device using a user-friendly character string, such as "Bedroom TV" or "Stairs light".The use of the user descriptor is optional. This descriptor contains a single field, which uses the ASCII character set, and shall contain a maximum of 16 characters.
+</li>
+<li><a href="struct_z_d_o___device_annce_req__t.html" class="el">Device_annce</a> <ACRONYM title="message transmission to every device in a network" style=" CURSOR: help; BORDER-BOTTOM: red 1px dashed">broadcast</ACRONYM> addressed command is provided to notify other devices that the device has joined or re-joined the network. This command shall be invoked for all end devices upon join or rejoin. This command may also be invoked by routers upon join or rejoin as part of NWK address conflict resolution. Upon receipt of this command, the Remote Device shall update the nwkAddressMap attribute of the NIB with the updated NWKAddr corresponding to the IEEEAddr received.
+</li>
+<li><a href="struct_z_d_o___user_desc_set_req__t.html" class="el">Configure User Descriptor</A> <ACRONYM title="message transmission to a single device in a network" style=" CURSOR: help; BORDER-BOTTOM: red 1px dashed">unicast</ACRONYM> addressed command permits an enquiring device to configure the user descriptor of the specified device.Upon receipt of this command, the recipient device shall process the command and generate <a href="struct_z_d_o___user_desc_conf_resp__t.html" class="el">confirmation responce</a>.
+</li>
+<li><a href="struct_z_d_o___system_server_discovery_req__t.html" class="el">System Server Discovery</A> <ACRONYM title="message transmission to every device in a network" style=" CURSOR: help; BORDER-BOTTOM: red 1px dashed">broadcast</ACRONYM> addressed command permits an enquiring device to discover the location of a particular system server or servers as indicated by the <a href="struct_z_d_o___system_server_discovery_req__t.html#0fcaf065387d08d6d12936792fadbb13" class="el">ServerMask</A> parameter. Upon receipt of this command, remote devices shall compare the <a href="struct_z_d_o___system_server_discovery_req__t.html#0fcaf065387d08d6d12936792fadbb13" class="el">ServerMask</A> parameter to the Server Mask field in their own Node descriptor. If no bits are found to match, no action is taken. If any matching bits are found, the remote device shall send a <a href="struct_z_d_o___system_server_discovery_resp__t.html" class="el">System Server Discovery Responce</A> back to the originator using unicast transmission (with acknowledgement request) and indicating the matching bits.
+</li>
+</ul>
+
+<p>See also: <a href="zdo_8h.html" class="el">ZDO Functions and Data Structures</a></p>
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>

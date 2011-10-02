@@ -1,0 +1,174 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>BitCloud Stack API Reference: Overview</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+<style>
+	li > span {
+		font-style:italic;
+		display:block;
+		margin-bottom:5px;
+	}
+	li {
+		margin-bottom:5px;
+	}
+</style>
+</head><body>
+
+<div class="header">
+  <div class="headertitle">
+    <div class="title">Programming basics</div>
+  </div>
+</div>
+
+<div class="contents">
+
+
+<p>
+This API Reference manual is intended do provide detailed information
+about all public BitCloud stack APIs, generally describe the stack components
+and the areas to which they can be applied, and to illustrate performing the
+most common tasks with multiple sample code demonstrations. Together with
+more conceptual <i>AVR2050: ButCloud Developer's Guide</i> this document
+represents a full and extensive source of help information for BitCloud
+applications' developers.
+</p>
+
+<span class="table_of_contents">Contents</span>
+<ul class="table_of_contents">
+  <li><a href="#api_doc_structure">API documentation structure</a></li>
+  <li><a href="#task_handlers">Task handlers</a></li>
+  <li><a href="#main_func"><code>main()</code> function</a></li>
+  <li><a href="#layers_communication">Communication between layers</a></li>
+  <li><a href="#req_conf">Requests and confirmations</a></li>
+  <li><a href="#def_task_exec">Deferring task execution</a></li>
+</ul>
+
+<a name="api_doc_structure"></a>
+<h2>API documentation structure</h2>
+<p>
+The API documentation structure is rather straitforward. All major stack components
+have corresponding chapters which may be easily found in the navigation tree.
+For each component there exist a page with general overview of functionality
+provided by the component and several pages focused on the component's usage.
+A separate chapter is dedicated to decriptions of sample applications provided
+along with the SDK. Another chapter, <i>Reference Lists</i>, comprises
+lists of functions, structures, header files, etc., and helps explore the stack
+APIs from different points of view.
+</p>
+
+<a name="task_handlers"></a>
+<h2>Task handlers</h2>
+<p>
+The BitCloud stack and the custom applications built on top BitCloud operate in
+a single-threaded environment. Allocation of the execution time is controlled by 
+the task scheduler, which an internal mechanism implemented by the stack. The 
+tas scheduler manages the order in which the tasks raised by different stack 
+components are executed. The order is based on the priority of layers. The
+application layer has the lowest priority. Tasks posted by a certain layer are 
+processed with a call to the corresponding task handler which is a function
+specific for each layer. The application task hanler is called 
+<a class="el" href="task_manager_8h.html#aec14264f3afa11a970347e765c44d9ef"><code>APL_TaskHandler()</code></a>
+and should be implemented by the application.
+</p>
+
+<a name="main_func"></a>
+<h2><code>main()</code> function</h2>
+<p>
+The starting point of a custom BitCloud application is the <code>main()</code>
+function. In BitCloud versions older than 1.11.0 it was implemented by the
+stack and its source code was unavailable for the application developers.
+From the version 1.11.0 the <code>main()</code> function body is defined 
+by the application to make the application development more flexible.
+Nevertheless, the function must contain two mandatory elements: a call to
+the 
+<a class="el" href="task_manager_8h.html#ab1f516d5749fdeb9264f4c1b45383234"><code>SYS_SysInit()</code></a> 
+function and the infinite loop with the
+<a class="el" href=""><code>SYS_RunTask()</code></a>
+inside which allows the task scheduler to call
+the next appropriate task handler.
+</p>
+<p>
+A typical <code>main()</code> function implementation is shown below:
+</p>
+<div class="fragment"><pre class="fragment">
+<span class="keyword">int</span> main(<span class="keyword">void</span>)
+{
+  SYS_SysInit();
+  
+  <span class="keyword">for</span> (;;) {
+    SYS_RunTask();
+  }
+}
+</pre></div>
+
+<a name="layers_communication"></a>
+<h2>Communication between layers</h2>
+<p>
+It is convenient to consider the user application as an additional layer to those
+present in the stack and the invocation of BitCloud functions as communication
+requests sent from the application to the underlying layers.
+</p>
+<p>
+Communication between different layers including requests between the stack layers
+employ the event driven programming model. A few operations are synchronous. Most of them
+in fact involve reading from and writing to internal stack structers and for this reason
+do not consume much execution time. But all major tasks imply sending requests to other
+nodes in the network that immediately causes considerably long waiting for response.
+In order not to lock the execution flow (which is single-threaded on an MCU)
+such requests provide pointers to callbacks which are called at the end of request
+execution by the underlying layer to which the request is issued.
+</p>
+
+<a name="req_conf"></a>
+<h2>Requests and confirmations</h2>
+<p>
+A function that performs an asynchronous request to a BitCloud component always has
+a name ended with <i>Req</i>. The function argument in this case is a pointer to
+a structure which name is obtained from the functioin name by adding <i>_t</i>, a
+mark denoting a type. This structure is regarded to as request parameters.
+The main field it includes is a pointer to a callback function which is to be
+called to confirm request execution. In addition to callback request parameters
+include confirmation parameters structure as a field. The latter structure's name
+is obtained by changing <i>Req</i> in its name to <i>Conf</i>. For example,
+network start request is issued by the
+<a class="el" href="zdo_8h.html#a5c2330058e9c40c5c771964b0f606c58"><code>ZDO_StartNetworkReq(ZDO_StartNetworkReq_t *req)</code></a>
+function, where
+<a class="el" href="struct_z_d_o___start_network_req__t.html"><code>ZDO_StartNetworkReq_t</code></a>
+has the <code>confirm</code> field of the
+<code>ZDO_StartNetworkConf_t</code> type.
+</p>
+<p>
+An instance of request parameters must be declared as a global variable, because
+the confirmation callback's argument points exactly to the confirmation
+parameters' field inside the request parameters. This requires that the instance of
+request parameres exists after the application looses execution flow control.
+</p>
+<p>
+The <code>status</code> field of the confirmation parameters indicates whether the
+request is executed successfully and reports the failure reason if it is not a
+success. The status has the enumeration type defined for each stack component.
+However, the value of the status field may not fall in the range defined by the
+enumeration because a failure during request execution may occur not only on the layer
+to which the request is sent directly, but on the lower layers also.
+</p>
+
+<a name="def_task_exec"></a>
+<h2>Deferring task execution</h2>
+<p>
+The BitCloud applications are required to conform to certain restrictions for
+execution times of functions defined by the applications. The application task
+handler, the <code>APL_TaskHandler()</code> function, must execute in less than 50ms.
+A callback defined by the application must execute in less than 10ms.
+</p>
+<p>
+If a certain callback has to perform some time-consuming actions and would 
+not finish in 10ms, the application can defer the callback exection and transfer 
+its logic to the task handler by posting a task for <code>APL_TaskHandler()</code> 
+with the 
+<a class="el" href="task_manager_8h.html#a19cb63c28d94c2870db54ef53ba2ccd3"><code>SYS_PostTask(APL_TASK_ID)</code></a>
+call.
+</p>
+
+</body>
+</html>

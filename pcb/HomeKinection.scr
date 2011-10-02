@@ -1,0 +1,1324 @@
+# Library script
+# 
+# Exported from /home/shay/a/sglarew/homekinection/pcb/HomeKinection.lbr at 9/29/11 8:48 PM
+# 
+# EAGLE Version 5.11.0 Copyright (c) 1988-2010 CadSoft
+# 
+Set Wire_Bend 2;
+Grid mm;
+Layer   1 Top;
+Layer  16 Bottom;
+Layer  17 Pads;
+Layer  18 Vias;
+Layer  19 Unrouted;
+Layer  20 Dimension;
+Layer  21 tPlace;
+Layer  22 bPlace;
+Layer  23 tOrigins;
+Layer  24 bOrigins;
+Layer  25 tNames;
+Layer  26 bNames;
+Layer  27 tValues;
+Layer  28 bValues;
+Layer  29 tStop;
+Layer  30 bStop;
+Layer  31 tCream;
+Layer  32 bCream;
+Layer  33 tFinish;
+Layer  34 bFinish;
+Layer  35 tGlue;
+Layer  36 bGlue;
+Layer  37 tTest;
+Layer  38 bTest;
+Layer  39 tKeepout;
+Layer  40 bKeepout;
+Layer  41 tRestrict;
+Layer  42 bRestrict;
+Layer  43 vRestrict;
+Layer  44 Drills;
+Layer  45 Holes;
+Layer  46 Milling;
+Layer  47 Measures;
+Layer  48 Document;
+Layer  49 Reference;
+Layer  51 tDocu;
+Layer  52 bDocu;
+Layer  91 Nets;
+Layer  92 Busses;
+Layer  93 Pins;
+Layer  94 Symbols;
+Layer  95 Names;
+Layer  96 Values;
+Layer  97 Info;
+Layer  98 Guide;
+Description 'Parts used in Home Kinection Senior Design Project';
+
+Edit 'F09G.sym';
+Pin '1' I/O None Middle R0 Pad 0 (-7.62 5.08);
+Pin '6' I/O None Middle R180 Pad 0 (7.62 2.54);
+Pin '2' I/O None Middle R0 Pad 0 (-7.62 2.54);
+Pin '7' I/O None Middle R180 Pad 0 (7.62 0);
+Pin '3' I/O None Middle R0 Pad 0 (-7.62 0);
+Pin '8' I/O None Middle R180 Pad 0 (7.62 -2.54);
+Pin '4' I/O None Middle R0 Pad 0 (-7.62 -2.54);
+Pin '9' I/O None Middle R180 Pad 0 (7.62 -5.08);
+Pin '5' I/O None Middle R0 Pad 0 (-7.62 -5.08);
+Layer 96;
+Change Size 1.778;
+Change Ratio 8;
+Change Font Proportional;
+Text '>VALUE' R0 (-3.81 -10.795);
+Layer 95;
+Change Size 1.778;
+Change Ratio 8;
+Text '>NAME' R0 (-3.81 8.89);
+Layer 94;
+Change Style Continuous;
+Wire  0.254 (-1.651 3.429) Flat +180 (-1.651 1.651);
+Wire  0.254 (1.524 1.651) Flat +180 (1.524 3.429);
+Wire  0.254 (-1.651 5.969) Flat +180 (-1.651 4.191);
+Wire  0.254 (1.524 -3.429) Flat +180 (1.524 -1.651);
+Wire  0.254 (-1.651 0.889) Flat +180 (-1.651 -0.889);
+Wire  0.254 (1.524 -0.889) Flat +180 (1.524 0.889);
+Wire  0.254 (-1.651 -1.651) Flat +180 (-1.651 -3.429);
+Wire  0.254 (1.524 -5.969) Flat +180 (1.524 -4.191);
+Wire  0.254 (-1.651 -4.191) Flat +180 (-1.651 -5.969);
+Wire  0.4064 (-4.064 6.9312) Flat -102.324 (-2.5226 8.172);
+Wire  0.4064 (-2.5226 8.1718) (0 7.62) (3.0654 6.9494);
+Wire  0.4064 (3.0654 6.9495) Flat -77.654 (4.0642 5.7088);
+Wire  0.4064 (4.064 -5.7088) (4.064 5.7088);
+Wire  0.4064 (3.0654 -6.9494) +77.6565 (4.064 -5.7088);
+Wire  0.4064 (-4.064 -6.9312) (-4.064 6.9312);
+Wire  0.4064 (-2.5226 -8.1718) (0 -7.62) (3.0654 -6.9494);
+Wire  0.4064 (-4.064 -6.9312) Flat +102.339 (-2.5226 -8.1719);
+
+Edit 'CRYSTAL.sym';
+Layer 94;
+Wire  0.254 (-2.54 3.81) (-2.54 -3.81) (2.54 -3.81) (2.54 3.81) \
+      (-2.54 3.81);
+Wire  0.254 (-5.08 -3.81) (-5.08 3.81);
+Wire  0.254 (5.08 3.81) (5.08 -3.81);
+Pin 'A' Pas None Middle R0 Pad 0 (-10.16 0);
+Pin 'B' Pas None Middle R180 Off 0 (10.16 0);
+Layer 95;
+Change Size 1.778;
+Change Ratio 8;
+Text '>NAME' R0 (-4.572 5.588);
+Layer 96;
+Change Size 1.778;
+Change Ratio 8;
+Text '>VALUE' R0 (-5.08 -7.62);
+
+Edit 'LED_RGB.sym';
+Layer 94;
+Wire  0.254 (6.35 2.54) (5.08 0) (3.81 2.54);
+Wire  0.254 (6.35 0) (5.08 0) (3.81 0);
+Layer 95;
+Change Size 1.778;
+Change Ratio 8;
+Text '>NAME' R90 (8.636 -4.572);
+Layer 94;
+Wire  0.254 (6.35 2.54) (5.08 2.54) (3.81 2.54);
+Wire  0.1524 (5.08 2.54) (5.08 0);
+Wire  0.1524 (3.048 1.778) (1.651 0.381);
+Wire  0.1524 (3.175 0.635) (1.778 -0.762);
+Layer 94;
+Change Spacing 1.27;
+Change Pour Solid;
+Change Rank 0;
+Polygon 0.1524  (1.651 0.381) (2.032 1.27) (2.54 0.762) (1.651 0.381);
+Layer 94;
+Change Spacing 1.27;
+Change Pour Solid;
+Change Rank 0;
+Polygon 0.1524  (1.778 -0.762) (2.159 0.127) (2.667 -0.381) (1.778 -0.762);
+Layer 94;
+Wire  0.254 \
+      (1.27 2.54) (0 0) (-1.27 2.54);
+Wire  0.254 (1.27 0) (0 0) (-1.27 0);
+Wire  0.254 (1.27 2.54) (0 2.54) (-1.27 2.54);
+Wire  0.1524 (0 2.54) (0 0);
+Wire  0.1524 (-2.032 1.778) (-3.429 0.381);
+Wire  0.1524 (-1.905 0.635) (-3.302 -0.762);
+Layer 94;
+Change Spacing 1.27;
+Change Pour Solid;
+Change Rank 0;
+Polygon 0.1524  (-3.429 0.381) (-3.048 1.27) (-2.54 0.762) (-3.429 0.381);
+Layer 94;
+Change Spacing 1.27;
+Change Pour Solid;
+Change Rank 0;
+Polygon 0.1524  (-3.302 -0.762) (-2.921 0.127) (-2.413 -0.381) (-3.302 -0.762);
+Layer 94;
+Wire  0.254 \
+      (-3.81 2.54) (-5.08 0) (-6.35 2.54);
+Wire  0.254 (-3.81 0) (-5.08 0) (-6.35 0);
+Pin 'C' Pas None Short R90 Off 0 (0 -5.08);
+Pin 'AR' Pas None Short R270 Off 0 (-5.08 5.08);
+Layer 94;
+Wire  0.254 (-3.81 2.54) (-5.08 2.54) (-6.35 2.54);
+Wire  0.1524 (-5.08 2.54) (-5.08 0);
+Wire  0.1524 (-7.112 1.778) (-8.509 0.381);
+Wire  0.1524 (-6.985 0.635) (-8.382 -0.762);
+Layer 94;
+Change Spacing 1.27;
+Change Pour Solid;
+Change Rank 0;
+Polygon 0.1524  (-8.509 0.381) (-8.128 1.27) (-7.62 0.762) (-8.509 0.381);
+Layer 94;
+Change Spacing 1.27;
+Change Pour Solid;
+Change Rank 0;
+Polygon 0.1524  (-8.382 -0.762) (-8.001 0.127) (-7.493 -0.381) (-8.382 -0.762);
+Layer 94;
+Wire  0.1524 \
+      (-5.08 0) (-5.08 -2.54);
+Wire  0.1524 (0 -2.54) (0 0);
+Wire  0.1524 (0 -2.54) (5.08 -2.54) (5.08 0);
+Wire  0.1524 (0 -2.54) (-5.08 -2.54);
+Pin 'AG' Pas None Short R270 Off 0 (0 5.08);
+Pin 'AB' Pas None Short R270 Off 0 (5.08 5.08);
+Layer 94;
+Change Size 1.27;
+Change Ratio 16;
+Change Font Vector;
+Text 'R' R0 (-7.62 2.54);
+Layer 94;
+Change Size 1.27;
+Change Ratio 16;
+Text 'G' R0 (-2.54 2.54);
+Layer 94;
+Change Size 1.27;
+Change Ratio 16;
+Text 'B' R0 (2.54 2.54);
+
+Edit 'ATZB-24-A2.sym';
+Pin 'SPI_CLK' Out None Middle R0 Both 0 (-25.4 30.48);
+Pin 'SPI_MISO' I/O None Middle R0 Both 0 (-25.4 27.94);
+Pin 'SPI_MOSI' I/O None Middle R0 Both 0 (-25.4 25.4);
+Pin 'GPIO0' I/O None Middle R0 Both 0 (-25.4 22.86);
+Pin 'GPIO1' I/O None Middle R0 Both 0 (-25.4 20.32);
+Pin 'GPIO2' I/O None Middle R0 Both 0 (-25.4 17.78);
+Pin 'OSC32K_OUT' Out None Middle R0 Both 0 (-25.4 15.24);
+Pin '!RESET' In None Middle R0 Both 0 (-25.4 12.7);
+Pin 'DGND@1' Pwr None Middle R0 Both 0 (-25.4 10.16);
+Pin 'CPU_CLK' Out None Middle R0 Both 0 (-25.4 7.62);
+Pin 'I2C_CLK' Out None Middle R0 Both 0 (-25.4 5.08);
+Pin 'I2C_DATA' I/O None Middle R0 Both 0 (-25.4 2.54);
+Pin 'UART_TXD' In None Middle R0 Both 0 (-25.4 0);
+Pin 'UART_RXD' Out None Middle R0 Both 0 (-25.4 -2.54);
+Pin '!UART_RTS' In None Middle R0 Both 0 (-25.4 -5.08);
+Pin '!UART_CTS' Out None Middle R0 Both 0 (-25.4 -7.62);
+Pin 'GPIO6' I/O None Middle R0 Both 0 (-25.4 -10.16);
+Pin 'GPIO7' I/O None Middle R0 Both 0 (-25.4 -12.7);
+Pin 'GPIO3' I/O None Middle R0 Both 0 (-25.4 -17.78);
+Pin 'GPIO4' I/O None Middle R0 Both 0 (-25.4 -20.32);
+Pin 'GPIO5' I/O None Middle R0 Both 0 (-25.4 -22.86);
+Pin 'DGND@2' Pwr None Middle R0 Both 0 (-25.4 -25.4);
+Pin 'DGND@3' Pwr None Middle R0 Both 0 (-25.4 -27.94);
+Pin 'D_VCC1' Pwr None Middle R0 Both 0 (-25.4 -30.48);
+Pin 'D_VCC2' Pwr None Middle R0 Both 0 (-25.4 -33.02);
+Pin 'JTAG_TMS' In None Middle R180 Both 0 (25.4 30.48);
+Pin 'JTAG_TDI' In None Middle R180 Both 0 (25.4 27.94);
+Pin 'JTAG_TDO' Out None Middle R180 Both 0 (25.4 25.4);
+Pin 'JTAG_TCK' In None Middle R180 Both 0 (25.4 22.86);
+Pin 'ADC_INPUT_3' In None Middle R180 Both 0 (25.4 20.32);
+Pin 'ADC_INPUT_2' In None Middle R180 Both 0 (25.4 17.78);
+Pin 'ADC_INPUT_1' In None Middle R180 Both 0 (25.4 15.24);
+Pin 'BAT' In None Middle R180 Both 0 (25.4 12.7);
+Pin 'A_VREF' I/O None Middle R180 Both 0 (25.4 10.16);
+Pin 'AGND' Pwr None Middle R180 Both 0 (25.4 7.62);
+Pin 'GPIO_1WR' I/O None Middle R180 Both 0 (25.4 5.08);
+Pin '!UART_DTR' In None Middle R180 Both 0 (25.4 2.54);
+Pin 'USART0_RXD' In None Middle R180 Both 0 (25.4 0);
+Pin 'USART0_TXD' Out None Middle R180 Both 0 (25.4 -2.54);
+Pin 'USART0_EXTCLK' I/O None Middle R180 Both 0 (25.4 -5.08);
+Pin 'GPIO8' I/O None Middle R180 Both 0 (25.4 -7.62);
+Pin 'IRQ_7' In None Middle R180 Both 0 (25.4 -10.16);
+Pin 'IRQ_6' In None Middle R180 Both 0 (25.4 -12.7);
+Layer 94;
+Wire  0.254 (-20.32 33.02) (20.32 33.02) (20.32 -35.56) (-20.32 -35.56) \
+      (-20.32 33.02);
+Layer 95;
+Change Size 1.778;
+Change Ratio 8;
+Change Font Proportional;
+Text '>NAME' R0 (-20.32 34.036);
+Layer 96;
+Change Size 1.778;
+Change Ratio 8;
+Text '>VALUE' R0 (-20.32 -38.1);
+
+Edit 'PSU_POWER.sym';
+Pin '12V' Pwr None Middle R0 Both 0 (-10.16 2.54);
+Pin 'GND@1' Pwr None Middle R0 Both 0 (-10.16 0);
+Pin 'GND@2' Pwr None Middle R0 Both 0 (-10.16 -2.54);
+Pin '5V' Pwr None Middle R0 Both 0 (-10.16 -5.08);
+Layer 94;
+Wire  0.254 (-5.08 5.08) (-5.08 -7.62) (5.08 -7.62) (5.08 5.08) \
+      (-5.08 5.08);
+Layer 95;
+Change Size 1.778;
+Change Ratio 8;
+Text '>NAME' R0 (-4.064 5.588);
+Layer 96;
+Change Size 1.778;
+Change Ratio 8;
+Text '>VALUE' R0 (-5.08 -9.906);
+
+Edit 'LUTRON_POWER.sym';
+Pin 'COM' Pwr None Middle R0 Both 0 (-10.16 2.54);
+Pin '24V' Pwr None Middle R0 Both 0 (-10.16 0);
+Pin 'CLOSE' Pwr None Middle R0 Both 0 (-10.16 -2.54);
+Pin 'OPEN' Pwr None Middle R0 Both 0 (-10.16 -5.08);
+Layer 94;
+Wire  0.254 (-5.08 5.08) (-5.08 -7.62) (5.08 -7.62) (5.08 5.08) \
+      (-5.08 5.08);
+Layer 95;
+Change Size 1.778;
+Change Ratio 8;
+Text '>NAME' R0 (-4.064 5.588);
+Layer 96;
+Change Size 1.778;
+Change Ratio 8;
+Text '>VALUE' R0 (-5.08 -9.906);
+
+Edit 'CX240D5R.sym';
+Layer 94;
+Wire  0.254 (-5.08 12.7) (5.08 12.7) (5.08 -12.7) (-5.08 -12.7) \
+      (-5.08 12.7);
+Pin 'DC-' I/O None Middle R0 Both 0 (-10.16 10.16);
+Pin 'DC+' I/O None Middle R0 Both 0 (-10.16 7.62);
+Pin 'AC1' Pwr None Middle R0 Both 0 (-10.16 -2.54);
+Pin 'AC2' Pwr None Middle R0 Both 0 (-10.16 -10.16);
+Layer 95;
+Change Size 1.778;
+Change Ratio 8;
+Text '>NAME' R0 (-4.572 13.208);
+Layer 96;
+Change Size 1.778;
+Change Ratio 8;
+Text '>VALUE' R0 (-5.08 -15.24);
+
+Edit '78XX.sym';
+Pin 'VIN' Pwr None Middle R0 Both 0 (-12.7 2.54);
+Pin 'VOUT' Pwr None Middle R180 Both 0 (12.7 2.54);
+Pin 'GND' Pwr None Middle R90 Both 0 (0 -10.16);
+Layer 94;
+Wire  0.254 (-7.62 5.08) (7.62 5.08) (7.62 -5.08) (-7.62 -5.08) \
+      (-7.62 5.08);
+Layer 96;
+Change Size 1.778;
+Change Ratio 8;
+Text '>VALUE' R0 (-7.62 5.588);
+Layer 95;
+Change Size 1.778;
+Change Ratio 8;
+Text '>NAME' R0 (-7.62 7.62);
+
+Edit 'H11A1SM.sym';
+Layer 94;
+Wire  0.254 (-10.16 7.62) (10.16 7.62) (10.16 -7.62) (-10.16 -7.62) \
+      (-10.16 7.62);
+Pin 'AN' Pas None Middle R0 Both 0 (-15.24 5.08);
+Pin 'CA' Pas None Middle R0 Both 0 (-15.24 0);
+Pin 'NC' NC None Middle R0 Both 0 (-15.24 -5.08);
+Pin 'EM' Pas None Middle R180 Both 0 (15.24 -5.08);
+Pin 'COL' Pas None Middle R180 Both 0 (15.24 0);
+Pin 'BASE' Pas None Middle R180 Both 0 (15.24 5.08);
+Layer 95;
+Change Size 1.27;
+Change Ratio 8;
+Text '>NAME' R0 (-3.302 8.382);
+Layer 96;
+Change Size 1.27;
+Change Ratio 8;
+Text '>VALUE' R0 (-3.556 -9.652);
+
+Edit 'MAX748A/763A.sym';
+Pin 'SHDN_L' In None Middle R0 Both 0 (-15.24 2.54);
+Pin 'REF' Out None Middle R0 Both 0 (-15.24 0);
+Pin 'SS' Pwr None Middle R0 Both 0 (-15.24 -2.54);
+Pin 'CC' In None Middle R0 Both 0 (-15.24 -5.08);
+Pin 'OUT' Pwr None Middle R180 Both 0 (15.24 -5.08);
+Pin 'GND' Pwr None Middle R180 Both 0 (15.24 -2.54);
+Pin 'LX' I/O None Middle R180 Both 0 (15.24 0);
+Pin 'V+' Pwr None Middle R180 Both 0 (15.24 2.54);
+Layer 94;
+Wire  0.254 (-10.16 5.08) (-10.16 -7.62) (10.16 -7.62) (10.16 5.08) \
+      (-10.16 5.08);
+Layer 95;
+Change Size 1.27;
+Change Ratio 8;
+Text '>NAME' R0 (-10.16 6.35);
+Layer 96;
+Change Size 1.27;
+Change Ratio 8;
+Text '>VALUE' R0 (-10.16 -10.16);
+
+Edit 'MAX3420EECJ.sym';
+Pin 'GPOUT0' Out None Middle R0 Both 0 (-25.4 7.62);
+Pin 'GPOUT1' Out None Middle R0 Both 0 (-25.4 5.08);
+Pin 'VL@1' In None Middle R0 Both 0 (-25.4 2.54);
+Pin 'VL@2' In None Middle R0 Both 0 (-25.4 0);
+Pin 'GND@1' Pwr None Middle R0 Both 0 (-25.4 -2.54);
+Pin 'GND@2' Pwr None Middle R0 Both 0 (-25.4 -5.08);
+Pin 'GPOUT2' Out None Middle R0 Both 0 (-25.4 -7.62);
+Pin 'GPOUT3' Out None Middle R0 Both 0 (-25.4 -10.16);
+Pin 'NC@1' NC None Middle R90 Both 0 (-10.16 -25.4);
+Pin 'RESET_L' In None Middle R90 Both 0 (-7.62 -25.4);
+Pin 'SS' In None Middle R90 Both 0 (-2.54 -25.4);
+Pin 'MISO' Out None Middle R90 Both 0 (0 -25.4);
+Pin 'MOSI' I/O None Middle R90 Both 0 (2.54 -25.4);
+Pin 'GPX' Out None Middle R90 Both 0 (5.08 -25.4);
+Pin 'NC@2' NC None Middle R90 Both 0 (7.62 -25.4);
+Pin 'INT' Out None Middle R180 Both 0 (22.86 -10.16);
+Pin 'GND@3' Pwr None Middle R180 Both 0 (22.86 -7.62);
+Pin 'GND@4' Pwr None Middle R180 Both 0 (22.86 -5.08);
+Pin 'D-' I/O None Middle R180 Both 0 (22.86 -2.54);
+Pin 'D+' I/O None Middle R180 Both 0 (22.86 0);
+Pin 'VCC@1' Pwr None Middle R180 Both 0 (22.86 2.54);
+Pin 'VCC@2' Pwr None Middle R180 Both 0 (22.86 5.08);
+Pin 'VBCOMP' In None Middle R180 Both 0 (22.86 7.62);
+Pin 'NC@3' NC None Middle R270 Both 0 (7.62 22.86);
+Pin 'XI' In None Middle R270 Both 0 (5.08 22.86);
+Pin 'XO' Out None Middle R270 Both 0 (2.54 22.86);
+Pin 'NC@4' NC None Middle R270 Both 0 (0 22.86);
+Pin 'GPIN0' In None Middle R270 Both 0 (-2.54 22.86);
+Pin 'GPIN1' In None Middle R270 Both 0 (-5.08 22.86);
+Pin 'GPIN2' In None Middle R270 Both 0 (-7.62 22.86);
+Pin 'GPIN3' In None Middle R270 Both 0 (-10.16 22.86);
+Pin 'SCLK' In None Middle R90 Both 0 (-5.08 -25.4);
+Layer 94;
+Wire  0.254 (-20.32 17.78) (-20.32 -20.32) (17.78 -20.32) (17.78 17.78) \
+      (-20.32 17.78);
+Layer 94;
+Change Size 1.778;
+Change Ratio 8;
+Text '>NAME' R0 (-20.32 19.05);
+Layer 94;
+Change Size 1.778;
+Change Ratio 8;
+Text '>VALUE' R0 (10.16 -22.86);
+
+Edit 'RM-3.312S/P.sym';
+Layer 94;
+Wire  0.254 (-5.08 7.62) (-5.08 -5.08) (5.08 -5.08) (5.08 7.62) \
+      (-5.08 7.62);
+Pin 'VIN-' I/O None Middle R0 Both 0 (-10.16 5.08);
+Pin 'VIN+' I/O None Middle R0 Both 0 (-10.16 2.54);
+Pin 'VOUT-' I/O None Middle R0 Both 0 (-10.16 0);
+Pin 'VOUT+' I/O None Middle R0 Both 0 (-10.16 -2.54);
+
+Edit 'G6K-2F-Y-DC3.sym';
+Layer 94;
+Wire  0.254 (-10.16 7.62) (-10.16 -7.62) (10.16 -7.62) (10.16 7.62) \
+      (-10.16 7.62);
+Pin 'T+' I/O None Middle R0 Both 0 (-15.24 5.08);
+Pin 'LA1' I/O None Middle R0 Both 0 (-15.24 0);
+Pin 'COMA' I/O None Middle R0 Both 0 (-15.24 -2.54);
+Pin 'LA2' I/O None Middle R0 Both 0 (-15.24 -5.08);
+Pin 'T-' I/O None Middle R180 Both 0 (15.24 5.08);
+Pin 'LB1' I/O None Middle R180 Both 0 (15.24 0);
+Pin 'COMB' I/O None Middle R180 Both 0 (15.24 -2.54);
+Pin 'LB2' I/O None Middle R180 Both 0 (15.24 -5.08);
+Layer 95;
+Change Size 1.27;
+Change Ratio 8;
+Text '>NAME' R0 (-10.16 8.382);
+Layer 96;
+Change Size 1.27;
+Change Ratio 8;
+Text '>VALUE' R0 (-10.16 -9.652);
+
+Edit 'MAX6349.sym';
+Pin 'MR_L' In None Middle R0 Both 0 (-17.78 -2.54);
+Pin 'SET' In None Middle R180 Both 0 (17.78 0);
+Pin 'IN' Pwr None Middle R0 Both 0 (-17.78 2.54);
+Pin 'OUT' Pwr None Middle R180 Both 0 (17.78 2.54);
+Pin 'RESET_L' In None Middle R180 Both 0 (17.78 -2.54);
+Pin 'GND' Pwr None Middle R0 Both 0 (-17.78 0);
+Layer 94;
+Wire  0.254 (-12.7 7.62) (-12.7 -7.62) (12.7 -7.62) (12.7 7.62) \
+      (-12.7 7.62);
+Layer 95;
+Change Size 1.27;
+Change Ratio 8;
+Text '>NAME' R0 (-11.43 8.89);
+Layer 96;
+Change Size 1.27;
+Change Ratio 8;
+Text '>VALUE' R0 (-11.43 -10.16);
+
+Edit 'MAX3221.sym';
+Pin '!EN' In None Middle R180 Both 0 (17.78 -5.08);
+Pin 'C1+' Pas None Middle R0 Both 0 (-17.78 10.16);
+Pin 'V+' Pas None Middle R0 Both 0 (-17.78 -5.08);
+Pin 'C1-' Pas None Middle R0 Both 0 (-17.78 7.62);
+Pin 'C2+' Pas None Middle R0 Both 0 (-17.78 5.08);
+Pin 'C2-' Pas None Middle R0 Both 0 (-17.78 2.54);
+Pin 'V-' Pas None Middle R0 Both 0 (-17.78 -7.62);
+Pin 'R_IN' In None Middle R180 Both 0 (17.78 0);
+Pin 'R_OUT' Out None Middle R0 Both 0 (-17.78 0);
+Pin '!INVALID' Out None Middle R180 Both 0 (17.78 2.54);
+Pin 'T_IN' In None Middle R0 Both 0 (-17.78 -2.54);
+Pin 'FORCEON' In None Middle R180 Both 0 (17.78 5.08);
+Pin 'T_OUT' Out None Middle R180 Both 0 (17.78 -2.54);
+Pin 'GND' Pwr None Middle R180 Both 0 (17.78 -7.62);
+Pin 'VCC' Pwr None Middle R180 Both 0 (17.78 10.16);
+Pin '!FORCEOFF' In None Middle R180 Both 0 (17.78 7.62);
+Layer 94;
+Wire  0.254 (-12.7 15.24) (-12.7 -12.7) (12.7 -12.7) (12.7 15.24) \
+      (-12.7 15.24);
+Layer 95;
+Change Size 1.778;
+Change Ratio 8;
+Text '>NAME' R0 (-12.7 16.51);
+Layer 96;
+Change Size 1.778;
+Change Ratio 8;
+Text '>VALUE' R0 (-12.7 -15.24);
+
+Edit '0015244449.sym';
+Pin '12V' Pwr None Short R0 Both 0 (-7.62 -2.54);
+Pin 'GND@1' Pwr None Short R0 Both 0 (-7.62 0);
+Pin 'GND@2' Pwr None Short R0 Both 0 (-7.62 2.54);
+Pin '5V' Pwr None Short R0 Both 0 (-7.62 5.08);
+Layer 94;
+Wire  0.254 (-5.08 7.62) (-5.08 -5.08) (5.08 -5.08) (5.08 7.62) \
+      (-5.08 7.62);
+
+Edit '2X5-NS.pac';
+Description '';
+Change Drill 1.016;Pad '1' Square 1.8796 R270 (-1.27 5.08);
+Change Drill 1.016;Pad '2' Octagon 1.8796 R270 (1.27 5.08);
+Change Drill 1.016;Pad '3' Octagon 1.8796 R270 (-1.27 2.54);
+Change Drill 1.016;Pad '4' Octagon 1.8796 R270 (1.27 2.54);
+Change Drill 1.016;Pad '5' Octagon 1.8796 R270 (-1.27 0);
+Change Drill 1.016;Pad '6' Octagon 1.8796 R270 (1.27 0);
+Layer 51;
+Rect R270 (-1.524 4.826) (-1.016 5.334);
+Layer 51;
+Rect R270 (1.016 4.826) (1.524 5.334);
+Layer 51;
+Rect R270 (1.016 2.286) (1.524 2.794);
+Layer 51;
+Rect R270 (-1.524 2.286) (-1.016 2.794);
+Layer 51;
+Rect R270 (1.016 -0.254) (1.524 0.254);
+Layer 51;
+Rect R270 (-1.524 -0.254) (-1.016 0.254);
+Layer 51;
+Rect R270 (1.016 -2.794) (1.524 -2.286);
+Layer 51;
+Rect R270 (-1.524 -2.794) (-1.016 -2.286);
+Layer 25;
+Change Size 1.27;
+Change Ratio 10;
+Text '>NAME' R270 (3.175 6.35);
+Change Drill 1.016;Pad '7' Octagon 1.8796 R270 (-1.27 -2.54);
+Change Drill 1.016;Pad '8' Octagon 1.8796 R270 (1.27 -2.54);
+Change Drill 1.016;Pad '9' Octagon 1.8796 R270 (-1.27 -5.08);
+Change Drill 1.016;Pad '10' Octagon 1.8796 R270 (1.27 -5.08);
+Layer 51;
+Rect R270 (1.016 -5.334) (1.524 -4.826);
+Layer 51;
+Rect R270 (-1.524 -5.334) (-1.016 -4.826);
+Layer 27;
+Change Size 1.27;
+Change Ratio 8;
+Change Font Vector;
+Text '>VALUE' R270 (-4.445 6.35);
+Layer 21;
+Wire  0.2032 (-3.175 5.715) (-3.175 4.445);
+
+Edit 'LED_RGB.pac';
+Description '';
+Change Drill 1;Pad 'GND' Round 0 R90 (1 0);
+Change Drill 1;Pad 'GRN' Round 0 R90 (-1 0);
+Change Drill 1;Pad 'BLU' Round 0 R90 (3 0);
+Change Drill 1;Pad 'RED' Round 0 R270 (-3 0);
+Layer 21;
+Wire  0.127 (-3.3 2) (-3.3 -2) +292.62 (-3.3 2);
+Layer 25;
+Change Size 1.27;
+Change Ratio 8;
+Text '>Name' R0 (-2.54 3.81);
+Layer 27;
+Change Size 1.27;
+Change Ratio 8;
+Text '>Value' R0 (-2.54 -5.08);
+
+Edit 'CSM-3X.pac';
+Description '';
+Layer 1;
+Smd '1' 3.5 1.2 -0 R0 (-2.75 0);
+Layer 1;
+Smd '2' 3.5 1.2 -0 R0 (2.75 0);
+Layer 21;
+Wire  0.2032 (-3.5 2.05) (3.5 2.05);
+Layer 51;
+Wire  0.127 (3.5 2.05) (3.5 -2.05);
+Layer 21;
+Wire  0.2032 (3.5 -2.05) (-3.5 -2.05);
+Layer 51;
+Wire  0.127 (-3.5 -2.05) (-3.5 2.05);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-3.5 2.35);
+Layer 39;
+Rect R0 (-3.5 -2.05) (3.5 2.05);
+Layer 51;
+Wire  0.127 (-3.5 2.05) (3.5 2.05);
+Wire  0.127 (3.5 -2.05) (-3.5 -2.05);
+
+Edit 'DO41-7.6.pac';
+Description '';
+Change Drill 1.016;Pad 'C' Round 0 R0 (-3.81 0);
+Change Drill 1.016;Pad 'A' Round 0 R0 (3.81 0);
+Layer 21;
+Wire  0.2032 (2.6035 -1.3589) (-2.6035 -1.3589);
+Layer 51;
+Wire  0.1524 (2.6035 -1.3589) (2.6035 1.3589);
+Layer 21;
+Wire  0.2032 (-2.6035 1.3589) (2.6035 1.3589);
+Layer 51;
+Wire  0.1524 (-2.6035 1.3589) (-2.6035 -1.3589);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-2.54 1.778);
+Layer 27;
+Change Size 1.27;
+Change Ratio 16;
+Text '>VALUE' R0 (-2.54 -2.983);
+Layer 51;
+Wire  0.8636 (-3.81 0) (-2.994 0);
+Layer 51;
+Rect R0 (-3.1335 -0.4318) (-2.612 0.4318);
+Layer 21;
+Rect R0 (-1.524 -1.3589) (-1.016 1.3589);
+Layer 51;
+Wire  0.8636 (3.81 0) (2.994 0);
+Layer 51;
+Rect R180 (2.612 -0.4318) (3.1334 0.4318);
+
+Edit 'ATZB-24-A2.pac';
+Description '';
+Layer 1;
+Smd '30' 0.8 1.2 -0 R0 (-4.5 -6.65);
+Layer 1;
+Smd '29' 0.8 1.2 -0 R0 (-5.5 -6.65);
+Layer 1;
+Smd '28' 0.8 1.2 -0 R0 (-6.5 -6.65);
+Layer 1;
+Smd '27' 0.8 1.2 -0 R0 (-7.5 -6.65);
+Layer 1;
+Smd '26' 0.8 1.2 -0 R0 (-8.5 -6.65);
+Layer 1;
+Smd '31' 0.8 1.2 -0 R0 (-3.5 -6.65);
+Layer 1;
+Smd '32' 0.8 1.2 -0 R0 (-2.5 -6.65);
+Layer 1;
+Smd '33' 0.8 1.2 -0 R0 (-1.5 -6.65);
+Layer 1;
+Smd '34' 0.8 1.2 -0 R0 (-0.5 -6.65);
+Layer 1;
+Smd '35' 0.8 1.2 -0 R0 (0.5 -6.65);
+Layer 1;
+Smd '36' 0.8 1.2 -0 R0 (1.5 -6.65);
+Layer 1;
+Smd '37' 0.8 1.2 -0 R0 (2.5 -6.65);
+Layer 1;
+Smd '38' 0.8 1.2 -0 R0 (3.5 -6.65);
+Layer 1;
+Smd '39' 0.8 1.2 -0 R0 (4.5 -6.65);
+Layer 1;
+Smd '40' 0.8 1.2 -0 R0 (5.5 -6.65);
+Layer 1;
+Smd '41' 0.8 1.2 -0 R0 (6.5 -6.65);
+Layer 1;
+Smd '42' 0.8 1.2 -0 R0 (7.5 -6.65);
+Layer 1;
+Smd '43' 0.8 1.2 -0 R0 (8.5 -6.65);
+Layer 1;
+Smd '19' 1.2 0.8 -0 R0 (-9.3 3);
+Layer 1;
+Smd '20' 1.2 0.8 -0 R0 (-9.3 2);
+Layer 1;
+Smd '21' 1.2 0.8 -0 R0 (-9.3 1);
+Layer 1;
+Smd '22' 1.2 0.8 -0 R0 (-9.3 0);
+Layer 1;
+Smd '23' 1.2 0.8 -0 R0 (-9.3 -1);
+Layer 1;
+Smd '24' 1.2 0.8 -0 R0 (-9.3 -2);
+Layer 1;
+Smd '25' 1.2 0.8 -0 R0 (-9.3 -3);
+Layer 1;
+Smd '14' 0.8 1.2 -0 R0 (-4.5 6.65);
+Layer 1;
+Smd '15' 0.8 1.2 -0 R0 (-5.5 6.65);
+Layer 1;
+Smd '16' 0.8 1.2 -0 R0 (-6.5 6.65);
+Layer 1;
+Smd '17' 0.8 1.2 -0 R0 (-7.5 6.65);
+Layer 1;
+Smd '18' 0.8 1.2 -0 R0 (-8.5 6.65);
+Layer 1;
+Smd '13' 0.8 1.2 -0 R0 (-3.5 6.65);
+Layer 1;
+Smd '12' 0.8 1.2 -0 R0 (-2.5 6.65);
+Layer 1;
+Smd '11' 0.8 1.2 -0 R0 (-1.5 6.65);
+Layer 1;
+Smd '10' 0.8 1.2 -0 R0 (-0.5 6.65);
+Layer 1;
+Smd '9' 0.8 1.2 -0 R0 (0.5 6.65);
+Layer 1;
+Smd '8' 0.8 1.2 -0 R0 (1.5 6.65);
+Layer 1;
+Smd '7' 0.8 1.2 -0 R0 (2.5 6.65);
+Layer 1;
+Smd '6' 0.8 1.2 -0 R0 (3.5 6.65);
+Layer 1;
+Smd '5' 0.8 1.2 -0 R0 (4.5 6.65);
+Layer 1;
+Smd '4' 0.8 1.2 -0 R0 (5.5 6.65);
+Layer 1;
+Smd '3' 0.8 1.2 -0 R0 (6.5 6.65);
+Layer 1;
+Smd '2' 0.8 1.2 -0 R0 (7.5 6.65);
+Layer 1;
+Smd '1' 0.8 1.2 -0 R0 (8.5 6.65);
+Layer 51;
+Wire  0.127 (-9.4 6.75) (-9.4 -6.75) (14.6 -6.75) (14.6 6.75) \
+      (-9.4 6.75);
+Layer 21;
+Wire  0.2032 (-9.4 6.75) (-9.4 3.85);
+Wire  0.2032 (-9.4 -6.75) (-9.4 -3.85);
+Wire  0.2032 (9.4 6.75) (14.6 6.75) (14.6 -6.75) (9.4 -6.75);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-9 7.8);
+Layer 51;
+Change Size 1.27;
+Change Ratio 8;
+Text '1' R0 (8.128 4.318);
+Layer 51;
+Change Size 1.27;
+Change Ratio 8;
+Text '18' R0 (-8.89 4.318);
+Layer 51;
+Change Size 1.27;
+Change Ratio 8;
+Text '26' R0 (-8.89 -5.588);
+Layer 51;
+Change Size 1.27;
+Change Ratio 8;
+Text '43' R0 (8.128 -5.588);
+Layer 41;
+Rect R0 (-9.4 -6.75) (14.6 6.75);
+Layer 43;
+Rect R0 (-9.4 -6.75) (14.6 6.75);
+Layer 39;
+Rect R0 (-9.4 -6.75) (14.6 6.75);
+Layer 21;
+Circle 0.2032 (8.5 8.1) (8.881 8.1);
+
+Edit 'OKI-78SR-3.3/1.5-W36H-C.pac';
+Description '';
+Layer 51;
+Wire  0.127 (-5.207 16.51) (5.207 16.51) (5.207 0);
+Wire  0.127 (-5.207 0) (-5.207 16.51);
+Change Drill 0.635;Pad '3' Round 0 R0 (-2.54 1.27);
+Change Drill 0.635;Pad '2' Round 0 R0 (0 1.27);
+Change Drill 0.635;Pad '1' Round 0 R0 (2.54 1.27);
+Layer 21;
+Wire  0.2032 (-5.207 7.62) (-5.207 16.51) (5.207 16.51) (5.207 7.62);
+Layer 51;
+Wire  0.127 (-5.207 0) (5.207 0);
+Layer 39;
+Rect R0 (-5.207 0) (5.207 16.51);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-5 16.8);
+Layer 21;
+Circle 0.2032 (4.064 1.27) (4.445 1.27);
+
+Edit 'CX240D5R.pac';
+Description '';
+Change Drill 1.0922;Pad '4' Round 0 R0 (0 13.97);
+Change Drill 1.0922;Pad '1' Round 2.1844 R0 (0 -13.97);
+Change Drill 1.0922;Pad '3' Round 0 R0 (0 8.89);
+Change Drill 1.0922;Pad '2' Round 2.1844 R0 (0 -3.81);
+Layer 51;
+Wire  0.127 (5.08 21.59) (5.08 -21.59) (-2.54 -21.59) (-2.54 21.59) \
+      (5.08 21.59);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (1.13 13.321);
+Layer 21;
+Wire  0.127 (0 -11.43) (0 -6.35);
+Wire  0.127 (0 -1.27) (0 6.35);
+
+Edit 'H11A1SM.pac';
+Description '';
+Layer 1;
+Smd '6' 1.78 1.52 -0 R0 (-2.54 4.5075);
+Layer 1;
+Smd '5' 1.78 1.52 -0 R0 (0 4.5075);
+Layer 1;
+Smd '4' 1.78 1.52 -0 R0 (2.54 4.5075);
+Layer 1;
+Smd '1' 1.78 1.52 -0 R0 (-2.54 -4.5075);
+Layer 1;
+Smd '2' 1.78 1.52 -0 R0 (0 -4.5075);
+Layer 1;
+Smd '3' 1.78 1.52 -0 R0 (2.54 -4.5075);
+Layer 21;
+Wire  0.2032 (4.445 3.3) (4.445 -3.3);
+Wire  0.2032 (-4.445 -3.3) (-4.445 3.3);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-3 5.6);
+Layer 51;
+Wire  0.127 (-4.445 3.3) (4.445 3.3);
+Wire  0.127 (-4.445 -3.3) (4.445 -3.3);
+Layer 21;
+Circle 0.2032 (-4.2 -4.5) (-3.819 -4.5);
+Layer 39;
+Rect R0 (-4.445 -3.3) (4.445 3.3);
+Layer 51;
+Wire  0.127 (-4.445 -3.3) (-4.445 3.3);
+Wire  0.127 (4.445 3.3) (4.445 -3.3);
+
+Edit '39532-1004.pac';
+Description '4-Pin connector for Lutron Shade unit';
+Change Drill 1.397;Pad '1' Round 0 R0 (0 7.62);
+Change Drill 1.397;Pad '2' Round 0 R0 (0 2.54);
+Change Drill 1.397;Pad '3' Round 0 R0 (0 -2.54);
+Change Drill 1.397;Pad '4' Round 0 R0 (0 -7.62);
+Layer 21;
+Wire  0.2032 (2 11.16) (-10 11.16) (-10 -11.16) (2 -11.16) \
+      (2 11.16);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-10 11.6);
+Layer 21;
+Circle 0.2032 (-1.9 7.62) (-1.519 7.62);
+Layer 39;
+Rect R0 (-10 -11.16) (2 11.16);
+
+Edit 'RM-3.312S/P.pac';
+Description '';
+Change Drill 1.15;Pad '1' Round 0 R0 (-3.81 0);
+Change Drill 1.15;Pad '2' Round 0 R0 (-1.27 0);
+Change Drill 1.15;Pad '3' Round 0 R0 (1.27 0);
+Change Drill 1.15;Pad '4' Round 0 R0 (3.81 0);
+Layer 51;
+Wire  0.127 (5.75 -1.25) (5.75 4.75) (-5.75 4.75) (-5.75 -1.25) \
+      (5.75 -1.25);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-3 5);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>VALUE' R0 (-4 -2.8);
+Layer 21;
+Circle 0.2032 (-3.81 1.905) (-3.429 1.905);
+
+Edit 'G6K-2F-Y-DC3.pac';
+Description '';
+Layer 1;
+Smd '8' 1.8 0.8 -0 R90 (-3.8 3.5);
+Layer 1;
+Smd '7' 1.8 0.8 -0 R90 (-0.6 3.5);
+Layer 1;
+Smd '6' 1.8 0.8 -0 R90 (1.6 3.5);
+Layer 1;
+Smd '5' 1.8 0.8 -0 R90 (3.8 3.5);
+Layer 1;
+Smd '2' 1.8 0.8 -0 R90 (-0.6 -3.5);
+Layer 1;
+Smd '3' 1.8 0.8 -0 R90 (1.6 -3.5);
+Layer 1;
+Smd '4' 1.8 0.8 -0 R90 (3.8 -3.5);
+Layer 1;
+Smd '1' 1.8 0.8 -0 R90 (-3.8 -3.5);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-3 4.8);
+Layer 21;
+Circle 0.2032 (-3.8 -5.2) (-3.419 -5.2);
+Layer 39;
+Rect R0 (-5 -3.35) (5 3.35);
+Layer 21;
+Wire  0.2032 (-5 3) (-5 -3);
+Wire  0.2032 (5 3) (5 -3);
+
+Edit 'D2PAK.pac';
+Description '';
+Layer 1;
+Smd '3' 12.2 9.75 -0 R0 (0 4.875);
+Layer 1;
+Smd '2' 1.6 3.5 -0 R0 (-2.54 -6.7);
+Layer 1;
+Smd '1' 1.6 3.5 -0 R0 (2.54 -6.7);
+Layer 39;
+Rect R0 (-5.2 -7.925) (5.2 7.925);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-5 10.1);
+Layer 21;
+Wire  0.2032 (-5.2 -1) (-5.2 -7);
+Wire  0.2032 (5.2 -1) (5.2 -7);
+
+Edit '8SO.pac';
+Description '';
+Layer 1;
+Smd '4' 1.4732 0.5588 -0 R0 (-3.6576 -1.905);
+Layer 1;
+Smd '3' 1.4732 0.5588 -0 R0 (-3.6576 -0.635);
+Layer 1;
+Smd '1' 1.4732 0.5588 -0 R0 (-3.6576 1.905);
+Layer 1;
+Smd '2' 1.4732 0.5588 -0 R0 (-3.6576 0.635);
+Layer 1;
+Smd '5' 1.4732 0.5588 -0 R0 (3.6576 -1.905);
+Layer 1;
+Smd '6' 1.4732 0.5588 -0 R0 (3.6576 -0.635);
+Layer 1;
+Smd '8' 1.4732 0.5588 -0 R0 (3.6576 1.905);
+Layer 1;
+Smd '7' 1.4732 0.5588 -0 R0 (3.6576 0.635);
+Layer 39;
+Rect R0 (-2.7051 -2.7305) (2.7051 2.7305);
+Layer 21;
+Wire  0.2032 (-2.54 2.7305) (2.54 2.7305);
+Wire  0.2032 (2.54 -2.7305) (-2.54 -2.7305);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-2.54 3.21);
+Layer 21;
+Circle 0.2032 (-5.1 1.905) (-4.719 1.905);
+
+Edit '32LQFP.pac';
+Description '';
+Layer 1;
+Smd '8' 0.5 1.45 -0 R90 (-4.1 -2.8);
+Layer 1;
+Smd '9' 0.5 1.45 -0 R0 (-2.8 -4.1);
+Layer 1;
+Smd '10' 0.5 1.45 -0 R0 (-2 -4.1);
+Layer 1;
+Smd '11' 0.5 1.45 -0 R0 (-1.2 -4.1);
+Layer 1;
+Smd '5' 0.5 1.45 -0 R90 (-4.1 -0.4);
+Layer 1;
+Smd '6' 0.5 1.45 -0 R90 (-4.1 -1.2);
+Layer 1;
+Smd '4' 0.5 1.45 -0 R90 (-4.1 0.4);
+Layer 1;
+Smd '7' 0.5 1.45 -0 R90 (-4.1 -2);
+Layer 1;
+Smd '3' 0.5 1.45 -0 R90 (-4.1 1.2);
+Layer 1;
+Smd '2' 0.5 1.45 -0 R90 (-4.1 2);
+Layer 1;
+Smd '1' 0.5 1.45 -0 R90 (-4.1 2.8);
+Layer 1;
+Smd '12' 0.5 1.45 -0 R0 (-0.4 -4.1);
+Layer 1;
+Smd '13' 0.5 1.45 -0 R0 (0.4 -4.1);
+Layer 1;
+Smd '14' 0.5 1.45 -0 R0 (1.2 -4.1);
+Layer 1;
+Smd '15' 0.5 1.45 -0 R0 (2 -4.1);
+Layer 1;
+Smd '16' 0.5 1.45 -0 R0 (2.8 -4.1);
+Layer 1;
+Smd '32' 0.5 1.45 -0 R0 (-2.8 4.1);
+Layer 1;
+Smd '29' 0.5 1.45 -0 R0 (-0.4 4.1);
+Layer 1;
+Smd '30' 0.5 1.45 -0 R0 (-1.2 4.1);
+Layer 1;
+Smd '28' 0.5 1.45 -0 R0 (0.4 4.1);
+Layer 1;
+Smd '31' 0.5 1.45 -0 R0 (-2 4.1);
+Layer 1;
+Smd '27' 0.5 1.45 -0 R0 (1.2 4.1);
+Layer 1;
+Smd '26' 0.5 1.45 -0 R0 (2 4.1);
+Layer 1;
+Smd '25' 0.5 1.45 -0 R0 (2.8 4.1);
+Layer 1;
+Smd '17' 0.5 1.45 -0 R90 (4.1 -2.8);
+Layer 1;
+Smd '20' 0.5 1.45 -0 R90 (4.1 -0.4);
+Layer 1;
+Smd '19' 0.5 1.45 -0 R90 (4.1 -1.2);
+Layer 1;
+Smd '21' 0.5 1.45 -0 R90 (4.1 0.4);
+Layer 1;
+Smd '18' 0.5 1.45 -0 R90 (4.1 -2);
+Layer 1;
+Smd '22' 0.5 1.45 -0 R90 (4.1 1.2);
+Layer 1;
+Smd '23' 0.5 1.45 -0 R90 (4.1 2);
+Layer 1;
+Smd '24' 0.5 1.45 -0 R90 (4.1 2.8);
+Layer 39;
+Rect R0 (-3.55 -3.55) (3.55 3.55);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-3.1 5.2);
+Layer 21;
+Circle 0.2032 (-5.6 2.8) (-5.219 2.8);
+
+Edit '6SOT.pac';
+Description '';
+Layer 1;
+Smd '2' 1.33 0.56 -0 R0 (-1.2 0);
+Layer 1;
+Smd '1' 1.33 0.56 -0 R0 (-1.2 0.95);
+Layer 1;
+Smd '3' 1.33 0.56 -0 R0 (-1.2 -0.95);
+Layer 1;
+Smd '5' 1.33 0.56 -0 R0 (1.2 0);
+Layer 1;
+Smd '6' 1.33 0.56 -0 R0 (1.2 0.95);
+Layer 1;
+Smd '4' 1.33 0.56 -0 R0 (1.2 -0.95);
+Layer 39;
+Rect R0 (-0.875 -1.5) (0.875 1.5);
+Layer 21;
+Wire  0.2032 (-0.8 1.5) (0.8 1.5);
+Wire  0.2032 (-0.8 -1.5) (0.8 -1.5);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-1.6 1.8);
+Layer 21;
+Circle 0.2032 (-2.6 0.95) (-2.219 0.95);
+
+Edit 'T1_3/4_5MM.pac';
+Description '';
+Change Drill 0.7;Pad 'GREEN' Round 1.208 R0 (-0.762 0);
+Change Drill 0.7;Pad 'BLUE' Round 1.208 R0 (2.286 0);
+Change Drill 0.7;Pad 'RED' Round 1.208 R0 (-2.286 0);
+Change Drill 0.7;Pad 'GND' Round 1.208 R0 (0.762 0);
+Layer 21;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-2.286 0.8128);
+Layer 21;
+Change Size 1.27;
+Change Ratio 16;
+Text '>VALUE' R0 (-2.286 -2.0828);
+
+Edit '16TSSOP.pac';
+Description '';
+Layer 1;
+Smd '13' 1.4 0.35 -0 R0 (2.875 0.325);
+Layer 1;
+Smd '12' 1.4 0.35 -0 R0 (2.875 -0.325);
+Layer 1;
+Smd '11' 1.4 0.35 -0 R0 (2.875 -0.975);
+Layer 1;
+Smd '10' 1.4 0.35 -0 R0 (2.875 -1.625);
+Layer 1;
+Smd '9' 1.4 0.35 -0 R0 (2.875 -2.275);
+Layer 1;
+Smd '14' 1.4 0.35 -0 R0 (2.875 0.975);
+Layer 1;
+Smd '15' 1.4 0.35 -0 R0 (2.875 1.625);
+Layer 1;
+Smd '16' 1.4 0.35 -0 R0 (2.875 2.275);
+Layer 1;
+Smd '1' 1.4 0.35 -0 R0 (-2.875 2.275);
+Layer 1;
+Smd '2' 1.4 0.35 -0 R0 (-2.875 1.625);
+Layer 1;
+Smd '3' 1.4 0.35 -0 R0 (-2.875 0.975);
+Layer 1;
+Smd '4' 1.4 0.35 -0 R0 (-2.875 0.325);
+Layer 1;
+Smd '5' 1.4 0.35 -0 R0 (-2.875 -0.325);
+Layer 1;
+Smd '6' 1.4 0.35 -0 R0 (-2.875 -0.975);
+Layer 1;
+Smd '7' 1.4 0.35 -0 R0 (-2.875 -1.625);
+Layer 1;
+Smd '8' 1.4 0.35 -0 R0 (-2.875 -2.275);
+Layer 39;
+Rect R0 (-2.69 -3.165) (2.69 3.165);
+Layer 21;
+Wire  0.2032 (-2.69 3.165) (2.69 3.165);
+Wire  0.2032 (-2.69 -3.165) (2.69 -3.165);
+Layer 25;
+Change Size 1.27;
+Change Ratio 16;
+Change Font Proportional;
+Text '>NAME' R0 (-2.7 3.5);
+Layer 21;
+Circle 0.2032 (-3.51 3.14) (-3.129 3.14);
+Layer 51;
+Wire  0.127 (-2.69 3.165) (2.69 3.165);
+Wire  0.127 (-2.69 -3.165) (2.69 -3.165);
+Wire  0.127 (-2.69 3.165) (-2.69 -3.165);
+Wire  0.127 (2.69 -3.165) (2.69 3.165);
+
+Edit '0015244449.pac';
+Description '';
+Change Drill 1.9304;Pad '1' Round 0 R0 (-7.62 0);
+Change Drill 1.9304;Pad '2' Round 0 R0 (-2.54 0);
+Change Drill 1.9304;Pad '3' Round 0 R0 (2.54 0);
+Change Drill 1.9304;Pad '4' Round 0 R0 (7.62 0);
+Layer 21;
+Wire  0.2032 (-11.6332 3.2512) (11.6332 3.2512);
+Wire  0.2032 (-11.6332 3.2512) (-11.6332 -1.6256) (-10.0076 -3.2512) (10.0076 -3.2512) \
+      (11.6332 -1.6256);
+Wire  0.2032 (11.6332 3.2512) (11.6332 -1.6256);
+Layer 21;
+Change Size 1.27;
+Change Ratio 16;
+Text '>NAME' R0 (-10.16 3.81);
+Layer 39;
+Change Spacing 1.27;
+Change Pour Solid;
+Change Rank 0;
+Polygon 0.127  (-11.6332 3.2512) (-11.6332 -1.6256) (-10.0076 -3.2512) (10.0076 -3.2512) \
+      (11.6332 -1.6256) (11.6332 3.2512) (-11.6332 3.2512);
+Layer 21;
+Circle 0.2032 (-11.43 -3.2512) (-11.049 -3.2512);
+
+Edit 'ECS-120-20-3X-EN-TR.dev';
+Prefix '';
+Description 'The CSM-3X is the miniature low profile resistance weld type SMD quartz crystal.';
+Value Off;
+Add CRYSTAL 'G$1' Next 0 (0 0);
+Package 'CSM-3X' '''''';
+Technology '';
+Connect  'G$1.A' '1'  'G$1.B' '2';
+
+Edit 'ATZB-24-A2.dev';
+Prefix '';
+Description '';
+Value Off;
+Add ATZB-24-A2 'G$1' Next 0 (0 0);
+Package 'ATZB-24-A2' '''''';
+Technology '';
+Connect  'G$1.ADC_INPUT_3' '30'  'G$1.JTAG_TCK' '29'  'G$1.JTAG_TDO' '28'  'G$1.JTAG_TDI' '27'  'G$1.JTAG_TMS' '26' \
+         'G$1.ADC_INPUT_2' '31'  'G$1.ADC_INPUT_1' '32'  'G$1.BAT' '33'  'G$1.A_VREF' '34'  'G$1.AGND' '35'  'G$1.GPIO_1WR' '36' \
+         'G$1.!UART_DTR' '37'  'G$1.USART0_RXD' '38'  'G$1.USART0_TXD' '39'  'G$1.USART0_EXTCLK' '40'  'G$1.GPIO8' '41'  'G$1.IRQ_7' '42' \
+         'G$1.IRQ_6' '43'  'G$1.GPIO3' '19'  'G$1.GPIO4' '20'  'G$1.GPIO5' '21'  'G$1.DGND@2' '22'  'G$1.DGND@3' '23' \
+         'G$1.D_VCC1' '24'  'G$1.D_VCC2' '25'  'G$1.UART_RXD' '14'  'G$1.!UART_RTS' '15'  'G$1.!UART_CTS' '16'  'G$1.GPIO6' '17' \
+         'G$1.GPIO7' '18'  'G$1.UART_TXD' '13'  'G$1.I2C_DATA' '12'  'G$1.I2C_CLK' '11'  'G$1.CPU_CLK' '10'  'G$1.DGND@1' '9' \
+         'G$1.!RESET' '8'  'G$1.OSC32K_OUT' '7'  'G$1.GPIO2' '6'  'G$1.GPIO1' '5'  'G$1.GPIO0' '4'  'G$1.SPI_MOSI' '3' \
+         'G$1.SPI_MISO' '2'  'G$1.SPI_CLK' '1';
+
+Edit 'OKI-78SR-3.3/1.5-W36H-C.dev';
+Prefix '';
+Description '';
+Value Off;
+Add 78XX 'G$1' Next 0 (0 0);
+Package 'OKI-78SR-3.3/1.5-W36H-C' '''''';
+Technology '';
+Connect  'G$1.VOUT' '3'  'G$1.GND' '2'  'G$1.VIN' '1';
+
+Edit 'LD1086D2T33TR.dev';
+Prefix '';
+Description '';
+Value Off;
+Add 78XX 'G$1' Next 0 (0 0);
+Package 'D2PAK' '''''';
+Technology '';
+Connect  'G$1.VOUT' '3'  'G$1.GND' '2'  'G$1.VIN' '1';
+
+Edit 'MAX763ACSA.dev';
+Prefix '';
+Description '';
+Value Off;
+Add MAX748A/763A 'G$1' Next 0 (0 0);
+Package '8SO' '''''';
+Technology '';
+Connect  'G$1.CC' '4'  'G$1.SS' '3'  'G$1.SHDN_L' '1'  'G$1.REF' '2'  'G$1.OUT' '5' \
+         'G$1.GND' '6'  'G$1.V+' '8'  'G$1.LX' '7';
+
+Edit 'MAX3420EECJ.dev';
+Prefix '';
+Description '\
+The MAX3420E contains the digital logic and analog circuitry necessary to\n\
+implement a full-speed USB peripheral compliant to USB specification rev 2.0. A\n\
+built-in full-speed transceiver features ±15kV ESD protection and programmable\n\
+USB connect and disconnect.  An internal serial-interface engine (SIE) handles\n\
+low-level USB protocol details such as error checking and bus retries. The\n\
+MAX3420E operates using a register set accessed by an SPI? interface that\n\
+operates up to 26MHz. Any SPI master (microprocessor, ASIC, DSP, etc.) can add\n\
+USB functionality using the simple 3- or 4-wire SPI interface.\n\
+\n\
+Internal level translators allow the SPI interface to run at a system voltage\n\
+between 1.71V and 3.6V. USB timed operations are done inside the MAX3420E with\n\
+interrupts provided at completion so an SPI master does not need timers to meet\n\
+USB timing requirements. The MAX3420E includes four general-purpose inputs and\n\
+outputs so any microprocessor that uses I/O pins to implement the SPI interface\n\
+can reclaim the I/O pins and gain additional ones.\n\
+\n\
+The MAX3420E operates over the extended -40°C to +85°C temperature range and is\n\
+available in a 32-pin LQFP package (7mm x 7mm) and a space-saving 24- pin TQFN\n\
+package (4mm x 4mm).';
+Value Off;
+Add MAX3420EECJ 'G$1' Next 0 (0 0);
+Package '32LQFP' '''''';
+Technology '';
+Connect  'G$1.GPOUT3' '8'  'G$1.NC@1' '9'  'G$1.RESET_L' '10'  'G$1.SCLK' '11'  'G$1.GND@1' '5' \
+         'G$1.GND@2' '6'  'G$1.VL@2' '4'  'G$1.GPOUT2' '7'  'G$1.VL@1' '3'  'G$1.GPOUT1' '2'  'G$1.GPOUT0' '1' \
+         'G$1.SS' '12'  'G$1.MISO' '13'  'G$1.MOSI' '14'  'G$1.GPX' '15'  'G$1.NC@2' '16'  'G$1.GPIN3' '32' \
+         'G$1.GPIN0' '29'  'G$1.GPIN1' '30'  'G$1.NC@4' '28'  'G$1.GPIN2' '31'  'G$1.XO' '27'  'G$1.XI' '26' \
+         'G$1.NC@3' '25'  'G$1.INT' '17'  'G$1.D-' '20'  'G$1.GND@4' '19'  'G$1.D+' '21'  'G$1.GND@3' '18' \
+         'G$1.VCC@1' '22'  'G$1.VCC@2' '23'  'G$1.VBCOMP' '24';
+
+Edit 'MAX6349TLUT.dev';
+Prefix '';
+Description '\
+The MAX6329/MAX6349 are low-dropout, micropower linear voltage regulators with\n\
+integrated microprocessor reset circuits.  Each is available with preset +3.3V,\n\
++2.5V, +1.8V, or adjustable output voltages and can deliver up to 150mA load\n\
+current. Employing internal Pchannel MOSFET pass transistors, the devices\n\
+consume only 25uA supply current, independent of the device load. The low\n\
+supply current, low dropout voltage, and integrated reset functionality make\n\
+these devices ideal for battery powered portable equipment.\n\
+\n\
+The MAX6329/MAX6349 include an internal reset circuit that indicates when the\n\
+regulator output drops below standard microprocessor supply tolerances (-5% or\n\
+-10%). The reset output remains asserted for 100ms (min) after the regulator\n\
+output exceeds the selected reset threshold, ensuring that supply voltages and\n\
+clock oscillators have stabilized before processor activity is enabled. Reset\n\
+outputs are available in push-pull (activelow or -high) and open-drain\n\
+(active-low) options. The internal reset circuit replaces external\n\
+microprocessor supervisors or RC-based reset time delays.\n\
+\n\
+The MAX6329/MAX6349 are optimized for use with a 1uF (min) output capacitor.\n\
+The regulator output voltage is adjustable with an external resistor-divider\n\
+network at SET (reset threshold voltages track the desired output voltage).\n\
+Each device includes thermal shutdown protection, output short-circuit\n\
+protection, and reverse leakage protection. The MAX6329 includes a shutdown\n\
+feature to reduce regulator current below 1uA (max) and the MAX6349 offers a\n\
+manual reset input to assert a microprocessor reset while the regulator output\n\
+is within specification.';
+Value Off;
+Add MAX6349 'G$1' Next 0 (0 0);
+Package '6SOT' '''''';
+Technology '';
+Connect  'G$1.GND' '2'  'G$1.IN' '1'  'G$1.MR_L' '3'  'G$1.SET' '5'  'G$1.OUT' '6' \
+         'G$1.RESET_L' '4';
+
+Edit 'H11A1SM.dev';
+Prefix '';
+Description 'The general purpose optocouplers consist of a gallium arsenide infrared emitting diode driving a silicon phototransistor in a 6-pin dual in-line package.';
+Value Off;
+Add H11A1SM 'G$1' Next 0 (0 0);
+Package 'H11A1SM' '''''';
+Technology '';
+Connect  'G$1.BASE' '6'  'G$1.COL' '5'  'G$1.EM' '4'  'G$1.AN' '1'  'G$1.CA' '2' \
+         'G$1.NC' '3';
+
+Edit 'CX240D5R.dev';
+Prefix '';
+Description 'Solid State Relay';
+Value Off;
+Add CX240D5R 'G$1' Next 0 (0 0);
+Package 'CX240D5R' '''''';
+Technology '';
+Connect  'G$1.DC-' '4'  'G$1.AC2' '1'  'G$1.DC+' '3'  'G$1.AC1' '2';
+
+Edit 'PSU_POWER.dev';
+Prefix '';
+Description '';
+Value Off;
+Add PSU_POWER 'G$1' Next 0 (0 0);
+Technology '';
+
+Edit 'LUTRON_POWER.dev';
+Prefix '';
+Description '\
+4-pin connector for Lutron Shade unit\n\
+**NOTE: Check pin assignments ***';
+Value Off;
+Add LUTRON_POWER 'G$1' Next 0 (0 0);
+Package '39532-1004' '''''';
+Technology '';
+Connect  'G$1.COM' '1'  'G$1.24V' '2'  'G$1.CLOSE' '3'  'G$1.OPEN' '4';
+
+Edit 'RM-3.312S/P.dev';
+Prefix '';
+Description '';
+Value Off;
+Add RM-3.312S/P 'G$1' Next 0 (0 0);
+Package 'RM-3.312S/P' '''''';
+Technology '';
+Connect  'G$1.VIN-' '1'  'G$1.VIN+' '2'  'G$1.VOUT-' '3'  'G$1.VOUT+' '4';
+
+Edit 'G6K-2F-Y-DC3.dev';
+Prefix '';
+Description 'Low Signal Relay - PCB 3.2MM DPDT G 3VDC Non-latching';
+Value Off;
+Add G6K-2F-Y-DC3 'G$2' Next 0 (0 0);
+Package 'G6K-2F-Y-DC3' '''''';
+Technology '';
+Connect  'G$2.T-' '8'  'G$2.LB1' '7'  'G$2.COMB' '6'  'G$2.LB2' '5'  'G$2.LA1' '2' \
+         'G$2.COMA' '3'  'G$2.LA2' '4'  'G$2.T+' '1';
+
+Edit 'LED_RGB.dev';
+Prefix '';
+Description '';
+Value Off;
+Add LED_RGB 'G$1' Next 0 (0 0);
+Package 'LED_RGB' '''''';
+Technology '';
+Connect  'G$1.C' 'GND'  'G$1.AG' 'GRN'  'G$1.AB' 'BLU'  'G$1.AR' 'RED';
+
+Edit 'RS232_HEADER.dev';
+Prefix '';
+Description '';
+Value Off;
+Add F09G 'G$1' Next 0 (0 0);
+Package '2X5-NS' '''''';
+Technology '';
+Connect  'G$1.1' '1'  'G$1.2' '2'  'G$1.3' '3'  'G$1.4' '4'  'G$1.5' '5' \
+         'G$1.6' '6'  'G$1.7' '7'  'G$1.8' '8'  'G$1.9' '9';
+
+Edit 'MAX3221CUE+.dev';
+Prefix '';
+Description 'RS-232 Interface IC 1uA 3-5.5V Tcvr w/AutoShutdown';
+Value Off;
+Add MAX3221 'G$1' Next 0 (0 0);
+Package '16TSSOP' '''''';
+Technology '';
+Connect  'G$1.T_OUT' '13'  'G$1.FORCEON' '12'  'G$1.T_IN' '11'  'G$1.!INVALID' '10'  'G$1.R_OUT' '9' \
+         'G$1.GND' '14'  'G$1.VCC' '15'  'G$1.!FORCEOFF' '16'  'G$1.!EN' '1'  'G$1.C1+' '2'  'G$1.V+' '3' \
+         'G$1.C1-' '4'  'G$1.C2+' '5'  'G$1.C2-' '6'  'G$1.V-' '7'  'G$1.R_IN' '8';
+
+Edit '0015244449.dev';
+Prefix '';
+Description '';
+Value Off;
+Add 0015244449 'G$1' Next 0 (0 0);
+Package '0015244449' '''''';
+Technology '';
+Connect  'G$1.12V' '1'  'G$1.GND@1' '2'  'G$1.GND@2' '3'  'G$1.5V' '4';

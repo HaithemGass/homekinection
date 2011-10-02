@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<workspace>
+  <batchBuild/>
+  <project>
+    <path>$WS_DIR$\RCB230.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\RCB231.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\MeshBean_900.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\MeshBean_900_OTA.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\RCB212.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\MeshBean.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\MeshBean_Amp.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\MeshBean_OTA.ewp</path>
+  </project>
+</workspace>

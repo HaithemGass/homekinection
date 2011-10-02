@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>Ping-Pong Application</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+
+<div class="header">
+  <div class="headertitle">
+    <div class="title">Ping-Pong Application</div>
+  </div>
+</div>
+
+<div class="contents">
+
+<p>This application shows how to make the nodes to process multiple data 
+requests. It also demonstrates the binding feature of the ZigBee PRO specification
+for service discovery and data transmission.</p>
+
+<p>Up to 4 nodes can be used in the application. A data frame originated from
+one of the nodes travels across the network in chain-like manner with each node
+passing it to the next one. The final node in the chain passes the message to 
+the first node thus starting a new transmission round in the circle.</p>
+
+<p>To use the binding feature set <tt>APP_USE_BINDING</tt> to 1 in the <tt>configuration.h</tt> file .
+In such case all nodes will have stochastic short addresses (that is, set to random
+values except for the coordinator, which always has the 0x0000 address) unknown to each other 
+in advance. Each node supports a cluster with the identifier deduced from the <tt>APP_DEVICE_NWK_ADDRESS</tt>
+parameter.</p>
+
+<p>If <tt>APP_USE_BINDING</tt> is set 0, nodes will use predefined short addresses
+deduced from the <tt>APP_DEVICE_NWK_ADDRESS</tt> parameter, and a message will be transmitted to these known addresses.</p>
+
+<p>The node order in the chain is determined by the short addresses.</p>
+
+<p>A device joins the network automatically on startup. If <tt>APP_USE_BINDING</tt> is true then right after 
+the network join devices start looking for the neighbor peers in the chain and bind to 
+them when found.</p>
+
+<p>Sending data starts after a certain delay when all devices entered the network or bound to each other. 
+A data frame is passed over the network circularly: &rarr;0&rarr;1&rarr;2&rarr;3&rarr;0&rarr;1... and so forth.</p>
+
+<p>If <tt>APP_USE_BINDING</tt> is true data transmission can fail due to communication error, router's overload
+or some other reason. In such case data circulation stops because target node cannot forward it further.
+Data transmission can be reinitiated by pressing <tt>SW2</tt> on any node.
+If binding is not used data transmission is guaranteed by acknowledgement requests.</p>
+
+<h2>LED Indications</h2>
+<p>If LEDs are present on the board, then they are used by the application:</p>
+<ul>
+  <li>The green LED turned on indicates that the network has started successfully.</li>
+  <li>The red LED turned on indicates successful completion of binding procedure.</li>
+  <li>The yellow LED is blinking during the process of data transfer, 
+    and is OFF after the transmission is completed.</li>
+</ul>
+ 
+<h2>Important Configuration Parameters</h2>
+<table>
+	<tr><td class="indexkey"><tt>APP_USE_BINDING</tt></td><td class="indexvalue">Specifies whether or not the binding feature is used</td></tr>
+  <tr><td class="indexkey"><tt>APP_DEVICE_NWK_ADDRESS</tt></td><td class="indexvalue">Determines the node order in the chain; is used to set short addresses
+    if binding is not used and cluster identifiers is binding is used.</td></tr>
+  <tr><td class="indexkey"><tt>APP_FINAL_DEVICE</tt></td><td class="indexvalue">Specifies the final device in the chain</td></tr>
+	<tr><td class="indexkey"><tt>TIMER_STARTING_NETWORK</tt></td><td class="indexvalue">The LED blinking interval during network start (ms)</td></tr>
+	<tr><td class="indexkey"><tt>TIMER_FW_DELAY</tt></td><td class="indexvalue">The interval before forwarding the received packet (ms)</td></tr>
+	<tr><td class="indexkey"><tt>CS_CHANNEL_MASK</tt></td><td class="indexvalue">Specifies a channel mask to be used for network operation.</td></tr>
+  <tr><td class="indexkey"><tt>CS_CHANNEL_PAGE</tt></td><td class="indexvalue">Specifies a channel page to be used.</td></tr>
+  <tr><td class="indexkey"><tt>CS_EXT_PANID</tt></td><td class="indexvalue">Specifies the network extended PANID. Should be unique at a given location.</td></tr>
+  <tr><td class="indexkey"><tt>CS_UID</tt></td><td class="indexvalue">The extended address for platforms where it is not available via the special UID chip or an external EEPROM.</td></tr>
+</table>
+
+<p>The description of parameters common for all applications can be found in <a href="Sample_app.html#ConfigParam">Sample Applications Overview</a>.
+ConfigServer parameters are described in the <a href="ConfigServer.html">Configuration Server</a> section.</p>
+
+<p>The source code of the Pingpong application is located in the
+<tt><nobr>[SDK]\Sample&nbsp;Applications\Pingpong</nobr></tt> directory.
+
+</div>
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>
+

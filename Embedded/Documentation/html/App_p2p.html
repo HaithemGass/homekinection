@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>Peer-to-peer Application</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+
+<div class="header">
+  <div class="headertitle">
+    <div class="title">Peer-to-peer Application</div>
+  </div>
+</div>
+
+<div class="contents">
+
+<p>This sample shows how to organize the simplest peer-to-peer link. A simple 
+buffering strategy is employed to avoid byte-by-byte data transfer.</p>
+
+<p>At least 2 nodes should be used: one coordinator and one router, but in total 
+up to 8 nodes can be engaged. Nodes are identified by their short (network) addresses 
+as assigned to the <tt>CS_NWK_ADDR</tt> parameter in the <tt>configuration.h</tt> file.
+Thus firmware for each device shall be recompiled with a particular value of the <tt>CS_NWK_ADDR</tt> 
+parameter.</p>
+
+<p>The network start procedure is initiated automatically on device startup.</p>
+
+<p>In the network, wireless data exchange is performed strictly in pairs according to 
+assigned short addresses:</p>
+<ul>
+	<li>node 0 with node 1;</li>
+	<li>node 2 with node 3;</li>
+	<li>node 4 with node 5;</li>
+	<li>node 6 with node 7.</li>
+</ul>
+
+<p>A node forwards all data received from the host over the serial interface (USART) to the 
+corresponding peer. Upon a frame reception the peer node in its turn sends received data to 
+own USART channel, thus a simple wireless USART link is established. For input/output of serial 
+data on devices with USART/USB connection to a PC, Windows HyperTerminal can be used. When typing 
+a message in one terminal window it is sent over the air to the peer node and should appear in 
+the HyperTerminal instance associated with the peer device. COM port connection parameters should 
+be configured on the PC in the following way:</p>
+<table>
+  <tr><td class="indexkey">Parameter</td><td class="indexkey">Value</td></tr>
+  <tr><td class="indexkey">Data Rate</td><td class="indexvalue">38400 baud</td></tr>
+  <tr><td class="indexkey">Data Bits</td><td class="indexvalue">8</td></tr>
+  <tr><td class="indexkey">Parity</td><td class="indexvalue">None</td></tr>
+  <tr><td class="indexkey">Stop Bits</td><td class="indexvalue">1</td></tr>
+  <tr><td class="indexkey">Flow Control</td><td class="indexvalue">Hardware</td></tr>
+</table>
+
+<p>In addition, if the board has buttons, pressing a certain button (<tt>SW1</tt> on a Meshbean board) on a 
+node results in a transmission of a single <nobr>maximum-length</nobr> frame filled with <tt>0xDD</tt> 
+bytes to the peer. This message appears on the peer node as a line of black rectangulars.</p>
+
+<p>In order to use standard security mechanism described in ZigBee specification, the Peer2peer application 
+shall be compiled with properly configured 
+<a href="Sample_app.html#Security">security-related parameters</a>.<p>
+
+<h2>LED Indications</h2>
+<p>If LEDs are present on the board, then they are used by the application:</p>
+<ul>
+  <li>The green LED is periodically blinking with 500ms interval when device is joining the network and is ON if it is in the network.</li>
+  <li>The red LED is flashing when the node is sending data.</li>
+  <li>The yellow LED is flashing when the node is receiving data.</li>
+</ul>
+
+<h2>Important configuration parameters</h2>
+<table>
+ 	<tr><td class="indexkey"><tt>APP_FRAGMENTATION</tt></td><td class="indexvalue">Specifies whether or not frame fragmentation should be used inside the stack.</td></tr>
+  <tr><td class="indexkey"><tt>CS_NWK_ADDR</tt></td><td class="indexvalue">Specifies the node's short address. Can be used only with <tt>CS_NWK_UNIQUE_ADDR</tt> set to <tt>true</tt>.</td></tr>
+  <tr><td class="indexkey"><tt>CS_NWK_UNIQUE_ADDR</tt></td><td class="indexvalue">Specifies whether the short address is set to a predefined value or to a random value; is set to <tt>true by the application.</tt> </td></tr>
+  <tr><td class="indexkey"><tt>CS_END_DEVICE_SLEEP_PERIOD</tt></td><td class="indexvalue">The duration of the end device sleep period given in milliseconds. Should be the same on parent and children nodes.</td></tr>
+  <tr><td class="indexkey"><tt>CS_CHANNEL_MASK</tt></td><td class="indexvalue">Specifies a channel mask to be used for network operation.</td></tr>
+  <tr><td class="indexkey"><tt>CS_CHANNEL_PAGE</tt></td><td class="indexvalue">Specifies a channel page to be used.</td></tr>
+  <tr><td class="indexkey"><tt>CS_EXT_PANID</tt></td><td class="indexvalue">Specifies the network extended PANID. Should be unique at a given location.</td></tr>
+  <tr><td class="indexkey"><tt>CS_UID</tt></td><td class="indexvalue">The extended address for platforms where it is not available via the special UID chip or an external EEPROM.</td></tr>
+</table>
+
+<p>The description of parameters common for all applications can be found in <a href="Sample_app.html#ConfigParam">Sample Applications Overview</a>.
+ConfigServer parameters are described in the <a href="ConfigServer.html">Configuration Server</a> section.</p>
+
+<p>The source codes of the Peer-to-peer application is located in the
+<tt><nobr>[SDK]\Sample&nbsp;Applications\Peer2peer</nobr></tt> directory.
+
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>BitCloud Stack API Reference: Configuration Server interface</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+<style>
+acronym{
+	cursor: help;
+	border-bottom: red 1px dashed;
+}
+li.aps{
+	margin:0.5em 0em;
+}
+</style>
+</head><body>
+<div class="header">
+  <div class="headertitle">
+    <div class="title">Configuration Server</div>
+  </div>
+</div>
+
+<div class="contents">
+
+<p>
+The BitCloud stack provides an extensive set of configuration parameters
+which determine different aspects of network and node behavior. 
+These parameters are accessible for an application via the Configuration
+Server interface (ConfigServer or CS for short).
+</p>
+<p>
+CS parameters can be divided in a set of categories according to different
+criteria. For example, one can distinhuish persistent and non persistent
+parameters. Persistent parameters are stored in power independent
+EEPROM memory and their values stay unchanged after the node HW reset. 
+Non persistent parameters are stored
+in RAM memory and upon HW reset are reinitialized with their default
+values. Whether a certain CS parameter belongs to a category is highlighted
+in the corresponding entry on the <a href="cs_defaults_8h.html" class="el">CS parameters defaults</a>
+page. Other criteria mark out parameters that can be set only at compilation 
+time, such as the parameters that are used to calculate an amount of memory 
+to be allocated by the application, and the parameters that can be changed
+only when the device is out of network since they determine certain network
+related aspects of node behavior.
+</p>
+<p>
+Note that if a parameter is persistent, this automatically means that it can
+be modified at run time, because there is no need to store in EEPROM parameters
+that can not be changed between two HW resets.
+</p>
+<p>
+Typical cases of CS parameters usage accompanied with exaplanations on how
+it affects the application or node behavior can be observed on the 
+<a href="cs_params_usage.html" class="el">CS parameters usage</a> page.
+</p>
+
+<h2>How to get or set a CS parameter</h2>
+<p>
+There are two options to assign a value to the CS parameter. One is to
+specify the value at compilation time by adding a line or changing an existing 
+one in the <code>configuration.h</code> file. A line shall be an ordinary
+<code>#define</code> preprocessor directive, for example, to set the maximum
+number of childs that the node, provided it is a router or the coordinator, 
+can accept to 5 put the following line in <code>configuration.h</code>:
+</p>
+<div class="fragment"><pre class="fragment">
+<span class="keyword">#define</span> CS_MAX_CHILDREN_AMOUNT 5
+</pre></div>
+<p>
+Fortunately, most of the parameters have default values that fit typical
+application configuration well, at least for the first time. The default values
+are given in <a class="el" href="cs_defaults_8h.html"><code>csDefaults.h</code></a> 
+which is a part of BitCloud. This file must not be changed. If the application 
+needs to modify a default value it shall perform this in the application 
+<code>configuration.h</code> file.
+</p>
+<p>
+To change values of the parameters that can be configured at run time use
+the <a href="config_server_8h.html#a0ea8ddc7bc41ce1c5ba556058ee1073b" class="el"><code>CS_ReadParameter()</code></a>
+function. For both compile-time and run-time configured parameters the application
+can read their value via the
+<a href="config_server_8h.html#a3106f18b9723751a9a5fa9deefa9d906" class="el"><code>CS_WriteParameter()</code></a> 
+function. To find out the detailed desciption proceed to the documentation of these function.
+</p>
+
+<p></p>
+<div><i>See also:</i></div>
+<div><a href="cs_params_usage.html" class="el">CS parameters usage</a></div>
+<div><a href="cs_defaults_8h.html" class="el">CS parameters defaults</a></div>
+
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>
+

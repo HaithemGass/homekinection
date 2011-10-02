@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>BitCloud Stack API Reference: Application Support sub-layer</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+<style>
+	Acronym{CURSOR: help; BORDER-BOTTOM: red 1px dashed;}
+</style>
+</head><body>
+
+<h2>APS Sub-Layer Status Parameters</h2>
+<p>Application support (APS) sub-layer confirm primitives often include a parameter that reports on the status of the request to which the confirmation applies:</p>
+<ul>
+	<li>A request has been executed <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c80787d3e34ec427cb7d3107395f348538" class="el">successfully</a></li>
+	<li>A transmit request failed since the <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c819b4bd868f44e30e5d8c2832a9b10a12" class="el">ASDU is too large</a> and fragmentation is not supported</li>
+	<li>A received fragmented frame <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8327dc34f073aac6e741ed56bd15ecd67" class="el">could not be defragmented</a> at the current time</li>
+	<li>A received fragmented frame could not be defragmented since the device <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c807c0ed015e8f72f21aa56a814ae54e63" class="el">does not support</a> fragmentation</li>
+	<li>A parameter value was <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8862dced50276200ed041b479e9e960b9" class="el">out of range</a></li>
+	<li>An APSME-UNBIND.request failed due to the requested binding link <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c827b45afba80e0eaf879f646925179682" class="el">not existing</a> in the binding table</li>
+	<li>An <a href="struct_a_p_s___remove_group_req__t.html" class="el">APSME-REMOVE-GROUP.request</a> has been issued with a group identifier that <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8e0185dd2f66be891f3e88603bf591b32" class="el">does not appear</a> in the group table</li>
+	<li>A parameter value was <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c89b42810982eb191bbbfa37a43cd369bc" class="el">invalid</a> or out of range</li>
+	<li>An <a href="struct_a_p_s___data_req__t.html" class="el">APSDE-DATA.request</a> requesting acknowledged transmission failed due to <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8d90b01ddc295744a0e2396061f2fd42c" class="el">no acknowledgement</a> being received</li>
+	<li>An <a href="struct_a_p_s___data_req__t.html" class="el">APSDE-DATA.request</a> with a destination <a href="aps_common_8h.html#0bc5b23d1c85adcef057f8c04dfc5365" class="el">addressing mode</a> set to 0x00 failed due to there being <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8ce0fa37248538290169a8aea8025a90e" class="el">no devices bound</a> to this device</li>
+	<li>An <a href="struct_a_p_s___data_req__t.html" class="el">APSDE-DATA.request</a> with a destination <a href="aps_common_8h.html#0bc5b23d1c85adcef057f8c04dfc5365" class="el">addressing mode</a> set to 0x03 failed due to <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c847d2ecca7d87082b977399f53e439421" class="el">no corresponding short address found</a> in the address map table</li>
+	<li>An <a href="struct_a_p_s___data_req__t.html" class="el">APSDE-DATA.request</a> with a destination <a href="aps_common_8h.html#0bc5b23d1c85adcef057f8c04dfc5365" class="el">addressing mode</a> set to 0x00 failed due to a binding table <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8ce981009ed1c4b195b37942542485146" class="el">not being supported</a> on the device</li>
+	<li>An <ACRONYM title="APS service data unit">ASDU</ACRONYM> was received that was <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8597cd8a377c3c6065e1de5dcad84e32a" class="el">secured using a link key</a></li>
+	<li>An <ACRONYM title="APS service data unit">ASDU</ACRONYM> was received that was <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8a25585d8aa066d96b10fc5a1834c3a27" class="el">secured using a network key</a></li>
+	<li>An <a href="struct_a_p_s___data_req__t.html" class="el">APSDE-DATA.request</a> requesting security has <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8845d3adcfa329b54e1f5f3de3a6e04f7" class="el">resulted in an error</a> during the corresponding security processing</li>
+	<li>An APSME-BIND.request or <a href="struct_a_p_s___add_group_req__t.html" class="el">APSME.ADDGROUP.request</a> issued when the binding or group tables, respectively, were <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8aab46766e6832edee99f3bb818e0e49a" class="el">full</a></li>
+	<li>An <ACRONYM title="APS service data unit">ASDU</ACRONYM> was received <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8aea1b443cfa30a84343b0ca74a23da47" class="el">without any security</a></li>
+	<li>An <a href="struct_a_p_s___get_req__t.html" class="el">APSME-GET.request</a> or <a href="struct_a_p_s___set_req__t.html" class="el">APSME-SET.request</a> has been issued with an <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8cc6edf32f67a33665840ce2ed07cf8d1" class="el">unknown attribute identifier</a></li>
+</ul>
+
+<p>This is not a complete list of possible status values. To find one go to the <a href="aps_common_8h.html#1b4ff3a412400f1920d4d56e771230c8" class="el">full status enumeration's specification</a>.</p>
+
+<p>See also: <br/><a href="aps_8h.html" class="el">APS Functions and Data Structures</a>
+<br/><a href="ASDU.html" class="el">APS Frame format</a></p>
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>

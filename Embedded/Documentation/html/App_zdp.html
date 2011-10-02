@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>ZDPDemo Application</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+
+<div class="header">
+  <div class="headertitle">
+    <div class="title">ZDP Demo Application</div>
+  </div>
+</div>
+
+<div class="contents">
+
+<p>This sample application demonstrates using ZDP requests to reveal properties of remote devices.</p>
+
+<p>Up to 8 nodes may participate. Each node is identified by a unique short address specified as
+the <tt>CS_NWK_ADDR</tt> parameter in the <tt>configuration.h</tt> file. This implies that each node
+shall be programmed with a separately compiled firmware image. The device type is set at run time by the 
+application depending on the short address value. Namely, if the short address equals <tt>0x0000</tt>,
+then the application decides that this is the coordinator, otherwise, the device type is set to router.</p>
+
+<p>On startup, the nodes form a network (a successful join to the network is indicated by the green LED flashing).</p>
+
+<p>Connect one node serially to a PC to test the applicaiton functionality with Windows HyperTerminal.
+After you set proper <a href="Sample_app.html#Connection">connection settings</a>, you will be prompted 
+with the following menu:</p>
+<div class="fragment">
+<pre class="fragment">ZDP Services sample application
+-------------------------------
+Perform ED scan on a remote device (E)
+Get active EndPoint(s) of a remote device (A)
+Get NWK address of a remote device (W)
+Get IEEE (MAC) address of a remote device (M)
+Get node descriptor of a remote device (D)
+Get power capabilities of a remote device (P)
+Get simple descriptor of a remote device (S)
+Force remote device to leave network (L)
+Show number of neighbors for this device (N)
+Show NWK status for this device (T)
+
+Please make a selection:
+</pre></div>
+<p>Try various options to check the output of the available ZDP requests.</p>
+
+<p>The source code of the ZDPDemo application is located in the
+<tt><nobr>[ZDK]\Sample&nbsp;Applications\ZDPDemo</nobr></tt> directory.
+
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>

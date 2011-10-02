@@ -1,0 +1,92 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:ShapeGame" mc:Ignorable="d" x:Class="ShapeGame.MainWindow"
+        Title="477 Prototype" Height="572.852" Width="1043.798" FontStyle="Italic"
+        Loaded="Window_Loaded" Closed="Window_Closed" Closing="Window_Closing" MinWidth="1043.798" MaxWidth="1043.798" MinHeight="572.852" MaxHeight="572.852">
+	<Window.Resources>
+		<Storyboard x:Key="Storyboard1"/>
+	</Window.Resources>
+	<Window.Triggers>
+		<EventTrigger RoutedEvent="FrameworkElement.Loaded">
+			<BeginStoryboard Storyboard="{StaticResource Storyboard1}"/>
+		</EventTrigger>
+	</Window.Triggers>
+    <Grid>
+		<Canvas Width="640" Height="480" Margin="11,25,376.798,29.852" x:Name="playfield" SizeChanged="Playfield_SizeChanged" RenderTransformOrigin="0,1">
+			<Canvas.RenderTransform>
+				<TransformGroup>
+					<ScaleTransform ScaleX="0.5" ScaleY="0.5"/>
+					<SkewTransform/>
+					<RotateTransform/>
+					<TranslateTransform/>
+				</TransformGroup>
+			</Canvas.RenderTransform>
+    		<Canvas.Background>
+    			<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+    				<GradientStop Color="#FF494949" Offset="0"/>
+    				<GradientStop Color="White" Offset="1"/>
+    			</LinearGradientBrush>
+    		</Canvas.Background>
+    	</Canvas>
+    	<Image x:Name="video" Height="240" Margin="11,22,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Left" Width="320" />
+		<Grid Margin="0,22,207.5,18" HorizontalAlignment="Right" Width="166.298">
+			<TextBox x:Name="keyWordTextBox" Margin="8,42.748,6.777,0" TextWrapping="Wrap" Text="Kinect" FontStyle="Normal" d:LayoutOverrides="GridBox" Height="23.96" VerticalAlignment="Top" TextChanged="changeKeyword"/>
+			<Label x:Name="keyWordLabel" Content="Command Keyword:" Margin="9.736,13.241,6.777,0" VerticalAlignment="Top" FontWeight="Bold" FontStyle="Normal" FontSize="14.667" d:LayoutOverrides="Width"/>
+		</Grid>
+		<Canvas Width="640" Height="480" Margin="335,25,52.798,29.852" x:Name="stage" SizeChanged="Playfield_SizeChanged" RenderTransformOrigin="0,1">
+			<Canvas.RenderTransform>
+				<TransformGroup>
+					<ScaleTransform ScaleX="0.5" ScaleY="0.5"/>
+					<SkewTransform/>
+					<RotateTransform/>
+					<TranslateTransform/>
+				</TransformGroup>
+			</Canvas.RenderTransform>
+			<Canvas.Background>
+				<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+					<GradientStop Color="#FF494949" Offset="0"/>
+					<GradientStop Color="White" Offset="1"/>
+				</LinearGradientBrush>
+			</Canvas.Background>
+		</Canvas>
+		<Button x:Name="replayButton" Content="Replay" Margin="0,209.234,420.798,0" VerticalAlignment="Top" Click="replayGesture" IsEnabled="False" HorizontalAlignment="Right" Width="75"/>
+		<Button x:Name="recordButton" Content="Record" Margin="366,40.117,0,0" VerticalAlignment="Top" Click="recordClick" HorizontalAlignment="Left" Width="75"/>
+		<Button x:Name="stopRecordButton" Content="Stop" Margin="445,40.117,507.798,0" VerticalAlignment="Top" IsEnabled="False" Click="stopRecordClick"/>
+		<Label Content="Recorded" HorizontalAlignment="Left" Margin="333.916,262,0,246.892" d:LayoutOverrides="Height"/>
+		<Label Content="Live" HorizontalAlignment="Left" Margin="11,262,0,246.892" d:LayoutOverrides="Height"/>
+		<StackPanel x:Name="BodyParts" Margin="0,93.734,283.823,114.735" Orientation="Vertical" HorizontalAlignment="Right">
+			<CheckBox x:Name="Head" Content="Head" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
+			<CheckBox x:Name="ShoulderCenter" Content="C Shoulder" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
+			<CheckBox x:Name="RightShoulder" Content="R Shoulder" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
+			<CheckBox x:Name="LeftShoulder" Content="L Shoulder" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
+			<CheckBox x:Name="RightElbow" Content="R Elbow" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
+			<CheckBox x:Name="LeftElbow" Content="L Elbow" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
+			<CheckBox x:Name="RightWrist" Content="R Wrist" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
+			<CheckBox x:Name="LeftWrist" Content="L Wrist" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
+			<CheckBox x:Name="RightHand" Content="R Hand" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
+			<CheckBox x:Name="LeftHand" Content="L Hand" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
+			<CheckBox x:Name="Spine" Content="Spine" IsChecked="True" HorizontalAlignment="Right" Width="77.08"/>
+			<CheckBox x:Name="HipCenter" Content="C Hip" IsChecked="True" HorizontalAlignment="Right" Width="77.08"/>
+			<CheckBox x:Name="RightHip" Content="R Hip" IsChecked="True" HorizontalAlignment="Right" Width="77.08"/>
+			<CheckBox x:Name="LeftHip" Content="L Hip" IsChecked="True" HorizontalAlignment="Right" Width="77.08"/>
+			<CheckBox x:Name="RightKnee" Content="R Knee" IsChecked="True" HorizontalAlignment="Right" Width="77.08"/>
+			<CheckBox x:Name="LeftKnee" Content="L Knee" IsChecked="True" HorizontalAlignment="Right" Width="77.08"/>
+			<CheckBox x:Name="RightAnkle" Content="R Ankle" IsChecked="True" HorizontalAlignment="Right" Width="77.08"/>
+			<CheckBox x:Name="LeftAnkle" Content="L Ankle" IsChecked="True" HorizontalAlignment="Right" Width="77.08"/>
+			<CheckBox x:Name="RightFoot" Content="R Foot" IsChecked="True" HorizontalAlignment="Right" Width="77.08"/>
+			<CheckBox x:Name="LeftFoot" Content="L Foot" IsChecked="True" HorizontalAlignment="Right" Width="77.08"/>
+		</StackPanel>
+		<Button x:Name="saveButton" Content="Save" Margin="0,234.194,420.798,0" VerticalAlignment="Top" Click="saveGesture" IsEnabled="False" HorizontalAlignment="Right" Width="75"/>
+		<TextBox x:Name="NameTextBox" Margin="381.51,212.234,0,0" TextWrapping="Wrap" Text="Sample Gesture" VerticalAlignment="Top" HorizontalAlignment="Left" Width="107.824"/>
+		<Label x:Name="NameLabel" Content="Name:" HorizontalAlignment="Left" Margin="335,210.234,0,0" VerticalAlignment="Top"/>
+		<ListBox x:Name="GestureLibraryBox" Height="112.5" Margin="366,93.734,511.798,0" VerticalAlignment="Top"/>
+		<Label Content="Known Gestures" HorizontalAlignment="Left" Margin="366.5,67.774,0,0" VerticalAlignment="Top" Width="100" d:LayoutOverrides="HorizontalAlignment"/>
+		<Button x:Name="LoadButton" Content="Load" HorizontalAlignment="Right" Margin="0,184.274,420.798,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="0.107,-0.455" Click="loadGesture"/>
+		<Slider x:Name="Slider" Margin="0,28.311,388.798,0" VerticalAlignment="Top" Maximum="100" SelectionEnd="1" TickFrequency="0.01" Value="24.5" Orientation="Vertical" HorizontalAlignment="Right" Height="233.883" Width="22"/>
+		<TextBox x:Name="AudioTextBox" HorizontalAlignment="Right" Margin="0,109.734,8,0" TextWrapping="Wrap" Width="199.5" Background="#FFFFA7A7" Height="152.46" VerticalAlignment="Top" IsReadOnlyCaretVisible="True" IsReadOnly="True" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True"/>
+		<TextBox x:Name="GestureTextBox" HorizontalAlignment="Right" Margin="0,0,5,18" TextWrapping="WrapWithOverflow" Width="199.5" Background="#FFA7C9FF" Height="152.46" VerticalAlignment="Bottom" TextOptions.TextFormattingMode="Display" IsReadOnly="True" VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True"/>
+		<Label Content="Audio:" HorizontalAlignment="Right" Margin="0,79.774,156.806,0" VerticalAlignment="Top" FontWeight="Bold"/>
+		<Label Content="Gestures:" HorizontalAlignment="Right" Margin="0,0,142.249,174.46" VerticalAlignment="Bottom" FontWeight="Bold"/>
+	</Grid>
+</Window>

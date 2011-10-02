@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>Throughput Test Application</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+
+<div class="header">
+  <div class="headertitle">
+    <div class="title">Throughput Test Application</div>
+  </div>
+</div>
+
+<div class="contents">
+
+
+<p>This application allows measurement of maximum application data throughput 
+in various transmission scenarios, such as with/without encryption, with/without 
+APS level acknowledgments, with different payload sizes, etc. One coordinator and 
+one router nodes are participating.</p>
+
+<p>The device type is specified in the <tt>configuration.h</tt> file by the 
+<tt>APP_DEVICE_TYPE</tt> parameter. Therefore firmware images for the coordinator 
+and the router shall be compiled separately.</p>
+
+<p>The network start procedure is initiated automatically on device startup.</p>
+
+<p>Upon network join the router node after <tt>TIMER_DELAY_PERIOD</tt> starts to 
+continuously send data packets over the air to the coordinator. The coordinator 
+receives data frames and measures the application level throughput based on the number 
+of payload bits received from the air and forwards this value to a PC via USART once 
+every <tt>TIMER_TRACK_PERIOD</tt> ms. Thus measured values can be observed in a terminal 
+window (for example, Windows HyperTerminal). See <a href="Sample_app.html#Connection">COM port
+connection settings</a>.</p>
+
+<p>In order to measure the maximum data throughput with encrypted data frames, the application shall 
+be compiled with properly configured <a href="Sample_app.html#Security">security-related parameters</a>.</p>
+
+<h2>LED Indications</h2>
+<p>If LEDs are present on the board, then they are used by the application:</p>
+<ul>
+  <li>The green LED is periodically blinking with 500ms interval when device is joining 
+    the network and is ON if it is in the network.</li>
+  <li>The red LED indicates packet transmission is indicated on the router.</li>
+  <li>The yellow LED is flashing when the coordinator is receiving data.</li>
+  <li>The red LED is flashing when the coordinator is forwarding measureds value to the 
+    USART interface.</li>
+</ul>
+
+<h2>Important configuration parameters</h2>
+<table>
+	<tr><td class="indexkey"><tt>APP_DEVICE_TYPE</tt></td><td class="indexvalue">Specifies the device type</td></tr>
+	<tr><td class="indexkey"><tt>APP_USE_APS_ACK</tt></td><td class="indexvalue">Specifies whether or not the APS-level acknowledgement (end-to-end) shall be requested for transmitted data frame.</td></tr>
+	<tr><td class="indexkey"><tt>TIMER_DELAY_PERIOD</tt></td><td class="indexvalue">The time interval (ms) after the network join when the coordinator starts measuring throughput and the router starts sending frames.</td></tr>
+	<tr><td class="indexkey"><tt>TIMER_TRACK_PERIOD</tt></td><td class="indexvalue">The time interval (ms) used on the coordinator for throughput measurement and output to the serial interface.</td></tr>
+	<tr><td class="indexkey"><tt>CS_CHANNEL_MASK</tt></td><td class="indexvalue">Specifies a channel mask to be used for network operation.</td></tr>
+  <tr><td class="indexkey"><tt>CS_CHANNEL_PAGE</tt></td><td class="indexvalue">Specifies a channel page to be used.</td></tr>
+  <tr><td class="indexkey"><tt>CS_EXT_PANID</tt></td><td class="indexvalue">Specifies the network extended PANID. Should be unique at a given location.</td></tr>
+  <tr><td class="indexkey"><tt>CS_UID</tt></td><td class="indexvalue">The extended address for platforms where it is not available via the special UID chip or an external EEPROM.</td></tr>
+</table>
+
+<p>The description of parameters common for all applications can be found in <a href="Sample_app.html#ConfigParam">Sample Applications Overview</a>.
+ConfigServer parameters are described in the <a href="ConfigServer.html">Configuration Server</a> section.</p>
+
+<p>The source code of the Throughput Test application is located in the
+<tt><nobr>[SDK]\Sample&nbsp;Applications\ThroughputTest</nobr></tt> directory.
+
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>
