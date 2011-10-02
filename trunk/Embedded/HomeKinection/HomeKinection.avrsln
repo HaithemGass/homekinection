@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# AvrStudio Solution File, Format Version 11.00
+Project("{D1100916-62DA-4D80-A9B4-55A1E7CCEEB3}") = "CommandModule", "CommandModule\CommandModule.avrgccproj", "{2F99A597-7AF4-453A-B2B2-E60FCCEE597E}"
+EndProject
+Project("{D1100916-62DA-4D80-A9B4-55A1E7CCEEB3}") = "DimmerModule", "DimmerModule\DimmerModule.avrgccproj", "{55C2BA1D-AD8E-43AF-A733-91F7B888986C}"
+EndProject
+Project("{D1100916-62DA-4D80-A9B4-55A1E7CCEEB3}") = "HIDModule", "HIDModule\HIDModule.avrgccproj", "{16C97FD8-F3F4-4C7E-8597-3B1ECE8E41DB}"
+EndProject
+Project("{D1100916-62DA-4D80-A9B4-55A1E7CCEEB3}") = "IRModule", "IRModule\IRModule.avrgccproj", "{17614DE8-8D74-4A16-ACC9-BF5DD82127E6}"
+EndProject
+Project("{D1100916-62DA-4D80-A9B4-55A1E7CCEEB3}") = "ShadeModule", "ShadeModule\ShadeModule.avrgccproj", "{A069BA6E-D42F-4C1E-B255-7790122A757B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2F99A597-7AF4-453A-B2B2-E60FCCEE597E}.Debug|AVR.ActiveCfg = Debug|AVR
+		{2F99A597-7AF4-453A-B2B2-E60FCCEE597E}.Release|AVR.ActiveCfg = Release|AVR
+		{2F99A597-7AF4-453A-B2B2-E60FCCEE597E}.Release|AVR.Build.0 = Release|AVR
+		{55C2BA1D-AD8E-43AF-A733-91F7B888986C}.Debug|AVR.ActiveCfg = Debug|AVR
+		{55C2BA1D-AD8E-43AF-A733-91F7B888986C}.Release|AVR.ActiveCfg = Release|AVR
+		{55C2BA1D-AD8E-43AF-A733-91F7B888986C}.Release|AVR.Build.0 = Release|AVR
+		{16C97FD8-F3F4-4C7E-8597-3B1ECE8E41DB}.Debug|AVR.ActiveCfg = Debug|AVR
+		{16C97FD8-F3F4-4C7E-8597-3B1ECE8E41DB}.Release|AVR.ActiveCfg = Release|AVR
+		{16C97FD8-F3F4-4C7E-8597-3B1ECE8E41DB}.Release|AVR.Build.0 = Release|AVR
+		{17614DE8-8D74-4A16-ACC9-BF5DD82127E6}.Debug|AVR.ActiveCfg = Debug|AVR
+		{17614DE8-8D74-4A16-ACC9-BF5DD82127E6}.Release|AVR.ActiveCfg = Release|AVR
+		{17614DE8-8D74-4A16-ACC9-BF5DD82127E6}.Release|AVR.Build.0 = Release|AVR
+		{A069BA6E-D42F-4C1E-B255-7790122A757B}.Debug|AVR.ActiveCfg = Debug|AVR
+		{A069BA6E-D42F-4C1E-B255-7790122A757B}.Release|AVR.ActiveCfg = Release|AVR
+		{A069BA6E-D42F-4C1E-B255-7790122A757B}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

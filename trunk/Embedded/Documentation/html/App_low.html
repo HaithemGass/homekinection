@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>Low Power Application</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+
+<div class="header">
+  <div class="headertitle">
+    <div class="title">Low Power Networking Application</div>
+  </div>
+</div>
+
+<div class="contents">
+
+<p>This sample application demonstrates following BitCloud and ZigBee PRO functionalities:</p>
+<ul>
+	<li>Power management scheme: scheduled device awakening;</li>
+  <li>Data collection from low-power devices on the central coordinator node;</li>
+	<li>Data delivery from parent device (coordinator in this example) to children end devices via polling mechanism.</li>
+</ul>       
+        
+<p>One coordinator and at least one end device shall be engaged. Nodes are identified by 
+their short (network) addresses as assigned to the <tt>APP_NWK_NODE_ADDRESS</tt> parameter 
+in the <tt>configuration.h</tt> file:</p>
+<ul>
+    <li>The coordinator node shall have <tt>APP_NWK_NODE_ADDRESS</tt> set to <tt>0x0000</tt>.</li>
+    <li>End device nodes have non-zero short addresses; </li>
+    <li>All nodes in the network shall have unique short addresses. Thus firmware for each device shall be recompiled 
+    with a particular value of <tt>APP_NWK_NODE_ADDRESS</tt></li>
+</ul>
+
+<p>After the application is loaded to the target board, the network start procedure is initiated 
+on the device automatically.</p>
+
+<p>After joining the network an end device transmits stub sensor data to the coordinator and enters 
+the sleep mode. Then it periodically wakes up with the <tt>CS_END_DEVICE_SLEEP_PERIIOD</tt> interval 
+and sends sensor data to the coordinator. After transmission is completed the end device falls asleep 
+again.</p>
+
+<p>Upon a data frame reception the coordinator node forwards it to the USB interface. Thus collected 
+information can be observed in the terminal window (e.g. Windows HyperTerminal). 
+See <a href="Sample_app.html#Connection"> COM port connection settings</a>.</p>
+
+<p>The coordinator is also able to configure the type of the sensor that end devices will emulate for their data reports. 
+By default a stub temperature value is sent from each end device. Periodically with a 20 seconds interval 
+a command to switch to the next sensor is sent from the coordinator consecutively to all children end 
+devices in a unicast manner. The target sensor is switched in the following order upon each 
+20 seconds interval: &rarr;temperature sensor&rarr;battery status&rarr;light sensor&rarr;temperature sensor&rarr;.</p>
+
+<p>If buttons are available on the board (for example, on the Meshbean board), pressing the <tt>SW2</tt> button causes</p>
+<ul>
+  <li>interrupted wake up and extra sensor data delivery for an end device</li>
+  <li>out-of-turn switch of the sensor type for the coordinator</li>
+</ul>
+
+<p> Note that if an end device is sleeping when coordinator decides to swith the sensor, the switch 
+command frame is buffered on the parent node (in this example, the coordinator) and delivered to the end device 
+when it wakes up and retrieves it via the polling mechanism.</p>
+
+<h2>LED Indications</h2>
+<p>If LEDs are present on the board, then they are used by the application:</p>
+<ul>
+  <li>The green LED (if present on the board) is periodically blinking with a 500ms interval 
+    when the device is joining the network and is ON if it is in the network and awake.</li>
+  <li>A flashing red LED indicates data transmission, while on the coordinator a yellow LED 
+    indicates the data reception.</li>
+</ul>
+
+<h2>Important Configuration Parameters</h2>
+<table>
+	<tr><td class="indexkey"><tt>APP_NWK_NODE_ADDRESS</tt></td><td class="indexvalue">Specifies the device's short address.</td></tr>
+	<tr><td class="indexkey"><tt>CS_NWK_UNIQUE_ADDR</tt></td><td class="indexvalue">Specifies whether the short address is set to a predefined value or to a random value; is set to <tt>true by the application.</tt> </td></tr>
+	<tr><td class="indexkey"><tt>CS_END_DEVICE_SLEEP_PERIOD</tt></td><td class="indexvalue">The duration of the end device sleep period given in milliseconds. Should be the same on parent and children nodes.</td></tr>
+	<tr><td class="indexkey"><tt>CS_CHANNEL_MASK</tt></td><td class="indexvalue">Specifies a channel mask to be used for network operation.</td></tr>
+  <tr><td class="indexkey"><tt>CS_CHANNEL_PAGE</tt></td><td class="indexvalue">Specifies a channel page to be used.</td></tr>
+  <tr><td class="indexkey"><tt>CS_EXT_PANID</tt></td><td class="indexvalue">Specifies the network extended PANID. Should be unique at a given location.</td></tr>
+  <tr><td class="indexkey"><tt>CS_UID</tt></td><td class="indexvalue">The extended address for platforms where it is not available via the special UID chip or an external EEPROM.</td></tr>
+</table>
+
+<p>The description of parameters common for all applications can be found in <a href="Sample_app.html#ConfigParam">Sample Applications Overview</a>.
+ConfigServer parameters are described in the <a href="ConfigServer.html">Configuration Server</a> section.</p>
+
+<p>The source code of the Low Power application is located in the
+<tt><nobr>[SDK]\Sample&nbsp;Applications\LowPower</nobr></tt> directory.</p>
+
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>

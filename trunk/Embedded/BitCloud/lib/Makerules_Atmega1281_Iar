@@ -1,0 +1,30 @@
+#----------------------------------------------
+#HAL makerules - should be included into components Makerules
+#----------------------------------------------
+
+#-Compiler type definition---------------------
+IAR_PATH = "$(IAR_AVR_HOME)/avr"
+COMPILER_TYPE = IAR
+COMPILER_AND_MICRO_TYPE = IAR_AVR
+#-Tools definitions----------------------------
+AS       = $(IAR_PATH)/bin/aavr
+LD       = $(IAR_PATH)/bin/xlink
+CC       = $(IAR_PATH)/bin/iccavr
+CPP      = $(IAR_PATH)/bin/iccavr
+AR       = $(IAR_PATH)/bin/xar
+IELFTOOL = 
+NM       = @echo ----NM: There is no such utility among IAR tools.
+STRIP    = @echo ----STRIP: There is no such utility among IAR tools.
+OBJCOPY  = @echo ----OBJCOPY: There is no such utility among IAR tools.
+OBJDUMP  = @echo ----OBJDUMP: There is no such utility among IAR tools.
+SIZE     = @echo ----SIZE: There is no such utility among IAR tools.
+
+#-Compiler flags-------------------------------
+CFLAGS = -I$(IAR_PATH)/inc/dlib   --dlib_config $(IAR_PATH)/LIB/DLIB/dlAVR-3s-ec_mul-n.h   --preprocess $(LIST_PATH) -lC $(LIST_PATH)    -I$(IAR_PATH)/inc   -ms --eeprom_size 4096 --library_module -y --initializers_in_flash --no_tbaa -DENABLE_BIT_DEFINITIONS -Ohz --diag_suppress Pa050,Pe188,Pa082 -e --cpu=m1281 --silent
+AR_KEYS =
+
+
+#-Objects to be linked with app----------------
+PLATFORM_SPECIFIC_OBJECTS  = WdtInitatmega1281_Iar.o
+
+SE_PATH      = $(COMPONENTS_PATH)/./SystemEnvironment

@@ -1,0 +1,103 @@
+#------------------------------------------------------------------------------- 
+#  \file Configuration
+#
+#  \brief Declares build options for the HAL.
+#
+#  \author
+#    Atmel Corporation: http://www.atmel.com \n
+#    Support email: avr@atmel.com
+#
+#  Copyright (c) 2008-2011, Atmel Corporation. All rights reserved.
+#  Licensed under Atmel's Limited License Agreement (BitCloudTM).
+#
+#------------------------------------------------------------------------------- 
+
+#-------------------------------------------------------------------------------
+# Build configuration:
+# For "DEBUG" configuration system asserts, logging and debug info are switched on.
+# For "RELEASE" configuration system asserts, logging and debug info are switched off.
+#-------------------------------------------------------------------------------
+BUILD_CONFIGURATION = RELEASE
+#BUILD_CONFIGURATION = DEBUG
+
+#-------------------------------------------------------------------------------
+# Build configuration:
+# If QUIET is TRUE then short build message format is used, otherwise - normal.
+#-------------------------------------------------------------------------------
+QUIET = TRUE
+#QUIET = FALSE
+
+#-------------------------------------------------------------------------------
+# Compiler type:
+#-------------------------------------------------------------------------------
+COMPILER_TYPE = GCC
+#COMPILER_TYPE = IAR
+
+#-------------------------------------------------------------------------------
+# Platforms selection:
+#-------------------------------------------------------------------------------
+PLATFORM = PLATFORM_ZIGBIT
+#PLATFORM = PLATFORM_RCB
+
+#-------------------------------------------------------------------------------
+# ZIGBIT platform specific options:
+#-------------------------------------------------------------------------------
+ifeq ($(PLATFORM), PLATFORM_ZIGBIT)
+  # Microcontroller's type declaration. The following variants are possible:
+  HAL = ATMEGA1281
+
+  # Controller reference frequency.
+  #HAL_FREQUENCY = HAL_4MHz
+  HAL_FREQUENCY = HAL_8MHz
+  
+  # Device to read UID from: TinyA13 MCU or DS2411.
+  #HAL_TINY_UID = TRUE
+  HAL_TINY_UID = FALSE
+
+  # Defines whether HAL controls amplifier or not.
+  HAL_USE_AMPLIFIER = FALSE
+  #HAL_USE_AMPLIFIER = TRUE
+  
+endif # PLATFORM_ZIGBIT
+
+#-------------------------------------------------------------------------------
+# PLATFORM_RCB platform specific options:
+#-------------------------------------------------------------------------------
+ifeq ($(PLATFORM), PLATFORM_RCB)
+  # Platform revisions
+  #PLATFORM_REV = RCB230_V31
+  #PLATFORM_REV = RCB230_V32
+  PLATFORM_REV = RCB230_V331
+  #PLATFORM_REV = RCB231_V402
+  #PLATFORM_REV = RCB231_V411
+  #PLATFORM_REV = RCB212_V532
+
+  # Controller reference frequency.
+  #HAL_FREQUENCY = HAL_4MHz
+  HAL_FREQUENCY = HAL_8MHz
+endif # PLATFORM_RCB
+
+#-------------------------------------------------------------------------------
+# OS selection. Parameters is only for ARM:
+#-------------------------------------------------------------------------------
+OS = NONE_OS
+#OS = FREE_RTOS
+
+# Gives a possibility to enable USART error callbacks.
+HAL_USE_USART_ERROR_EVENT = FALSE
+#HAL_USE_USART_ERROR_EVENT = TRUE
+
+#RF_RX_TX_INDICATOR
+HAL_RF_RX_TX_INDICATOR = TRUE
+#HAL_RF_RX_TX_INDICATOR = FALSE
+
+#Selected automatically to FALSE for ZIGBIT platform.
+ifeq ($(PLATFORM), PLATFORM_ZIGBIT)
+  HAL_RF_RX_TX_INDICATOR = FALSE
+endif # PLATFORM_ZIGBIT
+
+# Antenna diversity feature
+HAL_ANT_DIVERSITY = FALSE
+#HAL_ANT_DIVERSITY = TRUE
+
+# eof Configuration

@@ -1,0 +1,28 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>BitCloud Stack API Reference: ZigBee Device Objects</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+
+<h2>Power Management</h2>
+
+<p>In many applications devices are battery powered, and battery replacement or recharging in relatively
+short intervals is impractical. Therefore, the power consumption is of significant concern. Though in 
+certain applications some of these devices could be mains powered, the BitCloud Stack has been developed 
+to favor battery-powered devices, which will spend most of their operational life in a sleep state and hence 
+require a duty-cycling to reduce power consumption.</p>
+
+<p>The folowing commands are available for power management:</p>
+<ul>
+	<li><a href="struct_z_d_o___sleep_req__t.html" class="el">Sleep Request</A> command puts the device into a sleep mode.<br/>Upon receipt of this command, device shall return the <a href="struct_z_d_o___sleep_conf__t.html" class="el">confirmation.</A></li>
+	<li><a href="struct_z_d_o___wake_up_req__t.html" class="el">Wake Up Request</A> command forces the stack to wake up from the sleep mode.<br/>Upon receipt of this command, <a href="struct_z_d_o___wake_up_conf__t.html" class="el">confirmation</A> shall be returned.</li>
+	<li><a href="zdo_8h.html#380de225cf020fe8e9ea521f98571c73" class="el">Wake Up Indication</A> function indicates to the application that the stack is ready to wake up.</li>
+</ul>
+
+<p>See also: <a href="zdo_8h.html" class="el">ZDO Functions and Data Structures</a></p>
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>
+

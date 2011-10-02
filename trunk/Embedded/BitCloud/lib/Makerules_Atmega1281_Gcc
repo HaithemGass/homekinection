@@ -1,0 +1,28 @@
+#----------------------------------------------
+#HAL makerules - should be included into components Makerules
+#----------------------------------------------
+
+#-Compiler type definition---------------------
+COMPILER_TYPE = GCC
+COMPILER_AND_MICRO_TYPE = GCC_AVR
+#-Tools definitions----------------------------
+AS       = avr-as
+LD       = avr-ld
+CC       = avr-gcc
+CPP      = avr-g++
+AR       = avr-ar
+NM       = avr-nm
+STRIP    = avr-strip
+OBJCOPY  = avr-objcopy
+OBJDUMP  = avr-objdump
+SIZE     = avr-size
+
+#-Compiler flags-------------------------------
+CFLAGS =  -Os -std=gnu99 -pipe -c -W -Wall -ffunction-sections -mmcu=atmega1281 -mcall-prologues -fshort-enums 
+AR_KEYS = cr
+
+
+#-Objects to be linked with app----------------
+PLATFORM_SPECIFIC_OBJECTS  = WdtInitatmega1281_Gcc.o
+
+SE_PATH      = $(COMPONENTS_PATH)/./SystemEnvironment

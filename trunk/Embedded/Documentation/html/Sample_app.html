@@ -1,0 +1,167 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>BitCloud Sample Applications</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+
+<div class="header">
+  <div class="headertitle">
+    <div class="title">BitCloud Sample Applications</div>
+  </div>
+</div>
+
+<div class="contents">
+
+<p>Sample applications are provided with the BitCloud Software API in 
+order to demonstrate how to develop user's applications. The BitCloud 
+sample applications are intended to run on compatible platform devices.</p>
+
+<h2>System Requirements</h2>
+<p>System requirements for a PC used to compile applications and program the nodes are:
+<table>
+<tr><th colspan=2 align="left">PC</th></tr>
+<tr><td class="indexkey">CPU</td><td class="indexvalue">Intel Pentium III or higher, 800 MHz</td></tr>
+<tr><td class="indexkey">RAM</td><td class="indexvalue">128 MB</td></tr>
+<tr><td class="indexkey">Hard disk free space</td><td class="indexvalue">50 MB</td></tr>
+<tr><th colspan=2 align="left">Software</th></tr>
+<tr><td class="indexkey">Operating system</td><td class="indexvalue">Windows2000/XP</td></tr>
+<tr><td class="indexkey">USB driver </td><td class="indexvalue">CP210x USB to UART Bridge VCP Driver</td></tr>
+<tr><td class="indexkey">Java machine</td><td class="indexvalue">Java Runtime Environment JRE 5.0 Update 8 (version 1.5.0)</td></tr>
+</table>
+
+<p>For detail on the toolchains available for your platform and instructions on how to program devices
+refer to <i>AVR2052 BitCloud Quick Start Guide</i></p>
+
+<h2>Common Features</h2>
+
+<p>Each device must be configured with a unique short (network) address and the device type
+before a network start. Sample applications apply two different scenarios:</p>
+<ul>
+  <li>Some applications use the static addressing scheme and therefore require the short
+  address to be set at compile time in the <tt>configuration.h</tt> file. In this case
+  each device requires a separetely compiled firmware image.</li>
+  <li>Other applications apply stochastic addessing and require the device type to be
+  set at compile time in the <tt>configuration.h</tt> file. In this case each device type
+  (coordinator, router, and (or) end device) requires a separetely compiled firmware image.
+  The coordinator is assigned to the zero short address, while other devices receive random 
+  addresses. Note that some applications do not involve all device types.</li>
+</ul>
+
+<p>Most of sample applications make use of board periphery, typically, buttons and
+LEDs, through the Board Support Package (BSP) API. However, applications work correctly 
+independently on whether the periphery involved is present on the board or not. 
+If a board does not have buttons or LEDs, the API for these controls is still available
+although its functions do nothing, and therefore the same code as for platforms with
+real periphery is compiled and executed without errors on platforms without periphery.</p>
+
+<p>Moreover, sample applications are designed in such a way that they do not require
+periphery. A network start is performed automatically on device startup, and applications
+generally fire timers to run features they are intended to demonstrate. At the same time
+LEDs indicate application activity, and buttons if present help to perform additional
+interaction with a demo application. For detail see descriptions of particular applications.</p>
+
+<h2>How to Build</h2>
+
+<p>Source codes of all sample applications along with the corresponding
+configuration files are located at <tt><nobr>[SDK]\Sample&nbsp;Applications\</nobr></tt>.
+Hereafter, <tt>[SDK]</tt> denotes the root folder for the SDK installation.
+
+<p>The BitCloud library and Makerules files are contained at <tt><nobr>[SDK]\BitCloud\lib\</nobr></tt>.
+The choice of the particular library to include is made at compile time and
+based on the application's configuration parameters.</p>
+
+<p>If makefiles are used to compile the application, in Makefile located in the
+application root folder select one of available projects and one of the
+configurations corresponding to this project. Thus you will point the build system,
+which low-level makefile from the <tt>makefiles</tt> directory shall be used.
+The name of a low-level makefile consists of parts that indicates the properties of
+this configuration. For example, if the name ends with <tt>Gcc</tt>, then the
+AVR GCC compiler will be used, while configurations with <tt>Iar</tt> will
+make use of the IAR compiler.
+</p>
+
+<p>To compile an application from the command line, in the root application folder
+execute</p>
+<div class="fragment">
+<pre class="fragment">
+make clean all
+</pre>
+</div>
+
+<p>Alternatively you can open the <tt>*.aps</tt> file from the same directory with AVR Studio 
+and then execute <i>Build\Rebuild&nbsp;All</i> in the <i>Project</i>menu. 
+The <tt>*.hex</tt>, <tt>*.srec</tt>, <tt>*.bin</tt> and <tt>*.elf</tt>image files will be then
+generated.</p>
+
+<p>Alternatively you can open the <tt>.eww</tt> file in the <tt>iar_projects</tt> subdirectory 
+of the root application directory (for example for WSNDemo open WSNDemo.eww file from the 
+<tt>./Sample Applications/WSNDemo/iar_projects</tt> subdirectory)
+with IAR Embedded Workbench and execute <i>Rebuild All</i> item from the Project menu
+after choosing an appropriate build configuration from the list of available configurations.</p>
+
+<h2>Programming the Boards</h2>
+
+<p>The boards can be programmed using JTAG emulator, for example, JTAGICE mkII from Atmel, or
+with the help of other tools depending on the platform. For detail, refer to
+<i>AVR2052 BitCloud Quick Start Guide</i></p>
+
+<a name="Connection"></a><h2>Connecting to a PC</h2>
+
+<p>Most of the sample applications imply some interaction with a PC
+(although they may be run as well without connecting to a PC, when the only 
+observation of the state and activities of the boards is performed by their LEDs).
+While WSNDemo uses a special custom PC application named
+<a href="App_zbn.html#WSN_Monitor">WSNMonitor</a>, other applications need just 
+a general-purpose terminal application. The connection parameters must in a terminal
+window shall be set as follows (unless stated otherwise for a particular application):
+<table>
+	<tr><td class="indexkey">Parameter</td><td class="indexkey">Value</td></tr>
+	<tr><td class="indexkey">Data Rate</td><td class="indexvalue">38400 bps</td></tr>
+	<tr><td class="indexkey">Data Bits</td><td class="indexvalue">8</td></tr>
+	<tr><td class="indexkey">Parity</td><td class="indexvalue">None</td></tr>
+	<tr><td class="indexkey">Stop Bits</td><td class="indexvalue">1</td></tr>
+	<tr><td class="indexkey">Flow Control</td><td class="indexvalue">None</td></tr>
+</table>
+
+<a name="ConfigParam"></a><h2>Configuration Parameters</h2>
+
+<p>Application compile-time parameters are configured in the <tt>configuration.h</tt> file
+located in the target application's root directory. This file is used to define application-specific
+parameters usually prefixed with <tt>APP_</tt> and specify initial values for 
+various ConfigServer parameters if different from the default values given in the 
+<tt>csDefaults.h</tt> file from the <tt>include</tt> directory of the ConfigServer component.
+It is not recommended to change the default values in <tt>csDefaults.h</tt>, but rather
+specify required values in the application's <tt>configuration.h</tt> file.</p>
+
+
+<h2>Channel Selection</h2>
+
+<p>To select a channel to work on, the user may change the channel mask definition
+(<tt>CS_CHANNEL_MASK</tt>) in the application's configuration file,
+recompile the application and program the nodes with a new image.</p>
+
+<a name="Security"></a><h2>Security</h2>
+
+<p>By default, the NWK layer encryption (a standard security mechanism in the ZigBee specification) 
+implemented in BitCloud stack is switched off. Different versions of compiled stack libraries 
+are supplied for coordinator, router, end device, and all devices. Most of them are presented 
+in two variants: "Security OFF", "Security ON", and "High Security ON". 
+The choice of a particular library to include when compiling an application 
+is defined by the configuration selected in the high-level Makefile or in IAR Embedded
+Workbench.</b>
+
+<p>If security-enabled configuration is selected, consider <tt>CS_ZDO_SECURITY_STATUS</tt>,
+<tt>CS_SECURITY_ON</tt>, <tt>CS_APS_TRUST_CENTER_ADDRESS</tt>, and other security related
+parameters described on the <a href="cs_defaults_8h.html" class="el">CS parameters defaults</a>
+page.</p>
+
+<p>Note that switching on the security option enlarges a firmware image, so that for some applications 
+it may become too large to fit into the board's memory. In such case, the user may try to reduce 
+it by decreasing <tt>CS_NEIB_TABLE_SIZE</tt>, <tt>CS_ROUTE_TABLE_SIZE</tt>, and other parameters that 
+control memory allocation.</p>
+
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>

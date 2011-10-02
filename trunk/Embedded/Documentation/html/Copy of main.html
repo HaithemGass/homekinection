@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>BitCloud Stack API Reference: Main Page</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+
+
+<div class="header">
+  <div class="headertitle">
+    <div class="title">BitCloud Stack API Reference</div>
+  </div>
+</div>
+
+<div class="contents">
+
+<h2>Introduction</h2>
+<p>The BitCloud is a full-featured, professional grade embedded software ZigBee 
+stack from Atmel. The stack provides a software development platform for 
+reliable, scalable, and secure wireless applications running on Atmel 
+microcontrollers and radio transceivers. BitCloud is designed to support a broad 
+ecosystem of user-designed applications addressing diverse requirements while 
+enabling a full spectrum of software customization. </p>
+<p>The BitCloud stack is fully compliant with ZigBee PRO and ZigBee standards 
+for wireless sensing and control. It provides an augmented set of APIs which, 
+while maintaining full compliance with the standard, offer extended 
+functionality designed with developer's convenience and ease-of-use in mind. </p>
+<p>BitCloud's target audience is system designers, embedded programmers and hardware engineers evaluating, prototyping, and deploying 
+ZigBee solutions and products built on the Atmel hardware platform. BitCloud is delivered as a software development kit, which includes</p>
+<ul>
+	<li>extensive documentation</li>
+	<li>standard set of libraries comprising multiple components of the stack</li>
+	<li>sample user applications in source code</li>
+	<li>a complete set of peripheral drivers (also in source code) for the supported platforms</li>
+</ul>
+<br/>
+<h2>Features</h2>
+<p class="BT-BodyText"><span lang="EN-US">The BitCloud internal architecture 
+follows IEEE 802.15.4&#8482;, ZigBee-defined convention of splitting the networking 
+stack into logical layers. </span>Besides the core stack containing protocol implementation, BitCloud contains additional layers implementing shared services (e.g. <a href="task_manager_8h.html" class="el">task manager</A>, security, and <a href="pwrmgmt.html" class="el">power manager</A>) and hardware abstractions (e.g. hardware abstraction layer <a href="globals_func.html#index_h" class="el">HAL</a> and board support package <a href="globals_func.html#index_b" class="el">BSP</a>). The APIs contributed by these layers are outside the scope of core stack functionality. However, these essential additions to the set of APIs significantly help reduce application complexity and simplify integration.</p>
+<p>The topmost of the core stack layers, <a href="APS.html" class="el">APS</a>, provides the highest level of networking-related APIs visible to the application.</p>
+<p><a href="ZDO.html" class="el">ZDO</a> provides a set of fully compliant ZigBee Device Object APIs which enable main <a href="nwkmgmt.html" class="el">network management</a> functionality (start, reset, formation, join) and <a href="pwrmgmt.html" class="el">power management</A> (sleep, wakeup). <a href="ZDO.html" class="el">ZDO</a> also defines ZigBee Device Profile types, <a href="discovery.html" class="el">device and service discovery commands</A> implemented by the stack, and provides APIs for unicast, multicast, and broadcast data transmission and acknowledgment.</p>
+<p>There are three service "planes" including: <a href="task_manager_8h.html" class="el">task manager</A>, security, and <a href="pwrmgmt.html" class="el">power manager</A>. These services are available to the user application, and may also be utilized by lower stack layers.</p>
+<p><a href="task_manager_8h.html" class="el">Task manager</A> is the stack scheduler which mediates the use of the MCU among internal stack components and user application. The <a href="task_manager_8h.html" class="el">task manager</A> utilizes a proprietary priority queue-based algorithm specifically tuned for multi-layer stack environment and demands of time-critical network protocols.</p>
+<p><a href="pwrmgmt.html" class="el">Power management</A> routines are responsible for gracefully shutting down all stack components and saving system state when preparing to sleep and restoring system state when waking up.</p>
+<p><a href="globals_func.html#index_h" class="el">Hardware Abstraction Layer</A> includes a complete set of APIs for using on-module hardware resources (<a href="eeprom_8h.html" class="el">EEPROM</A>, <a href="app_timer_8h.html" class="el">app</A>, <a href="sleep_timer_8h.html" class="el">sleep</A>, and <a href="wdt_ctrl_8h.html" class="el">watchdog</A> timers) as well as the reference drivers for rapid design-in and smooth integration with a range of external peripherals (<a href="irq_8h.html" class="el">IRQ</A>, <a href="i2c_packet_8h.html" class="el">I<SUP>2</SUP>C</A>, <a href="spi_8h.html" class="el">SPI</A>, <a href="uart_8h.html" class="el">UART</A>, <a href="w1_8h.html" class="el">1-wire</A>).</p>
+<p><a href="globals_func.html#index_b" class="el">Board Support Package</A> includes a complete set of drivers for managing standard peripherals (<a href="sensors_8h.html" class="el">sensors</A>, <a href="uid_8h.html" class="el">UID chip</A>, <a href="sliders_8h.html" class="el">sliders</A>, and <a href="buttons_8h.html" class="el">buttons</A>) placed on a MeshBean development board.</p>
+<p><a href="config_server_8h.html" class="el">Configuration server</A> is a component of the stack that stores key stack configuration parameters and allows users to change them without recompiling the core stack layers. Users can configure the stack and specify key parameters (e.g. select tree vs. mesh routing, network fan-in, and <a href="config_server_8h.html#b35c792b7eef40359dc0a6ae87610b38" class="el">depth</A>, <a href="config_server_8h.html#d913e01b52dd44a469260af694c6fd84" class="el">PAN ID</A>, <a href="config_server_8h.html#2719d5610524a9c4fbb963422a3e861b" class="el">channel mask</A>, etc.) all without managing multiple versions of the stack libraries.</p><br/>
+<h2>BitCloud Software Stack Architecture</h2>
+<p><img border="0" src="bitcloud_arch.png"></p>
+<h2>Network Topology</h2>
+<p>The BitCloud Stack supports star, tree, and mesh topologies. In a star topology, the network is controlled by one single device called coordinator. The coordinator is responsible for initiating and maintaining the devices on the network. All other devices, known as end devices, directly communicate with the coordinator. In mesh and tree topologies, the coordinator is responsible for starting the network and for choosing certain key network parameters, but the network may be extended through the use of routers.</p>
+<h2>BitCloud API Functions</h2>
+<p>The BitCloud API <a href="globals_func.html" class="el">functions</a> contained within this package fall into the 
+categories related to the following layers:</p>
+<ul>
+	<li><a href="globals_func.html#index_a" class="el">APS</a> (Application Support Sublayer)</li>
+	<li><a href="globals_func.html#index_z" class="el">ZDO</a> (ZigBee device object)</li>
+	<li><a href="globals_func.html#index_c" class="el">Configuration server</a> functions</li>
+	<li><a href="globals_func.html#index_s" class="el">Multitasking management</a> functions</li>
+	<li><a href="globals_func.html#index_h" class="el">HAL</a> (functions dealing with the hardware functionality of the module)</li>
+	<li><a href="globals_func.html#index_b" class="el">BSP</a> (functions that provide interface to the buttons and sensors of the MeshBean board)</li>
+</ul>
+
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>

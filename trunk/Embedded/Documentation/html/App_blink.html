@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>Blink Application</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+</head><body>
+
+<div class="header">
+  <div class="headertitle">
+    <div class="title">Blink Application</div>
+  </div>
+</div>
+
+<div class="contents">
+
+<p>This example introduces the simplest application that uses the timer and 
+LEDs if present on the board. When started, the application makes LEDs on the 
+target board blink synchronously with a certain period.</p>
+
+<p>The frequency of blinking is varied automatically every ten seconds, decreasing
+from the default <tt>APP_BLINK_PERIOD</tt> value by a factor of two and then increasing
+back to the default value.</p>
+ 
+<p>In addition, if the board has buttons on it, the frequency of blinking may be varied manually 
+within the range specified at compile time. Namely, it increases or decreases by a factor 
+of two on pressing on the first or the second button (on the MeshBean board, <tt>SW1</tt> 
+and <tt>SW2</tt> buttons), respectively.
+Minimum, maximum and initial period values (in milliseconds) are defined in the
+<tt>configuration.h</tt> file.</p>
+
+<p>It is not recommended to set the initial period outside the 
+minimum..maximum range, or set the minimum value to less than 2.
+In these cases, the application may behave inconsistently. 
+(The corresponding error checking was omitted intentionally in order to keep
+the application code as simple as possible.)</p>
+
+<h2>Configuration parameters</h2>
+<table>
+	<tr><td class="indexkey"><tt>APP_BLINK_PERIOD</tt></td><td class="indexvalue">Initial blinking period (ms)</td></tr>
+	<tr><td class="indexkey"><tt>APP_MIN_BLINK_PERIOD</tt></td><td class="indexvalue">Minimum blinking period (ms)</td></tr>
+	<tr><td class="indexkey"><tt>APP_MAX_BLINK_PERIOD</tt></td><td class="indexvalue">Maximum blinking period (ms)</td></tr>
+</table>
+
+<p>The description of parameters common for all applications can be found in <a href="Sample_app.html#ConfigParam">Sample Applications Overview</a>.
+ConfigServer parameters are described in the <a href="ConfigServer.html">Configuration Server</a> section.</p>
+
+<p>The source code and for the Blink application is located in the
+<tt><nobr>[SDK]\Sample&nbsp;Applications\Blink</nobr></tt> directory.</p>
+
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>

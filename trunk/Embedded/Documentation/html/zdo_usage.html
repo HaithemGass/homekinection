@@ -1,0 +1,409 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+<title>BitCloud Stack API Reference: Using the ZDO component</title>
+<link href="doxygen.css" rel="stylesheet" type="text/css">
+<link href="tabs.css" rel="stylesheet" type="text/css">
+<style>
+	li > span {
+		font-style:italic;
+		display:block;
+		margin-bottom:5px;
+	}
+	li {
+		margin-bottom:5px;
+	}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="headertitle">
+    <div class="title">Using the ZDO component</div>
+  </div>
+</div>
+
+<div class="contents">
+
+<p>
+The ZigBee Device Objects (ZDO) component of the BitCloud stack provides
+an interface between the application framework, that is a collection of
+application objects, the device profile, and the <a href="APS.html" class="el">APS</a>
+layer. ZDO offers several asynchronous requests for performing basic networking operations, 
+such as network formation and join, and a set of functions that help obtain network 
+information from internal stack structures. A considerable part of network related 
+functionality is maintained by ZigBee Device Profile (ZDP) requests.
+The sections below describe the most common tasks performed with the use
+of ZDO component.
+</p>
+
+<p></p>
+<div><i>See also:</i></div>
+<div><a href="zdo_8h.html" class="el">ZDO Functions and Data Structures</a></div>
+<p></p>
+
+<span class="table_of_contents">Contents</span>
+<ul class="table_of_contents">
+  <li><a href="#start_network">Network start</a></li>
+  <li><a href="#network_notf">Handling network notifications</a></li>
+  <li>
+	<a href="#zdp_requests">Using ZDP requests</a>
+	<ul>
+		<li><a href="#zdp_device_discovery">Device Discovery requests</a></li>
+		<li><a href="#zdp_service_discovery">Service discovery requests</a></li>
+		<li><a href="#zdp_leave_network">Leaving the network</a></li>
+		<li><a href="#zdp_nwk_mgmt">Network management requests</a></li>
+	</ul>
+  </li>
+</ul>
+
+<a name="start_network"></a><span class="to_top"><a href="#">Back to top</a></span>
+<h2>Network start</h2>
+<p>
+Starting network on a certain device means forming a new network
+if the device is the coordinator or discovering and joining to an
+existent network if the device is a router or an end device.
+In both cases the user should call the 
+<a class="el" href="zdo_8h.html#a5c2330058e9c40c5c771964b0f606c58"><code>ZDO_StartNetworkReq()</code></a> 
+function. The function takes a pointer to an instance of 
+<a class="el" href="struct_z_d_o___start_network_req__t.html"><code>ZDO_StartNetworkReq_t</code></a> 
+type as an argument. The only field to be specified in the request
+parameters is a pointer to the confirmation callback given in the
+<code>ZDO_StartNetworkConf</code> field. Upon request competion the
+APS layer fills the <code>confirm</code> field with the execution
+status and information about the network entered by the device. A
+pointer to this field is received as the argument of the callback.
+The following code sample demostrates performing network start.
+
+<div class="fragment"><pre class="fragment">
+<span class="comment">//The parameters for the network start request</span>
+ZDO_StartNetworkReq_t networkParams;
+
+<span class="comment">//the definition of the callback for the network start request</span>
+<span class="keyword">static void</span> ZDO_StartNetworkConf(ZDO_StartNetworkConf_t *confirmInfo)
+{
+    //code goes here
+}
+...
+<span class="comment">//configure the request parameters</span>
+networkParams.ZDO_StartNetworkConf = ZDO_StartNetworkConf;
+<span class="comment">//send the request</span>
+ZDO_StartNetworkReq(&networkParams);
+</pre></div>
+
+As for the most of requests in BitCloud the <code>status</code>
+field of confirmation parameters reports whether the request has
+executed successully. The 
+<a class="el" href="zdo_8h.html#afceb1ef32c21b6fa29f4dc0f57c48075a485e7e1226f64058373d133748aae368"><code>ZDO_SUCCESS_STATUS</code></a>
+value indicates
+that the device has successfully formed or joined the network. In this 
+case network parameters, the short address assigned to the device and
+the parent address are received as well (see documentation of
+<a class="el" href="struct_z_d_o___start_network_conf__t.html"><code>ZDO_StartNetworkConf_t</code></a>).
+</p>
+
+<a name="network_notf"></a><span class="to_top"><a href="#">Back to top</a></span>
+<h2>Handling network notifications</h2>
+<p>
+Each application must implement the 
+<a class="el" href="zdo_8h.html#a56a1c80b09aea02707718c402ef7b99a"><code>ZDO_MgmtNwkUpdateNotf(ZDO_MgmtNwkUpdateNotf_t * nwkParams)</code></a>
+function. The function is called by the stack when certain network events
+occur. The type of the event is observed with the <code>nwkParams->status</code>
+field. The application can choose to ignore or to process any of the events.
+Possible event types are given in the following list:
+</p>
+<ul>
+  <li>
+    <span>ZDO_NETWORK_STARTED_STATUS</span>
+	<div>Received when the stack performs network start by itself, not initiated 
+	on the application level, e.g. when the node automatically rejoined to 
+	the network after it had lost connection to the parent.</div>
+  </li>
+  <li>
+    <span>ZDO_NETWORK_LOST_STATUS</span>
+	<div>Indicates parent loss. After issuing this notification the stack 
+	automatically attempts to rejoin the network. This status can be received 
+	only on end devices.</div>
+  </li>
+  <li>
+    <span>ZDO_NETWORK_LEFT_STATUS</span>
+    <div>Received either when the node lost its parent and failed to rejoin to the 
+	network or when the node left the network by itself in response a ZDP command.</div>
+  </li>
+  <li>
+    <span>ZDO_NWK_UPDATE_STATUS</span>
+    <div>Indicates that one or more of network parameters has been changed. Parameters 
+	include PANID, channel mask, node’s short address.</div>
+  </li>
+  <li>
+    <span>ZDO_CHILD_JOINED_STATUS</span>
+    <div>Indicates that a new child has successfully joined to the current node. This 
+	status is not valid for end devices.</div>
+  </li>
+  <li>
+    <span>ZDO_CHILD_REMOVED_STATUS</span>
+    <div>Indicates that a child has left the network.</div>
+  </li>
+  <li>
+    <span>ZDO_STATIC_ADDRESS_CONFLICT_STATUS</span>
+    <div>Indicates that a short address set statically has leaded to the address conflict. 
+	The event is raised on the node that discovered the conflict. The application is 
+	responsible for resolving the conflict, typically by choosing a different short 
+	address and updating its value on the node via a ZDP request.</div>
+  </li>
+  <li>
+    <span>ZDO_NO_KEY_PAIR_DESCRIPTOR_STATUS</span>
+	<div>The status is valid for high security mode only. The event is raised on the trust
+	center node and indicates that the link key value for the device that tries to
+	join the network is not found. The application can save the extended address of
+	the potential child to extract the link key for it from an external source of information,
+	so that the child can be authenticated when it make the next attempt to join the network.</div>
+  </li>
+</ul>
+<p>
+The definition of the <code>ZDO_MgmtNwkUpdateNotf()</code> function
+in the application code might look like the following:
+
+<div class="fragment"><pre class="fragment">
+<span class="keyword">void</span> ZDO_MgmtNwkUpdateNotf(ZDO_MgmtNwkUpdateNotf_t *nwkParams)
+{
+  <span class="keyword">switch</span> (nwkParams->status)
+  {
+    <span class="keyword">case</span> ZDO_NETWORK_STARTED_STATUS:
+      <span class="comment">//More code goes here, e.g. the application may save new</span>
+      <span class="comment">//network parameters</span>
+      ...
+      <span class="keyword">break</span>;
+    <span class="keyword">case</span> ZDO_NO_KEY_PAIR_DESCRIPTOR_STATUS:
+<span class="keyword">#ifdef</span> _HIGH_SECURITY_
+      <span class="comment">//The event can occur in high security mode on the trust center only</span>
+      <span class="comment">//Extract the extended address of the device attempting to join the network</span>
+      ExtAddr_t addr = nwkParams->childInfo.extAddr;
+      uint8_t   linkKey[16] = ...; <span class="comment">//Find out the link key value and store in this variable</span>
+      APS_SetLinkKey(&addr, linkKey); <span class="comment">//Set the link key for the given extended address</span>
+<span class="keyword">#endif</span>
+      <span class="keyword">break</span>;
+    <span class="keyword">default</span>:
+      <span class="keyword">break</span>;
+  }
+}
+</pre></div>
+Note the use of <code>_HIGH_SECURITY_</code> define. It marks code parts that
+would be included if the application is compiled with high security mode.
+If the code in the callback might consume more than 10ms, its execution
+should be <a href="overview.html#def_task_exec">deferred</a>.
+</p>
+
+<a name="zdp_requests"></a><span class="to_top"><a href="#">Back to top</a></span>
+<h2>Using ZDP requests</h2>
+<p>
+ZigBee Device Profile (ZDP) requests provide a set of functionality for
+managing the network, discovering devices and services, etc. The
+<a class="el" href="zdo_8h.html#ad2406e206b8fe81a68b44e8f7112f20a"><code>ZDO_ZdpReq()</code></a>
+function issues a ZDP request. A particular action performed by the function is
+detemined by the <code>reqCluster</code> field in an instance of the 
+<a class="el" href="struct_z_d_o___zdp_req__t.html"><code>ZDO_ZdpReq_t </code></a>
+type representing request parameters. Additional request parameters are given in 
+the <code>req.reqPayload</code> field, which is actually a union, so that
+the same memory is used for parameters specific for different request types. 
+</p>
+<p>
+Since the function call is done asynchronously request parameters structure shall
+be defined in a global scope. Note that an instance of request parameters
+must not be reused until the confirmation is called for the current request,
+because the callback is provided with a pointer to response parameters
+that reside in the instance of the request parameters.
+</p>
+<p>
+Following sections provide some examples of issuing ZDP requsts of various types.
+For more example explore the code of sample applications provided with the SDK.
+</p>
+
+<a name="zdp_device_discovery"></a>
+<h3>Device Discovery requests</h3>
+<p>
+Two typical tasks in ZigBee application development are obtaining the extended address of a 
+remote device corresponding to a given short address and a reverse task of discoveing the
+short address of a device with a given extended address. These tasks are accomplished with
+a help of ZDP requests of 
+<a class="el" href="zdo_8h.html#abed82baf7f470b522273a3e37c24c600a5f82e8ee6326f3c9011130028c2150b6"><code>IEEE_ADDR_CLID</code></a> and 
+<a class="el" href="zdo_8h.html#abed82baf7f470b522273a3e37c24c600ac74a17ef13dadfbed128cd8a75131bc6"><code>NWK_ADDR_CLID</code></a> types,
+respectively. For example, to obtain the extended address the following code may be used:
+</p>
+<div class="fragment"><pre class="fragment">
+ZDO_IeeeAddrReq_t *ieeeAddrReq = &zdpReq.req.reqPayload.ieeeAddrReq;
+zdpReq.ZDO_ZdpResp = zdpIeeeAddrResp; <span class="comment">//confirmation callback</span>
+zdpReq.reqCluster = IEEE_ADDR_CLID; <span class="comment">//type of request</span>
+ieeeAddrReq->nwkAddrOfInterest = nwkAddr; <span class="comment">//the destination short address</span>
+ieeeAddrReq->reqType = SINGLE_RESPONSE_REQUESTTYPE; <span class="comment">//indicate that response is expected from</span>
+                                                    <span class="comment">//one node only</span>
+ieeeAddrReq->startIndex = 0;
+ZDO_ZdpReq(&zdpReq); <span class="comment">//send the request</span>
+</pre></div>
+<p>
+Implementation of the callback for this request might look like the following:
+</p>
+<div class="fragment"><pre class="fragment">
+<span class="keyword">static void</span> zdpIeeeAddrResp(ZDO_ZdpResp_t *resp)
+{
+  <span class="comment">//Convert the response to the appropriate type</span>
+  ZDO_IeeeAddrResp_t *ieeeAddrResp = (ZDO_IeeeAddrResp_t *) &resp->respPayload.ieeeAddrResp;
+  <span class="comment">//Check whether the operation is a success</span>
+  <span class="keyword">if</span> (ZDO_SUCCESS_STATUS == resp->respPayload.status)
+  {
+    <span class="comment">//The desired extended address is contained in ieeeAddrResp->ieeeAddrRemote filed</span>
+    ... <span class="comment">//Performed actions that required obtaining the address</span>
+    <span class="comment">//Post a task to notify the stack that APL_TaskHandler() should</span>
+    <span class="comment">//be executed</span>
+    SYS_PostTask(APL_TASK_ID);
+  }
+  <span class="keyword">else</span>
+  {
+    <span class="comment">//Execute required logic, e.g. perform IEEE request again</span>
+  }
+}
+</pre></div>
+<p>
+Note that the response should be converted to the type conforming to
+the type of the issued request. For that, select appropriate field from the union
+inside the <code>respPayload</code> field.
+</p>
+
+<a name="zdp_service_discovery"></a>
+<h3>Service Discovery requests</h3>
+<p>
+Service Discovery stands for procedures of collecting information about
+network devices and functionality they support. Through the use of Service Discovery
+the application on the current node is able to find out short addresses of devices
+which support certain input or output clusters and accomplish some other similar tasks.
+</p>
+<p>
+An essential ZDP request implementing Service Discovery that is frequenty needed in
+applications is of type 
+<a class="el" href="zdo_8h.html#abed82baf7f470b522273a3e37c24c600a1d325fb1f092187e9d0754cbd6eeb930"><code>MATCH_DESCRIPTOR_CLID</code></a>. 
+It launches a search for
+devices that have registered endpoints with simple descriptors matching a specified
+criterion. The request can be sent either to a specific node identified with the short
+address or to a broadcast address. The application can specify a list of input and a list 
+of output clusters, although it is rarely useful to point out more than one cluster,
+because a destination node responds with a list of all its endpoints that support at 
+least one input or output cluster specified in the request. The following code sends a
+match descriptor request:
+</p>
+<div class="fragment"><pre class="fragment">
+<span class="comment">//define global variables</span>
+<span class="keyword">static</span> ZDO_ZdpReq_t zdpReq;
+...
+ZDO_MatchDescReq_t *matchDescReq = &zdpReq.req.reqPayload.matchDescReq;
+
+zdpReq.ZDO_ZdpResp = zdpMatchDescResp; <span class="comment">//confirmation callback</span>
+zdpReq.reqCluster = MATCH_DESCRIPTOR_CLID; <span class="comment">//set request type</span>
+
+matchDescReq->nwkAddrOfInterest = CPU_TO_LE16(BROADCAST_SHORT_ADDRESS);
+matchDescReq->profileId = CPU_TO_LE16(APP_PROFILE); <span class="comment">//set profile ID</span>
+matchDescReq->numInClusters = 1; <span class="comment">//number of clusters</span>
+matchDescReq->inClusterList[0] = APP_CLUSTER; <span class="comment">//set cluster ID</span>
+
+ZDO_ZdpReq(&zdpReq); <span class="comment">//send the request</span>
+</pre></div>
+<p>
+Each reply from a discovered device received by the originator node causes the 
+confirmation callback to be called. As soon as the request is issued the stack 
+starts a timer and waits for replies during a certaion period of time firing the callback
+with 
+<a class="el" href="zdo_8h.html#afceb1ef32c21b6fa29f4dc0f57c48075a8b8607ff5b05ae92768e8ac830fd2b7a"><code>ZDO_CMD_COMPLETED_STATUS</code></a>
+when the timer stops. Each response
+contains the short address, the number of matching endpoints and the list of
+matching endpoints. The confirmation implementation can be as follows:
+</p>
+<div class="fragment"><pre class="fragment">
+<span class="comment">//Confirmation callback implementation</span>
+<span class="keyword">static void</span> zdpMatchDescResp(ZDO_ZdpResp_t *resp)
+{
+  ZDO_MatchDescResp_t *matchResp = &resp->respPayload.matchDescResp;
+  <span class="keyword">if</span> (ZDO_CMD_COMPLETED_STATUS == resp->respPayload.status) {
+    <span class="comment">//timeout has expired; this is the last time the callback is called</span>
+    <span class="comment">//for the current request</span>
+  }
+  <span class="keyword">else if</span> (ZDO_SUCCESS_STATUS == resp->respPayload.status) {
+    <span class="comment">//process another response from the network, e.g. the application</span>
+	<span class="comment">//can immediately send a request for the extended address of the device</span>
+	doIeeeAddrReq();
+  }
+  <span class="keyword">else</span> {
+    <span class="comment">//process failure statuses</span>
+  }
+}
+</pre></div>
+
+<a name="leave_network"></a>
+<h3>Leaving the network</h3>
+<p>
+To force the device to leave the network issue a ZDP request of the
+<a class="el" href="zdo_8h.html#abed82baf7f470b522273a3e37c24c600ac2b1e0911f2526595f35d8af301504c8"><code>MGMT_LEAVE_CLID</code></a> 
+type. The request can also be used to force a remote
+node to leave the network. A node that has left the network cannot be reached by
+remote data requests and can not sent data to remote nodes from the application layer.
+To return to the network the node should issue network start request. To ensure
+that the same network will be chosen during network scan procedures, the PANID value
+of the previous network shall be saved before network leave and indicated as predefined.
+</p>
+<p>
+The folowing examples illustrates parameters configuration for the <code>MGMT_LEAVE_CLID</code>
+request which will force the current node to leave the network:
+</p>
+<div class="fragment"><pre class="fragment">
+<span class="keyword">static</span> ZDO_ZdpReq_t zdpLeaveReq; <span class="comment">//globally defined variable</span>
+…
+<span class="comment">//set corresponding cluster ID </span>
+zdpLeaveReq.reqCluster = MGMT_LEAVE_CLID; 
+zdpLeaveReq.dstAddrMode = EXT_ADDR_MODE;
+zdpLeaveReq.dstExtAddr = 0; <span class="comment">// for own node address shall be 0</span>
+zdpLeaveReq.ZDO_ZdpResp = ZDO_ZdpLeaveResp; <span class="comment">// callback</span>
+
+<span class="comment">//for own node address shall be 0 </span>
+zdpLeaveReq.req.reqPayload.mgmtLeaveReq.deviceAddr = 0;
+<span class="comment">//specify whether to force children leave or not </span>
+zdpLeaveReq.req.reqPayload.mgmtLeaveReq.removeChildren = 0;
+
+<span class="comment">//specify whether to perform rejoin procedure after network leave </span>
+zdpLeaveReq.req.reqPayload.mgmtLeaveReq.rejoin = 0;
+ZDO_ZdpReq(&zdpLeaveReq); <span class="comment">// request for network leave</span>
+</pre></div>
+<p>
+The request can also be used for asking a remote node to leave. Moreover,
+it is possible to force all its direct children to leave. For that, parameters
+shall be configured in a different way as it is shown below:
+</p>
+<div class="fragment"><pre class="fragment">
+<span class="keyword">static</span> ZDO_ZdpReq_t zdpLeaveReq; <span class="comment">//globally defined variable</span>
+…
+<span class="comment">//set corresponding cluster ID </span>
+zdpLeaveReq.reqCluster = MGMT_LEAVE_CLID; 
+zdpLeaveReq.dstAddrMode = EXT_ADDR_MODE;
+zdpLeaveReq.dstExtAddr = DST_EXT_ADDRESS; <span class="comment">//for own node address shall be 0</span>
+zdpLeaveReq.ZDO_ZdpResp = ZDO_ZdpLeaveResp; <span class="comment">//confirmation callback</span>
+
+<span class="comment">//for own node address shall be 0 </span>
+zdpLeaveReq.req.reqPayload.mgmtLeaveReq.deviceAddr = DST_EXT_ADDRESS;
+<span class="comment">//specify whether to force children leave or not </span>
+zdpLeaveReq.req.reqPayload.mgmtLeaveReq.removeChildren = 1;
+
+<span class="comment">//specify whether to perform rejoin procedure after network leave</span>
+zdpLeaveReq.req.reqPayload.mgmtLeaveReq.rejoin = 0;
+ZDO_ZdpReq(&zdpLeaveReq); <span class="comment">// request for network leave</span>
+</pre></div>
+<p>
+If the <code>rejoin</code> field is set to 1, then a destination node will attempt to join
+the network again after the network leave is complete. It may be used to force a device 
+to change its parent or join with a deffirent short address.
+</p>
+
+<!--<a name="zdp_nwk_mgmt"></a>
+<h3>Network management requests</h3>
+<p>
+</p>-->
+
+</div>
+<img src="footer.png" style="margin-top:20px"/>
+</body>
+</html>
