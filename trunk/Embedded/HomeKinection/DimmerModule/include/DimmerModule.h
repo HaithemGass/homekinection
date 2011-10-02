@@ -19,14 +19,17 @@
 
 #define DEVICE_MESSAGE_SUPPORT (DEVICE_MESSAGE_DIMMER | DEVICE_MESSAGE_STATUS)
 #define MAX_DIMMER_BRIGHTNESS 520
+//#define MAX_DIMMER_BRIGHTNESS 600
+#define MODULE_TYPE_DIMMER
 
 /******************************************************************************
                     Includes section
 *****************************************************************************/
-#include "sliders.h"
-#include "buttons.h"
+//#include "sliders.h"
+//#include "buttons.h"
 #include "leds.h"
 #include "defines.h"
+#include <halIrq.h>
 
 
 /*****************************************************************************
@@ -57,6 +60,7 @@ void initializeDevice();
 void initializeConfigurationServer();
 void initializePWM();
 void initializeRotaryEncoder();
+void initializeZeroDetect();
 void registerEndpoints();
 
 void sendDimmerPacket(ShortAddr_t addr);
@@ -67,6 +71,7 @@ void retryStatusPacket();
 
 void readGreyCode();
 void readButton();
+void resetPWM();
 
 
 #endif /* DIMMERMODULE_H_ */

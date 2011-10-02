@@ -19,6 +19,7 @@
 #include <DimmerModule.h>
 #include <gpio.h>
 #include <pwm.h>
+#include <halPwm.h>
 
 
 /*****************************************************************************
@@ -334,6 +335,7 @@ void ZDO_UnbindIndication(ZDO_UnbindInd_t *unbindInd)
 **************************************************************************/
 void initializeDevice()
 {
+	
 	BSP_OpenLeds(); // Enable LEDs 
 	GPIO_2_set();			
 	GPIO_1_clr();	
@@ -356,8 +358,19 @@ void initializeDevice()
 	startNetworkReq.ZDO_StartNetworkConf = networkStartConfirm;
 	ZDO_StartNetworkReq(&startNetworkReq);	     		
 	
-     initializePWM();
-	initializeRotaryEncoder();			
+    initializePWM();
+	initializeRotaryEncoder();	
+	initializeZeroDetect();		
+}
+
+void initializeZeroDetect()
+{
+	
+	HAL_RegisterIrq(IRQ_6,IRQ_ANY_EDGE,resetPWM);
+	HAL_EnableIrq(IRQ_6);
+  
+  
+  
 }
 
 void initializeRotaryEncoder()
@@ -388,7 +401,7 @@ void initializePWM()
 	HAL_OpenPwm(PWM_UNIT_3);			
 	pwmChannel1.unit = PWM_UNIT_3;
 	pwmChannel1.channel  = PWM_CHANNEL_0;
-	pwmChannel1.polarity = PWM_POLARITY_INVERTED;			
+	pwmChannel1.polarity = PWM_POLARITY_NON_INVERTED;			
 	HAL_SetPwmFrequency(PWM_UNIT_3, MAX_DIMMER_BRIGHTNESS , PWM_PRESCALER_64 );			
 	HAL_StartPwm(&pwmChannel1);	
 	HAL_SetPwmCompareValue(&pwmChannel1, (MAX_DIMMER_BRIGHTNESS * intensity)/100);     
@@ -446,7 +459,6 @@ ISR(INT3_vect)
   readGreyCode();
   EIMSK |= (0x0E);  
 }
-
 
 void readGreyCode()
 {
@@ -513,6 +525,18 @@ void readGreyCode()
 		appState = APP_NETWORK_SEND_STATUS;
 		SYS_PostTask(APL_TASK_ID);		
 	}
+}
+
+void resetPWM()
+{
+	  halMoveWordToRegister(&TCNTn(PWM_UNIT_3), 0x0000);
+	  GPIO_2_toggle();
+	//TCNT3=0x0000;
+//	HAL_StopPwm(&pwmChannel1);	
+//	HAL_SetPwmFrequency(PWM_UNIT_3, MAX_DIMMER_BRIGHTNESS , PWM_PRESCALER_64 );			
+//	HAL_StartPwm(&pwmChannel1);	
+//	HAL_SetPwmCompareValue(&pwmChannel1, (MAX_DIMMER_BRIGHTNESS * intensity)/100);
+	
 }
 
 /**********************************************************************//**
