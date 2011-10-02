@@ -62,6 +62,9 @@ void registerEndpoints();
 void sendDimmerPacket(ShortAddr_t addr);
 void sendStatusPacket(ShortAddr_t addr);
 
+void retryDimmerPacket();
+void retryStatusPacket();
+
 void readGreyCode();
 void readButton();
 
