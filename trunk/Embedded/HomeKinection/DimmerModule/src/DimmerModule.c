@@ -46,7 +46,7 @@ static StatusMessagePacket statusMessage; // Dimmer Message buffer
 
 static ShortAddr_t myAddr;
 
-static HAL_AppTimer_t buttonTimer;
+static HAL_AppTimer_t retryTimer;
 
 static bool encoderChannel1, encoderChannel2;
 static uint16_t intensity = 0;
@@ -91,15 +91,35 @@ void APL_TaskHandler(void)
 		
                     ///APP_NETWORK_SEND_STATUS
 		case APP_NETWORK_SEND_STATUS:
-		     GPIO_0_set();
-			sendStatusPacket(CPU_TO_LE16(0));			
+		     
+			 if(ableToSend)
+			 {
+		        GPIO_0_set();
+			   sendStatusPacket(CPU_TO_LE16(0));	 				 
+			 }else{
+			   HAL_StopAppTimer(&retryTimer);
+			   retryTimer.callback = retryStatusPacket;
+			   retryTimer.interval = 10;
+			   retryTimer.mode = TIMER_ONE_SHOT_MODE;
+			   HAL_StartAppTimer(&retryTimer);
+			 }
+		
 			appState = APP_NETWORK_IDLE;			
 		break;
           
           ///APP_NETWORK_SEND_STATUS
 		case APP_NETWORK_SEND_DIMMER:
-		     GPIO_0_set();
-			sendDimmerPacket(CPU_TO_LE16(0));
+                if(ableToSend)
+			 {
+		        GPIO_0_set();
+			   sendStatusPacket(CPU_TO_LE16(0));	 				 
+			 }else{
+			   HAL_StopAppTimer(&retryTimer);
+			   retryTimer.callback = retryDimmerPacket;
+			   retryTimer.interval = 10;
+			   retryTimer.mode = TIMER_ONE_SHOT_MODE;
+			   HAL_StartAppTimer(&retryTimer);
+			 }
 			appState = APP_NETWORK_IDLE;			
 		break;
           
@@ -116,14 +136,14 @@ void APL_TaskHandler(void)
 void sendStatusPacket(ShortAddr_t addr)
 {	
      
-	uint16_t temp = (!lampOn) ? 0 : (MAX_DIMMER_BRIGHTNESS * intensity)/100 ;
+	uint16_t temp = (lampOn) ? ((MAX_DIMMER_BRIGHTNESS * intensity)/100) : 0 ;
 	HAL_SetPwmCompareValue(&pwmChannel1,temp ); 
 		
      statusMessage.data.deviceType = DIMMER_MODULE;
      statusMessage.data.statusMessageType = 0x0000;
      statusMessage.data.shortAddress = myAddr ;     
 	 
-	stuffStatusPacket((uint8_t*) &temp, sizeof(intensity), &statusMessage)	 ;
+	stuffStatusPacket((uint8_t*) &temp, sizeof(temp), &statusMessage)	 ;
      
 	packet.asdu = (uint8_t *)(&statusMessage.data);
 	packet.asduLength = sizeof(statusMessage.data);
@@ -163,6 +183,19 @@ void sendDimmerPacket(ShortAddr_t addr)
 	
 	
 	APS_DataReq(&packet); 	
+}
+
+
+void retryStatusPacket()
+{
+	appState = APP_NETWORK_SEND_STATUS;
+	SYS_PostTask(APL_TASK_ID);	
+}
+
+void retryDimmerPacket()
+{
+	appState = APP_NETWORK_SEND_DIMMER;
+	SYS_PostTask(APL_TASK_ID);	
 }
 
 /*******************************************************************************
