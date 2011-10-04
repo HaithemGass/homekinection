@@ -137,14 +137,31 @@ void APL_TaskHandler(void)
 void sendStatusPacket(ShortAddr_t addr)
 {	
      
-	uint16_t temp = (lampOn) ? ((MAX_DIMMER_BRIGHTNESS * intensity)/100) : 0 ;
-	HAL_SetPwmCompareValue(&pwmChannel1,temp ); 
+	uint16_t temp;
+	if(lampOn)
+	{
+		//to avoid overflow
+		if(intensity > 50)
+		{
+		  temp = (MAX_DIMMER_BRIGHTNESS * (intensity-50)/50);
+		  temp = temp + (MAX_DIMMER_BRIGHTNESS)/2; 
+		}
+		else
+		{
+		  temp = ((MAX_DIMMER_BRIGHTNESS * intensity)/100); 
+		}					
+     }
+	else
+	{
+	     temp = 0;
+	}			 
+	HAL_SetPwmCompareValue(&pwmChannel1,(MAX_DIMMER_BRIGHTNESS - temp) ); 
 		
      statusMessage.data.deviceType = DIMMER_MODULE;
      statusMessage.data.statusMessageType = 0x0000;
      statusMessage.data.shortAddress = myAddr ;     
 	 
-	stuffStatusPacket((uint8_t*) &temp, sizeof(temp), &statusMessage)	 ;
+	stuffStatusPacket((uint8_t*) &intensity, sizeof(intensity), &statusMessage)	 ;
      
 	packet.asdu = (uint8_t *)(&statusMessage.data);
 	packet.asduLength = sizeof(statusMessage.data);
@@ -208,11 +225,7 @@ void retryDimmerPacket()
 *******************************************************************************/
 void statusMessageReceived(APS_DataInd_t* indData)
 {	
-     StatusMessageData *data = (StatusMessageData*)(indData->asdu);
-     
-     if(data->deviceType == DIMMER_MODULE){
-          HAL_SetPwmCompareValue(&pwmChannel1, data->message[0]);     
-     }          	
+     indData = indData;       	
 }
 
 
@@ -225,9 +238,18 @@ void statusMessageReceived(APS_DataInd_t* indData)
 *******************************************************************************/
 void dimmerCommandReceived(APS_DataInd_t* indData)
 {	
-     indData = indData;
-	 GPIO_2_clr();
-	 GPIO_1_clr();
+	DimmerCommandData *data = (StatusMessageData*)(indData->asdu);
+	uint16_t temp;
+	lampOn = true;
+	if(data->intensity > 50){
+	     temp = (MAX_DIMMER_BRIGHTNESS * (data->intensity-50)/50);
+		temp = temp + (MAX_DIMMER_BRIGHTNESS)/2; 
+	}
+	else
+	{
+		temp = ((MAX_DIMMER_BRIGHTNESS * data->intensity)/100); 
+	}			
+	HAL_SetPwmCompareValue(&pwmChannel1, MAX_DIMMER_BRIGHTNESS - temp);	
 }
 
 
@@ -398,13 +420,18 @@ void initializeRotaryEncoder()
 void initializePWM()
 {
 	//setup pwm
+	GPIO_3_make_out();
+	
 	HAL_OpenPwm(PWM_UNIT_3);			
 	pwmChannel1.unit = PWM_UNIT_3;
 	pwmChannel1.channel  = PWM_CHANNEL_0;
 	pwmChannel1.polarity = PWM_POLARITY_NON_INVERTED;			
 	HAL_SetPwmFrequency(PWM_UNIT_3, MAX_DIMMER_BRIGHTNESS , PWM_PRESCALER_64 );			
 	HAL_StartPwm(&pwmChannel1);	
-	HAL_SetPwmCompareValue(&pwmChannel1, (MAX_DIMMER_BRIGHTNESS * intensity)/100);     
+     HAL_SetPwmCompareValue(&pwmChannel1, 0); 
+	
+	encoderChannel1 = ((PIND & (1 << PIND2)) != 0);
+	encoderChannel2 = ((PIND & (1 << PIND3)) != 0);    	
 }
 
 void initializeConfigurationServer()
@@ -460,6 +487,12 @@ ISR(INT3_vect)
   EIMSK |= (0x0E);  
 }
 
+ISR(TIMER3_COMPA_vect)
+{
+     GPIO_2_toggle();	
+	GPIO_3_set();
+}
+
 void readGreyCode()
 {
 	bool newEn1, newEn2, sendMessage = false;	
@@ -479,7 +512,7 @@ void readGreyCode()
 			encoderChannel2 = newEn2;
 			if(newEn1 == newEn2)
 			{				
-				if(intensity < 100)
+				if(intensity < 99)
 				{				  
 				  intensity++;
 				  sendMessage = true;
@@ -510,7 +543,7 @@ void readGreyCode()
 		}
 		else
 		{		
-			if(intensity < 100)
+			if(intensity < 99)
 			{
 				intensity++;
 				sendMessage = true;				
@@ -529,14 +562,7 @@ void readGreyCode()
 
 void resetPWM()
 {
-	  halMoveWordToRegister(&TCNTn(PWM_UNIT_3), 0x0000);
-	  GPIO_2_toggle();
-	//TCNT3=0x0000;
-//	HAL_StopPwm(&pwmChannel1);	
-//	HAL_SetPwmFrequency(PWM_UNIT_3, MAX_DIMMER_BRIGHTNESS , PWM_PRESCALER_64 );			
-//	HAL_StartPwm(&pwmChannel1);	
-//	HAL_SetPwmCompareValue(&pwmChannel1, (MAX_DIMMER_BRIGHTNESS * intensity)/100);
-	
+	  halMoveWordToRegister(&TCNTn(PWM_UNIT_3), 0x0000);	 
 }
 
 /**********************************************************************//**
