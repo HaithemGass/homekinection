@@ -16,6 +16,7 @@
 
 #include <appTimer.h>
 #include <zdo.h>
+#include <usart.h>
 #include <CommandModule.h>
 #include <gpio.h>
 #include <pwm.h>
@@ -40,6 +41,9 @@ static APS_DataReq_t packet; // Data transmission request
 
 //Global PWM Ch1
 HAL_PwmDescriptor_t pwmChannel1;
+
+//Gloabl Usart Channel
+HAL_UsartDescriptor_t usartChannel0;
 
 static DimmerCommandPacket dimmerMessage; // Dimmer Message buffer
 static ShadeCommandPacket shadeMessage; // Dimmer Message buffer
@@ -146,7 +150,11 @@ void statusMessageReceived(APS_DataInd_t* indData)
 		uint16_t * p_intensity = (uint16_t * )(data->message);
 		uint16_t intensity = *p_intensity;		
           HAL_SetPwmCompareValue(&pwmChannel1, 5  * intensity);     
-     }          	
+     }
+	
+	uint8_t message[] = "STATUS MESSAGE!\r\n";
+	 
+	HAL_WriteUsart(&usartChannel0, message, sizeof(message));
 }
 
 /*******************************************************************************
@@ -294,6 +302,7 @@ void initializeDevice()
 	ZDO_StartNetworkReq(&startNetworkReq);	     		
 	
      initializePWM();			
+	initializeSerial();
 }
 
 void initializePWM()
@@ -306,6 +315,19 @@ void initializePWM()
 	HAL_SetPwmFrequency(PWM_UNIT_3, 500 , PWM_PRESCALER_64 );			
 	HAL_StartPwm(&pwmChannel1);
 	HAL_SetPwmCompareValue(&pwmChannel1, 0);     
+}
+
+void initializeSerial()
+{
+	usartChannel0.baudrate = USART_BAUDRATE_9600;
+	usartChannel0.tty = USART_CHANNEL_0;
+	usartChannel0.mode = USART_MODE_ASYNC;
+	usartChannel0.parity = USART_PARITY_NONE;
+	usartChannel0.stopbits = USART_STOPBIT_1;
+	usartChannel0.flowControl = USART_FLOW_CONTROL_NONE;	
+	usartChannel0.dataLength = USART_DATA8;
+	
+	HAL_OpenUsart(&usartChannel0);
 }
 
 void initializeConfigurationServer()
