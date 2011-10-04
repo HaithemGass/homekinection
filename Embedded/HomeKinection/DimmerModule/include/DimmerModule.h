@@ -18,8 +18,8 @@
 *****************************************************************************/
 
 #define DEVICE_MESSAGE_SUPPORT (DEVICE_MESSAGE_DIMMER | DEVICE_MESSAGE_STATUS)
-#define MAX_DIMMER_BRIGHTNESS 520
-//#define MAX_DIMMER_BRIGHTNESS 600
+//#define MAX_DIMMER_BRIGHTNESS 520
+#define MAX_DIMMER_BRIGHTNESS 1040
 #define MODULE_TYPE_DIMMER
 
 /******************************************************************************
