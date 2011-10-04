@@ -9,6 +9,20 @@
 #ifndef HELPERS_H_
 #define HELPERS_H_
 
+
+#define LED_COLOR_OFF 0,0,0
+
+#define LED_COLOR_RED 255,0,0
+#define LED_COLOR_GREEN 0,255,0
+#define LED_COLOR_BLUE 0,0,255
+#define LED_COLOR_WHITE 255,255,255
+#define LED_COLOR_YELLOW 255,255,0
+#define LED_COLOR_PURPLE 110,0,100
+#define LED_COLOR_ORANGE 255,100,0
+#define LED_COLOR_PINK 255,100,100
+#define LED_COLOR_TURQUOISE 0,150,100
+
+
 HAL_PwmDescriptor_t pwmChannelRed;
 HAL_PwmDescriptor_t pwmChannelGreen;
 HAL_PwmDescriptor_t pwmChannelBlue;
