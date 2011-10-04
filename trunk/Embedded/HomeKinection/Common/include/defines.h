@@ -122,6 +122,45 @@ typedef enum
      static SimpleDescriptor_t shadeEndpoint = {SHADE_CONTROL,1, 1, 1, 0, 0, NULL, 0, NULL};
 #endif
 
+//-------------------------IR
+#if ((DEVICE_MESSAGE_SUPPORT & DEVICE_MESSAGE_IR) != 0)
+     
+	BEGIN_PACK
+     typedef struct  
+	{
+		 uint16_t duration;
+	}PACK remoteTransition;
+	END_PACK     
+	 
+	BEGIN_PACK
+     typedef struct  
+	{
+		 remoteTransition transitions[32];
+		 uint8_t length;
+	}PACK remoteSequence;
+	END_PACK
+	 
+	BEGIN_PACK
+	typedef struct  
+	{
+		 uint8_t remoteSequenceNumber;
+		 remoteSequence sequence;
+	}PACK IRCommandData;
+	END_PACK	
+	
+	BEGIN_PACK
+	typedef struct
+	{
+		uint8_t header[APS_ASDU_OFFSET]; // Header
+		IRCommandData data;
+		uint8_t footer[APS_AFFIX_LENGTH - APS_ASDU_OFFSET]; //Footer
+	} PACK IRCommandPacket;
+	END_PACK
+	
+	static APS_RegisterEndpointReq_t irEndpointParams;
+     static SimpleDescriptor_t irEndpoint = {IR_CONTROL,1, 1, 1, 0, 0, NULL, 0, NULL};
+#endif
+
 /*****************************************************************************
 ******************************************************************************
 *                                                                            *
