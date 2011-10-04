@@ -54,6 +54,7 @@ void statusMessageReceived (APS_DataInd_t* indData);
 void initializeDevice();
 void initializeConfigurationServer();
 void initializePWM();
+void initializeSerial();
 
 void sendDimmerPacket(ShortAddr_t addr);
 void sendShadePacket(ShortAddr_t addr);
