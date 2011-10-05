@@ -17,6 +17,7 @@
 ******************************************************************************
 *****************************************************************************/
 #define DEVICE_MESSAGE_SUPPORT (DEVICE_MESSAGE_ALL)
+#define LED_MAX_BRIGHTNESS 255
 
 /******************************************************************************
                     Includes section
@@ -25,6 +26,7 @@
 #include "buttons.h"
 #include "leds.h"
 #include "defines.h"
+
 
 /*****************************************************************************
 ******************************************************************************
@@ -48,6 +50,7 @@ static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo);
 static void networkTransmissionConfirm(APS_DataConf_t *result);
 
 void dimmerCommandReceived (APS_DataInd_t* indData);
+void irCommandReceived (APS_DataInd_t* indData);
 void shadeCommandReceived (APS_DataInd_t* indData);
 void statusMessageReceived (APS_DataInd_t* indData);
 
@@ -58,8 +61,10 @@ void initializeSerial();
 
 void sendDimmerPacket(ShortAddr_t addr);
 void sendShadePacket(ShortAddr_t addr);
+void sendIRPacket(ShortAddr_t addr);
 
 void registerEndpoints();
+
 
 
 #endif /* COMMANDMODULE_H_ */
