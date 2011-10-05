@@ -6,42 +6,78 @@
  */ 
 
 
-#ifndef DIMMERMODULE_H_
-#define DIMMERMODULE_H_
+#ifndef IRMODULE_H_
+#define IRMODULE_H_
+/*****************************************************************************
+******************************************************************************
+*                                                                            *
+*                                 DEFINES                                    *
+*                                                                            *
+*                                                                            *
+******************************************************************************
+*****************************************************************************/
 
-
-/**************************************************************************//**
-  \file blink.h
-  
-  \brief Blink application header file.
-
-  \author
-    Atmel Corporation: http://www.atmel.com \n
-    Support email: avr@atmel.com
-
-  Copyright (c) 2008-2011, Atmel Corporation. All rights reserved.
-  Licensed under Atmel's Limited License Agreement (BitCloudTM).
-
-  \internal
-    History:     
-******************************************************************************/
+#define DEVICE_MESSAGE_SUPPORT (DEVICE_MESSAGE_IR| DEVICE_MESSAGE_STATUS)
+//#define MAX_DIMMER_BRIGHTNESS 520
+#define PWM_FREQUENCY 104
+#define MODULE_TYPE_DIMMER
+#define TIMER_UNIT_5 0x120
 
 /******************************************************************************
                     Includes section
-******************************************************************************/
-#include "sliders.h"
+*****************************************************************************/
+//#include "sliders.h"
 #include "buttons.h"
 #include "leds.h"
+#include "defines.h"
+#include <halIrq.h>
 
-/******************************************************************************
-                    Defines section
-******************************************************************************/
-#define APP_BLINK_INTERVAL             (APP_BLINK_PERIOD / 2)       // Blink interval.
-#define APP_MIN_BLINK_INTERVAL         (APP_MIN_BLINK_PERIOD / 2)   // Minimum blink interval.
-#define APP_MAX_BLINK_INTERVAL         (APP_MAX_BLINK_PERIOD / 2)   // Maximum blink interval.
 
-#define APP_HALF_PERIOD_BUTTON          BSP_KEY0                // Button that reduces blink interval to a half.
-#define APP_DOUBLE_PERIOD_BUTTON        BSP_KEY1                // Button that doubles blink interval.
+/*****************************************************************************
+******************************************************************************
+*                                                                            *
+*                           STRUCTS AND ENUMS                                *
+*                                                                            *
+*                                                                            *
+******************************************************************************
+*****************************************************************************/
+
+/*****************************************************************************
+******************************************************************************
+*                                                                            *
+*                           FUNCTION DECLARATIONS                            *
+*                                                                            *
+*                                                                            *
+******************************************************************************
+*****************************************************************************/                  
+
+static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo);
+static void networkTransmissionConfirm(APS_DataConf_t *result);
+
+void dimmerCommandReceived (APS_DataInd_t* indData);
+void statusMessageReceived (APS_DataInd_t* indData);
+
+void initializeDevice();
+void initializeConfigurationServer();
+void initializePWM();
+void initializeTimer();
+void initializeIR();
+void registerEndpoints();
+
+void sendIRPacket(ShortAddr_t addr);
+void sendStatusPacket(ShortAddr_t addr);
+
+void retryDimmerPacket();
+void retryStatusPacket();
+
+void readGreyCode();
+void readButton();
+void resetPWM();
+void onStartRecording(uint8_t button);
+void handleIRChange();
+void playIR();
+void onButtonDown(uint8_t button);
+
 
 
 #endif /* DIMMERMODULE_H_ */
