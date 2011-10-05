@@ -1872,6 +1872,9 @@
     <Compile Include="Common\include\defines.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Common\include\helpers.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="configuration.h">
       <SubType>compile</SubType>
     </Compile>
