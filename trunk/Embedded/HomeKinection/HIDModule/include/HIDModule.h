@@ -6,25 +6,17 @@
  */ 
 
 
-#ifndef DIMMERMODULE_H_
-#define DIMMERMODULE_H_
-
-
-/**************************************************************************//**
-  \file blink.h
-  
-  \brief Blink application header file.
-
-  \author
-    Atmel Corporation: http://www.atmel.com \n
-    Support email: avr@atmel.com
-
-  Copyright (c) 2008-2011, Atmel Corporation. All rights reserved.
-  Licensed under Atmel's Limited License Agreement (BitCloudTM).
-
-  \internal
-    History:     
-******************************************************************************/
+#ifndef HIDMODULE_H_
+#define HIDMODULE_H_
+/*****************************************************************************
+******************************************************************************
+*                                                                            *
+*                                 DEFINES                                    *
+*                                                                            *
+*                                                                            *
+******************************************************************************
+*****************************************************************************/
+#define DEVICE_MESSAGE_SUPPORT (DEVICE_MESSAGE_HID | DEVICE_MESSAGE_STATUS)
 
 /******************************************************************************
                     Includes section
@@ -32,19 +24,83 @@
 #include "sliders.h"
 #include "buttons.h"
 #include "leds.h"
-
-/******************************************************************************
-                    Defines section
-******************************************************************************/
-#define APP_BLINK_INTERVAL             (APP_BLINK_PERIOD / 2)       // Blink interval.
-#define APP_MIN_BLINK_INTERVAL         (APP_MIN_BLINK_PERIOD / 2)   // Minimum blink interval.
-#define APP_MAX_BLINK_INTERVAL         (APP_MAX_BLINK_PERIOD / 2)   // Maximum blink interval.
-
-#define APP_HALF_PERIOD_BUTTON          BSP_KEY0                // Button that reduces blink interval to a half.
-#define APP_DOUBLE_PERIOD_BUTTON        BSP_KEY1                // Button that doubles blink interval.
+#include "defines.h"
 
 
-#endif /* DIMMERMODULE_H_ */
+/*****************************************************************************
+******************************************************************************
+*                                                                            *
+*                           STRUCTS AND ENUMS                                *
+*                                                                            *
+*                                                                            *
+******************************************************************************
+*****************************************************************************/
+
+typedef enum{
+	USB_STATE_IDLE,
+	USB_STATE_RELEASE,
+	USB_STATE_WAIT
+}USB_STATE;	
+
+
+/*****************************************************************************
+******************************************************************************
+*                                                                            *
+*                           FUNCTION DECLARATIONS                            *
+*                                                                            *
+*                                                                            *
+******************************************************************************
+*****************************************************************************/                  
+
+static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo);
+static void networkTransmissionConfirm(APS_DataConf_t *result);
+
+void hidCommandReceived (APS_DataInd_t* indData);
+void statusMessageReceived (APS_DataInd_t* indData);
+
+void initializeDevice();
+void initializeConfigurationServer();
+void initializeSPI();
+void initializeUSB();
+
+
+
+void resetMAX();
+void writeMAXReg(uint8_t addr, uint8_t data);
+void writeMAXRegAck(uint8_t addr, uint8_t data);
+void writeMAXBytes(uint8_t addr, uint8_t length, uint8_t *message);
+
+uint8_t readMAXReg(uint8_t addr);
+uint8_t readMAXRegAck(uint8_t addr);
+void readMAXBytes(uint8_t addr, uint8_t length, uint8_t* buffer);
+
+void enableUSBInit();
+void USBSendDescriptor();
+void USBClassRequest();
+void USBVendorRequest();
+void USBFeature(bool sc);
+void USBGetStatus();
+void USBSetInterface();
+void USBGetInterface();
+void USBSetConfiguration();
+void USBGetConfiguration();
+void USBStdRequest();
+void USBHandleINT3();
+void USBHandleSetup();
+void USBHandleINT();
+void USBHandleTimeOut();
+
+void spiCompleteCallback();
+void spiStartTransmission(uint8_t *message, uint16_t length);
+
+void sendStatusPacket(ShortAddr_t addr);
+
+void registerEndpoints();
+
+void testMAXChip();
+
+
+#endif /* COMMANDMODULE_H_ */
 
 
 // eof blink.h
