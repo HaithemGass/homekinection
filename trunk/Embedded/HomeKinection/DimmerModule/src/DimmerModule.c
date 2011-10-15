@@ -390,9 +390,7 @@ void initializeZeroDetect()
 	
 	HAL_RegisterIrq(IRQ_6,IRQ_ANY_EDGE,resetPWM);
 	HAL_EnableIrq(IRQ_6);
-  
-  
-  
+      
 }
 
 void initializeRotaryEncoder()

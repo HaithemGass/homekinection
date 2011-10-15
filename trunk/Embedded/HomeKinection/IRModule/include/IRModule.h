@@ -22,6 +22,7 @@
 #define PWM_FREQUENCY 104
 #define MODULE_TYPE_DIMMER
 #define TIMER_UNIT_5 0x120
+#define RECORD_TIMEOUT 0x1388;
 
 /******************************************************************************
                     Includes section

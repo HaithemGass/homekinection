@@ -44,8 +44,8 @@ static ZDO_StartNetworkReq_t startNetworkReq;
 static APS_DataReq_t packet; // Data transmission request
 
 //Global AppTimer
-HAL_AppTimer_t testSpi;
 HAL_AppTimer_t usbTimeOut;
+HAL_AppTimer_t usbButtonTimer;
 
 //Gloabl Usart Channel
 HAL_SpiDescriptor_t spiChannel0;
@@ -116,13 +116,11 @@ void APL_TaskHandler(void)
 void hidCommandReceived(APS_DataInd_t* indData)
 {		
      indData = indData;
-	 setLED(LED_COLOR_PINK);
 }
 
 void statusMessageReceived(APS_DataInd_t* indData)
 {		
-     indData = indData;
-	 setLED(LED_COLOR_YELLOW);
+     indData = indData;	 
 }
 
 /*******************************************************************************
@@ -266,16 +264,19 @@ void writeMAXBytes(uint8_t addr, uint8_t length, uint8_t *message)
 		packet[i+1] = message[i];		
 	}
 	GPIO_8_clr();
-	spiStartTransmission(packet, sizeof(packet));
+	spiStartTransmission(packet, length + 1);
 	GPIO_8_set();
 }
 
 void resetMax()
 {
-	uint16_t i;
-	uint16_t delay = 10000;
-     writeMAXReg(rUSBCTL, 0x20);	
-	for(i = 0; i<delay; i++);
+	uint32_t i;
+	uint32_t delay = 10000;
+     writeMAXReg(rUSBCTL, 0x20);
+	for(i = 0; i<delay; i++)
+	{
+		NOP;
+     };
 	writeMAXReg(rUSBCTL, 0x00);	
 }	 
 
@@ -285,11 +286,12 @@ uint8_t readMAXReg(uint8_t addr)
 	uint8_t packet;
 	packet = (addr) ;
 	GPIO_8_clr();
-	spiStartTransmission(&packet, sizeof(uint8_t));
+	halSyncUsartSpiWriteData(spiChannel0.tty, &packet, sizeof(uint8_t));
 	packet = 0;
-	spiStartRead(&packet, sizeof(uint8_t));
+	halSyncUsartSpiReadData(spiChannel0.tty, &packet, sizeof(uint8_t));
 	GPIO_8_set();
 	return packet;
+	cli();
 }
 
 uint8_t readMAXRegAck(uint8_t addr)
@@ -297,9 +299,9 @@ uint8_t readMAXRegAck(uint8_t addr)
 	uint8_t packet;
 	packet = (addr) + 1;	
 	GPIO_8_clr();
-	spiStartTransmission(&packet, sizeof(uint8_t));	
+	halSyncUsartSpiWriteData(spiChannel0.tty, &packet, sizeof(uint8_t));	
 	packet = 0;				
-	spiStartRead(&packet, sizeof(uint8_t));
+	halSyncUsartSpiReadData(spiChannel0.tty, &packet, sizeof(uint8_t));
 	GPIO_8_set();
 	return packet;
 }
@@ -307,25 +309,25 @@ uint8_t readMAXRegAck(uint8_t addr)
 void readMAXBytes(uint8_t addr, uint8_t length, uint8_t *buffer)
 {	
 	uint8_t packet, i;
-	packet = (addr) + 1;
+	packet = (addr);
 	GPIO_8_clr();	
-	spiStartTransmission(&packet, sizeof(uint8_t));
+	halSyncUsartSpiWriteData(spiChannel0.tty, &packet, sizeof(uint8_t));
 	for(i = 0; i<length; i++)
 	{
 		buffer[i] = 0;
 	}
-	spiStartRead(buffer, length);	
+	halSyncUsartSpiReadData(spiChannel0.tty, buffer, length);	
 	GPIO_8_set();
 }
 
 
 void writeMAXReg(uint8_t addr, uint8_t data)
 {
-	static uint8_t packet[2];
+	uint8_t packet[2];
 	packet[0] = (addr) + 2;
 	packet[1] = data;
 	GPIO_8_clr();
-	spiStartTransmission(packet, sizeof(packet));
+	spiStartTransmission(packet, 2);
 	GPIO_8_set();
 }
 
@@ -335,7 +337,7 @@ void writeMAXRegAck(uint8_t addr, uint8_t data)
 	packet[0] = (addr) + 3;
 	packet[1] = data;
 	GPIO_8_clr();
-	spiStartTransmission(packet, sizeof(packet));
+	spiStartTransmission(packet, 2);
 	GPIO_8_set();
 }
 
@@ -352,56 +354,46 @@ void enableUSBInit()
 
 void initializeUSB()
 {
-	//setup INT callback
-	HAL_RegisterIrq(IRQ_7,IRQ_FALLING_EDGE,USBHandleINT);
-	HAL_EnableIrq(IRQ_7);
-	
-	HAL_RegisterIrq(IRQ_6,IRQ_FALLING_EDGE,USBHandleINT);
-	HAL_EnableIrq(IRQ_6);
-	
-	writeMAXReg(rPINCTL, (bmFDUPSPI)); //default interrupt is edge-active 1->0
+	//setup INT callback	
+	writeMAXReg(rPINCTL, (bmFDUPSPI | bmPOSINT)); //default interrupt is edge-active 1->0
 	resetMax();	
 	
-	enableUSBInit();
+	usbState = USB_STATE_IDLE;		
 	
-	writeMAXReg(rEP3INFIFO, 0); //key up
-	writeMAXReg(rEP3INFIFO, 0);
+	while(!testMAXChip()); //keep trying till we are successful.
 	
-	writeMAXReg(rEP3INFIFO, 0);
-	writeMAXReg(rEP3INBC, 3); //arm for first transfer
+
 	
-	usbState = USB_STATE_IDLE;
-	
-	writeMAXReg(rUSBCTL, bmCONNECT);
+	writeMAXReg(rUSBCTL,(bmCONNECT | bmVBGATE));
+     enableUSBInit();
+	writeMAXReg(rCPUCTL,bmIE);
 	
 	
-	//setLED(LED_COLOR_GREEN);
-	writeMAXReg(rCPUCTL, bmIE);
-	//setLED(LED_COLOR_YELLOW);
+	HAL_RegisterIrq(IRQ_7,IRQ_RISING_EDGE,USBHandleINT);
+	HAL_EnableIrq(IRQ_7);	   
 	
 	usbTimeOut.callback = USBHandleTimeOut;
-	usbTimeOut.interval = 8000;
-	
-	//usbTimeOut.callback = testMAXChip;
-	//usbTimeOut.interval = 500;
-	
+	usbTimeOut.interval = 8000;	
 	usbTimeOut.mode = TIMER_REPEAT_MODE;
-	HAL_StartAppTimer(&usbTimeOut);	
+	HAL_StartAppTimer(&usbTimeOut);	  
 	
-	testMAXChip();
-	     
+	usbButton = false;	
+	
+	//prep the first key up;
+	writeMAXReg(rEP3INFIFO,0);			// send the "keys up" code
+	writeMAXReg(rEP3INFIFO,0);
+	writeMAXReg(rEP3INFIFO,0);
+	writeMAXReg(rEP3INBC,3);
 }
 
-void testMAXChip()
+bool testMAXChip()
 {
+	bool ret = false;
 	uint8_t j,wr,rd;
 	uint8_t correct[] = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80};
 	//lets test our connection
-     //writeMAXReg(rPINCTL,bmFDUPSPI); // MAX3420: SPI=full-duplex
-     //writeMAXReg(rUSBCTL,bmCHIPRES); // reset the MAX3420E
-     //writeMAXReg(rUSBCTL,0); // remove the reset
      wr=0x01; // initial register write value	
-		
+	setLED(LED_COLOR_YELLOW);
      for(j=0; j<8; j++)
      {
           writeMAXReg(rUSBIEN,wr);
@@ -415,7 +407,7 @@ void testMAXChip()
 				     setLED(LED_COLOR_ORANGE);
 					 break;
 				case 1:
-				     setLED(LED_COLOR_YELLOW);
+				     setLED(LED_COLOR_WHITE);
 					 break;
 				case 2:
 				     setLED(LED_COLOR_PINK);
@@ -434,26 +426,33 @@ void testMAXChip()
 					 break;
 				case 7:
 				     setLED(LED_COLOR_GREEN);
+					 ret = true;
 					 break;
 			}
 		}			  
      }
+	 return ret;
 }
 
 void USBHandleTimeOut()
 {
-	usbButton = (~(readMAXReg(rGPIO)) & 0x10);
-	if(usbSuspended)
-	{
-		if(usbButton)
-		{
-			SETBIT(rUSBCTL, bmSIGRWU);
-			while((readMAXReg(rUSBIRQ) & bmSIGRWU) == 0);
-			CLRBIT(rUSBCTL, bmSIGRWU);
-			usbSuspended = false;
-		}
-	}
+	//usbButton = (~(readMAXReg(rGPIO)) & 0x10);
+	//if(usbSuspended)
+	//{
+		//if(usbButton)
+		//{
+			//SETBIT(rUSBCTL, bmSIGRWU);
+			//while((readMAXReg(rUSBIRQ) & bmSIGRWU) == 0);
+			//CLRBIT(rUSBCTL, bmSIGRWU);
+			//usbSuspended = false;
+		//}
+	//}
 }
+
+void USBHandleFakeButton()
+{
+	usbButton = true;
+}	
 
 void USBHandleINT()
 {
@@ -474,7 +473,7 @@ void USBHandleINT()
 	else if(itest1 & bmIN3BAVIE)
 	{
 		USBHandleINT3();
-		setLED(LED_COLOR_PURPLE);
+		//setLED(LED_COLOR_PURPLE);
 	}
 	else if(itest2 & bmSUSPIE)
 	{
@@ -484,7 +483,7 @@ void USBHandleINT()
 		writeMAXReg(rUSBIRQ, bmBUSACTIRQ);
 		SETBIT(rUSBIEN, bmBUSACTIE);
 		usbSuspended = true;
-		setLED(LED_COLOR_BLUE);
+		setLED(LED_COLOR_YELLOW);
 	}
 	else if(itest2 & bmBUSACTIE)
 	{
@@ -496,16 +495,16 @@ void USBHandleINT()
 	}
 	else if(itest2 & bmURESIE)
 	{
-		writeMAXReg(rUSBIEN, bmURESIE);
-		setLED(LED_COLOR_YELLOW);
+		writeMAXReg(rUSBIRQ, bmURESIRQ);
+		setLED(LED_COLOR_RED);
 	}
 	else if(itest2 & bmURESDNIE)
 	{
-		writeMAXReg(rUSBIRQ, bmURESDNIE);
+		writeMAXReg(rUSBIRQ, bmURESDNIRQ);
 		enableUSBInit();
 		setLED(LED_COLOR_ORANGE);
 	}else{
-		setLED(LED_COLOR_PINK);
+
 	}
 	
 }
@@ -536,29 +535,41 @@ void USBHandleINT3()
 	switch(usbState)
 	{
 		case USB_STATE_IDLE:
+		     setLED(LED_COLOR_ORANGE);
 		     if(usbButton)
 			{
+				 usbButton = false;
 				 writeMAXReg(rEP3INFIFO, 0x08);
 				 writeMAXReg(rEP3INFIFO, 0x0);
 				 writeMAXReg(rEP3INFIFO, 0x07);
-				 writeMAXRegAck(rEP3INBC, 3);
+				 writeMAXReg(rEP3INBC, 3);
 				 usbState = USB_STATE_RELEASE;				 				
+			}
+			else
+			{
+			     writeMAXReg(rEP3INFIFO, 0x00); //KEY UP
+			     writeMAXReg(rEP3INFIFO, 0x00);
+			     writeMAXReg(rEP3INFIFO, 0x00); //KEY UP
+			     writeMAXReg(rEP3INBC, 3);
 			}
 			break;
 		case USB_STATE_RELEASE:		     
+		     setLED(LED_COLOR_TURQUOISE);
 			writeMAXReg(rEP3INFIFO, 0x00); //KEY UP
 			writeMAXReg(rEP3INFIFO, 0x00);
 			writeMAXReg(rEP3INFIFO, 0x00); //KEY UP
-			writeMAXRegAck(rEP3INBC, 3);
-			usbState = USB_STATE_WAIT;
+			writeMAXReg(rEP3INBC, 3);
+			usbState = USB_STATE_IDLE;
 			break;
 		case USB_STATE_WAIT:
+		     setLED(LED_COLOR_PINK);
 		     if(!usbButton)
 			{
 			     usbState = USB_STATE_IDLE;
 			}
 			break;
 		default:
+		     
 		     usbState = USB_STATE_IDLE;				 			 
 	}
 }
@@ -651,7 +662,7 @@ void USBGetStatus()
 	switch(testByte)
 	{
 		case 0x80: //DEVICE
-		     writeMAXReg(rEP0FIFO, usbRWUEnabled);
+		     writeMAXReg(rEP0FIFO, usbRWUEnabled + 1); // +1 means self powered
 			writeMAXReg(rEP0FIFO, 0x00);
 			writeMAXRegAck(rEP3INBC, 2);
 			break;
@@ -683,8 +694,8 @@ void USBGetStatus()
 void USBFeature(bool sc)
 {
 	uint8_t maskData = 0;
-	if(  (usbSetupPacket[bmRequestType] == 0x02) & //ENPOINT
-	     (usbSetupPacket[wValueL] == 0x00) & //EP Halt
+	if(  (usbSetupPacket[bmRequestType] == 0x02) && //ENPOINT
+	     (usbSetupPacket[wValueL] == 0x00) && //EP Halt
 		(usbSetupPacket[wIndexL] == 0x83)) //IN3 = 83
 	{
 	     maskData = readMAXReg(rEPSTALLS);
@@ -693,7 +704,7 @@ void USBFeature(bool sc)
 		writeMAXReg(rEPSTALLS, (maskData | bmACKSTAT) );					
 			
 	}
-	else if( (usbSetupPacket[bmRequestType] == 0x00) &
+	else if( (usbSetupPacket[bmRequestType] == 0x00) &&
 	         (usbSetupPacket[wValueL] == 0x01))	
 	{
 		uint8_t temp;
@@ -763,6 +774,15 @@ void USBSendDescriptor()
 	}else{
 		STALL_EP0;
 	}
+	
+	
+	
+	
+	usbButtonTimer.callback = USBHandleFakeButton;
+	usbButtonTimer.interval = 500;	
+	usbButtonTimer.mode = TIMER_REPEAT_MODE;
+	HAL_StartAppTimer(&usbButtonTimer);	
+	
 }
 
 void USBClassRequest()
@@ -772,7 +792,7 @@ void USBClassRequest()
 
 void USBVendorRequest()
 {
-	//NOP	
+	STALL_EP0;
 }
 
 void initializeSPI()
@@ -780,8 +800,8 @@ void initializeSPI()
 	spiChannel0.baudRate = SPI_CLOCK_RATE_500;
 	spiChannel0.tty = SPI_CHANNEL_0;
 	spiChannel0.dataOrder = SPI_DATA_MSB_FIRST;
-	spiChannel0.clockMode = SPI_CLOCK_MODE3;	
-	spiChannel0.callback = NULL;
+	spiChannel0.clockMode = SPI_CLOCK_MODE0;	
+	spiChannel0.callback = NULL;	
 	HAL_OpenSpi(&spiChannel0);	
 }
 

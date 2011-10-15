@@ -20,6 +20,7 @@
 #include <gpio.h>
 #include <pwm.h>
 #include <halPwm.h>
+#include "helpers.h"
 
 
 /*****************************************************************************
@@ -50,7 +51,6 @@ static ShortAddr_t myAddr;
 static HAL_AppTimer_t retryTimer;
 static HAL_AppTimer_t remoteTimer;
 
-static bool encoderChannel1, encoderChannel2;
 static uint16_t intensity = 0;
 static bool ableToSend = true;
 static bool lampOn = true;
@@ -102,7 +102,7 @@ void APL_TaskHandler(void)
 		     
 			 if(ableToSend)
 			 {
-		        GPIO_0_set();
+		        setLED(LED_COLOR_BLUE);
 			   sendStatusPacket(CPU_TO_LE16(0));	 				 
 			 }else{
 			   HAL_StopAppTimer(&retryTimer);
@@ -119,7 +119,7 @@ void APL_TaskHandler(void)
 		case APP_NETWORK_SEND_DIMMER:
                 if(ableToSend)
 			 {
-		        GPIO_0_set();
+		        setLED(LED_COLOR_BLUE);
 			   sendStatusPacket(CPU_TO_LE16(0));	 				 
 			 }else{
 			   HAL_StopAppTimer(&retryTimer);
@@ -272,7 +272,7 @@ static void networkTransmissionConfirm(APS_DataConf_t *result)
 {			
 	//Empty Function just to make sure stuff doesn't explode... theoretically we could retry here.			
      result = result;
-	GPIO_0_clr();
+	setLED(LED_COLOR_OFF);
 	ableToSend = true;
 }
 
@@ -290,13 +290,10 @@ static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo)
           myAddr = confirmInfo->shortAddr;
 		appState = APP_NETWORK_JOINED;
 		SYS_PostTask(APL_TASK_ID);
-		GPIO_2_clr();
-		GPIO_1_set();
+		setLED(LED_COLOR_GREEN);
 		// Configure blink timer
 	}else{
-		GPIO_0_set();
-		GPIO_1_set();
-		GPIO_2_set();
+		setLED(LED_COLOR_YELLOW);
 	}
 }
 
@@ -366,10 +363,9 @@ void ZDO_UnbindIndication(ZDO_UnbindInd_t *unbindInd)
 void initializeDevice()
 {
 	
-	BSP_OpenLeds(); // Enable LEDs 
+	initializeLED();
 	BSP_OpenButtons(onButtonDown,onStartRecording);
-	GPIO_2_set();			
-	GPIO_1_clr();	
+	setLED(LED_COLOR_RED);
 	
 
 	                      		
@@ -442,6 +438,7 @@ void initializePWM()
 
 void playIR()
 {
+	startLEDBlink(LED_COLOR_GREEN, LED_BLINK_FAST);
 	if(!playingIR) 
 	{
 	sequenceIndex=0;
@@ -451,7 +448,7 @@ void playIR()
     ((1 << COMnx1((&pwmChannel1))) | (1 << COMnx0((&pwmChannel1))));
 	pwmOn=true;
 	}	
-	playingIR = true;
+	playingIR = true;	
 	
 }
 
@@ -459,7 +456,7 @@ void initializeTimer()
 {
 	
 	TCCR5B = (1 << CS51);
-	OCR5C = 0x1388;
+	OCR5C = RECORD_TIMEOUT;
 	TIMSK5 |= (1 << 3);
 }
 
@@ -500,8 +497,8 @@ void onStartRecording(uint8_t button)
 	
 	if(button == BSP_KEY1)
 	{
-		GPIO_2_set();
-		GPIO_1_clr();
+		setLED(LED_COLOR_RED);
+		OCR5C = RECORD_TIMEOUT;
 		waitingForFirstPulse=true;
 		sequenceIndex=0;
 	}
@@ -554,13 +551,12 @@ ISR(INT2_vect)
 ISR(TIMER5_COMPC_vect)
 {
 	// timer timed out
-	
-    // GPIO_0_toggle();	
+	    
 	// TCNT5 = 0x0000;
 	if(recording)
 	{
 	currentSequence.length=sequenceIndex;
-	GPIO_2_clr();
+	setLED(LED_COLOR_OFF);
 	recording=false;
 	}
 	else if(playingIR)
@@ -579,6 +575,7 @@ ISR(TIMER5_COMPC_vect)
 		if(++sequenceIndex == currentSequence.length)
 		{
 			playingIR=false;
+			stopLEDBlink();
 		TCCRnA((&pwmChannel1)->unit) &= ~((1 << COMnx1((&pwmChannel1))) | (1 << COMnx0((&pwmChannel1))));	
 			pwmOn=false;
 		}
@@ -591,73 +588,6 @@ ISR(TIMER5_COMPC_vect)
 	}
 
 
-}
-
-void readGreyCode()
-{
-	bool newEn1, newEn2, sendMessage = false;	
-	newEn1 = ((PIND & (1 << PIND2)) != 0);
-	newEn2 = ((PIND & (1 << PIND3)) != 0);
-	GPIO_1_clr();
-	GPIO_2_clr();
-	
-	if(newEn1 == encoderChannel1)
-	{
-		if(newEn2 == encoderChannel2)
-		{			        				
-			return;			
-		}
-		else
-		{
-			encoderChannel2 = newEn2;
-			if(newEn1 == newEn2)
-			{				
-				if(intensity < 99)
-				{				  
-				  intensity++;
-				  sendMessage = true;
-				}						
-			}
-			else
-			{
-		
-				if(intensity > 0)
-				{
-                      intensity--;
-				  sendMessage = true;
-				}
-			}
-		}
-		
-	}
-	else
-	{
-		encoderChannel1 = newEn1;
-		if(newEn1 == newEn2)
-		{		
-			if(intensity > 0)
-			{
-				intensity--;
-				sendMessage = true;				
-			}						
-		}
-		else
-		{		
-			if(intensity < 99)
-			{
-				intensity++;
-				sendMessage = true;				
-			}
-		}
-		
-	}
-	encoderChannel1 = newEn1;
-	encoderChannel2 = newEn2;
-	if(sendMessage)
-	{        				 		   
-		appState = APP_NETWORK_SEND_STATUS;
-		SYS_PostTask(APL_TASK_ID);		
-	}
 }
 
 void resetTimer()
