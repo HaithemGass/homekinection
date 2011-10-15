@@ -449,16 +449,16 @@ static int halReadUsartSpi(HAL_SpiDescriptor_t *descriptor, uint8_t *buffer, uin
     return -1; // incorrect descriptor
 
   if (NULL != descriptor->callback)
-  {
+  {    
     if (-1 == halFillServiceInfo(descriptor, buffer, length, USART_SPI_READ_MODE))
       return -1;
 
     halEnableUsartSpiRxcInterrupt(descriptor->tty);
-    halEnableUsartSpiDremInterrupt(descriptor->tty);
+    halEnableUsartSpiDremInterrupt(descriptor->tty);    
     return 0;
   }
   else
-  {
+  {    
     return halSyncUsartSpiReadData(descriptor->tty, buffer, length);
   }
 }
@@ -536,7 +536,7 @@ static int halReadRealSpi(HAL_SpiDescriptor_t *descriptor, uint8_t *buffer, uint
    or number of read bytes from internal buffer to the application buffer for slave.
 ******************************************************************************/
 int HAL_ReadSpi(HAL_SpiDescriptor_t *descriptor, uint8_t *buffer, uint16_t length)
-{
+{  
 #if defined(ATMEGA128RFA1)
   if (SPI_CHANNEL_2 == descriptor->tty)
     return halReadRealSpi(descriptor, buffer, length);

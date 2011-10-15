@@ -89,6 +89,7 @@ void USBHandleINT3();
 void USBHandleSetup();
 void USBHandleINT();
 void USBHandleTimeOut();
+void USBHandleFakeButton();
 
 void spiCompleteCallback();
 void spiStartTransmission(uint8_t *message, uint16_t length);
@@ -97,7 +98,7 @@ void sendStatusPacket(ShortAddr_t addr);
 
 void registerEndpoints();
 
-void testMAXChip();
+bool testMAXChip();
 
 
 #endif /* COMMANDMODULE_H_ */

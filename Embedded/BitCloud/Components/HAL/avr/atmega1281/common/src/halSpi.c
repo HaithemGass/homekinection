@@ -22,6 +22,7 @@
                    Includes section
 ******************************************************************************/
 #include <spi.h>
+#include "helpers.h"
 
 /******************************************************************************
                    Define(s) section
@@ -123,8 +124,7 @@ Returns:
 ******************************************************************************/
 uint16_t halSyncUsartSpiReadData(SpiChannel_t tty, uint8_t *buffer, uint16_t length)
 {
-  uint16_t i;
-
+  uint16_t i;  
   for (i = 0; i < length; i++)
   {
     // Wait for empty transmit buffer

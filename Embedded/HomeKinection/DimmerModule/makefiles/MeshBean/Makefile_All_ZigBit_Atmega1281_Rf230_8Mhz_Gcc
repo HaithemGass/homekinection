@@ -67,7 +67,8 @@ SRCS = \
   ./../../../../BitCloud/Components/BSP/MESHBEAN/src/bspTaskManager.c \
   ./../../../../BitCloud/Components/ConfigServer/src/csPersistentMem.c \
   ./../../../../BitCloud/Components/ConfigServer/src/csMem.c \
-  ./../../../../BitCloud/Components/ConfigServer/src/configServer.c 
+  ./../../../../BitCloud/Components/ConfigServer/src/configServer.c \
+  ./../../../../BitCloud/Components/HAL/avr/atmega1281/common/src/halPwm.c  
 
 PREINCLUDE = MakerulesBc_All_Atmega1281_Rf230_Gcc.h
 
