@@ -45,7 +45,8 @@ static APS_DataReq_t packet; // Data transmission request
 
 //Global AppTimer
 HAL_AppTimer_t usbTimeOut;
-HAL_AppTimer_t usbButtonTimer;
+HAL_AppTimer_t usbKeyboardTimer;
+HAL_AppTimer_t usbMouseTimer;
 
 //Gloabl Usart Channel
 HAL_SpiDescriptor_t spiChannel0;
@@ -55,11 +56,16 @@ static ShortAddr_t childToSendTo = 0;
 static int c_children = 0;
 
 
-static USB_STATE usbState;
+static KEYBOARD_STATE usbState;
 static uint8_t usbRWUEnabled;
 static uint8_t usbConfigValue;
+
 static bool usbEp3Stall;
-static bool usbButton;
+static bool usbEp2Stall;
+
+static bool usbKeyboard;
+static bool usbMouse;
+
 static bool usbSuspended;
 static uint8_t usbSetupPacket[8];
 
@@ -358,7 +364,7 @@ void initializeUSB()
 	writeMAXReg(rPINCTL, (bmFDUPSPI | bmPOSINT)); //default interrupt is edge-active 1->0
 	resetMax();	
 	
-	usbState = USB_STATE_IDLE;		
+	usbState = KEYBOARD_STATE_IDLE;		
 	
 	while(!testMAXChip()); //keep trying till we are successful.
 	
@@ -377,7 +383,7 @@ void initializeUSB()
 	usbTimeOut.mode = TIMER_REPEAT_MODE;
 	HAL_StartAppTimer(&usbTimeOut);	  
 	
-	usbButton = false;	
+	usbKeyboard = false;	
 	
 	//prep the first key up;
 	writeMAXReg(rEP3INFIFO,0);			// send the "keys up" code
@@ -393,7 +399,7 @@ bool testMAXChip()
 	uint8_t correct[] = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80};
 	//lets test our connection
      wr=0x01; // initial register write value	
-	setLED(LED_COLOR_YELLOW);
+	setLED(LED_COLOR_RED);
      for(j=0; j<8; j++)
      {
           writeMAXReg(rUSBIEN,wr);
@@ -404,28 +410,28 @@ bool testMAXChip()
 			switch(j)
 			{
 				case 0:
-				     setLED(LED_COLOR_ORANGE);
+				     //setLED(LED_COLOR_ORANGE);
 					 break;
 				case 1:
-				     setLED(LED_COLOR_WHITE);
+				     //setLED(LED_COLOR_WHITE);
 					 break;
 				case 2:
-				     setLED(LED_COLOR_PINK);
+				     //setLED(LED_COLOR_PINK);
 					 break;
 				case 3:
-				     setLED(LED_COLOR_PURPLE);
+				     //setLED(LED_COLOR_PURPLE);
 					 break;
 				case 4:
-				     setLED(LED_COLOR_BLUE);
+				     //setLED(LED_COLOR_BLUE);
 					 break;
 				case 5:
-				     setLED(LED_COLOR_TURQUOISE);
+				     //setLED(LED_COLOR_TURQUOISE);
 					 break;
 				case 6:
-				     setLED(LED_COLOR_WHITE);
+				     //setLED(LED_COLOR_GREEN);
 					 break;
 				case 7:
-				     setLED(LED_COLOR_GREEN);
+				     setLED(LED_COLOR_WHITE);
 					 ret = true;
 					 break;
 			}
@@ -436,10 +442,10 @@ bool testMAXChip()
 
 void USBHandleTimeOut()
 {
-	//usbButton = (~(readMAXReg(rGPIO)) & 0x10);
+	//usbKeyboard = (~(readMAXReg(rGPIO)) & 0x10);
 	//if(usbSuspended)
 	//{
-		//if(usbButton)
+		//if(usbKeyboard)
 		//{
 			//SETBIT(rUSBCTL, bmSIGRWU);
 			//while((readMAXReg(rUSBIRQ) & bmSIGRWU) == 0);
@@ -449,13 +455,13 @@ void USBHandleTimeOut()
 	//}
 }
 
-void USBHandleFakeButton()
+void USBHandleFakeKeyboard()
 {
-	usbButton = true;
+	usbKeyboard = true;
 }	
 
 void USBHandleINT()
-{
+{	
 	static uint8_t itest1,itest2;
 	setLED(LED_COLOR_BLUE);
 	HAL_StopAppTimer(&usbTimeOut);
@@ -468,12 +474,17 @@ void USBHandleINT()
 	{
 		writeMAXReg(rEPIRQ, bmSUDAVIRQ);
 		USBHandleSetup();
-		setLED(LED_COLOR_GREEN);
+		//setLED(LED_COLOR_GREEN);
 	}
 	else if(itest1 & bmIN3BAVIE)
 	{
 		USBHandleINT3();
 		//setLED(LED_COLOR_PURPLE);
+	}
+	else if(itest1 & bmIN2BAVIE)
+	{
+		USBHandleINT2();
+//		setLED(LED_COLOR_PURPLE);
 	}
 	else if(itest2 & bmSUSPIE)
 	{
@@ -483,7 +494,7 @@ void USBHandleINT()
 		writeMAXReg(rUSBIRQ, bmBUSACTIRQ);
 		SETBIT(rUSBIEN, bmBUSACTIE);
 		usbSuspended = true;
-		setLED(LED_COLOR_YELLOW);
+//		setLED(LED_COLOR_YELLOW);
 	}
 	else if(itest2 & bmBUSACTIE)
 	{
@@ -491,18 +502,18 @@ void USBHandleINT()
 		CLRBIT(rUSBIEN, bmBUSACTIE);
 		SETBIT(rUSBIEN, bmSUSPIE);
 		usbSuspended = false;
-		setLED(LED_COLOR_TURQUOISE);
+//		setLED(LED_COLOR_TURQUOISE);
 	}
 	else if(itest2 & bmURESIE)
 	{
 		writeMAXReg(rUSBIRQ, bmURESIRQ);
-		setLED(LED_COLOR_RED);
+//		setLED(LED_COLOR_RED);
 	}
 	else if(itest2 & bmURESDNIE)
 	{
 		writeMAXReg(rUSBIRQ, bmURESDNIRQ);
 		enableUSBInit();
-		setLED(LED_COLOR_ORANGE);
+//		setLED(LED_COLOR_ORANGE);
 	}else{
 
 	}
@@ -530,20 +541,30 @@ void USBHandleSetup()
 }
 
 
+void USBHandleINT2()
+{
+     //do nothing with the mouse right now.
+	writeMAXReg(rEP2INFIFO, 0x00); //Buttons
+	writeMAXReg(rEP2INFIFO, 0x00);//x
+	writeMAXReg(rEP2INFIFO, 0x00); //y
+	writeMAXReg(rEP2INBC, 3);	 
+}
+
+
 void USBHandleINT3()
 {
 	switch(usbState)
 	{
-		case USB_STATE_IDLE:
+		case KEYBOARD_STATE_IDLE:
 		     setLED(LED_COLOR_ORANGE);
-		     if(usbButton)
+		     if(usbKeyboard)
 			{
-				 usbButton = false;
+				 usbKeyboard = false;
 				 writeMAXReg(rEP3INFIFO, 0x08);
 				 writeMAXReg(rEP3INFIFO, 0x0);
 				 writeMAXReg(rEP3INFIFO, 0x07);
 				 writeMAXReg(rEP3INBC, 3);
-				 usbState = USB_STATE_RELEASE;				 				
+				 usbState = KEYBOARD_STATE_RELEASE;				 				
 			}
 			else
 			{
@@ -553,24 +574,24 @@ void USBHandleINT3()
 			     writeMAXReg(rEP3INBC, 3);
 			}
 			break;
-		case USB_STATE_RELEASE:		     
+		case KEYBOARD_STATE_RELEASE:		     
 		     setLED(LED_COLOR_TURQUOISE);
 			writeMAXReg(rEP3INFIFO, 0x00); //KEY UP
 			writeMAXReg(rEP3INFIFO, 0x00);
 			writeMAXReg(rEP3INFIFO, 0x00); //KEY UP
 			writeMAXReg(rEP3INBC, 3);
-			usbState = USB_STATE_IDLE;
+			usbState = KEYBOARD_STATE_IDLE;
 			break;
-		case USB_STATE_WAIT:
+		case KEYBOARD_STATE_WAIT:
 		     setLED(LED_COLOR_PINK);
-		     if(!usbButton)
+		     if(!usbKeyboard)
 			{
-			     usbState = USB_STATE_IDLE;
+			     usbState = KEYBOARD_STATE_IDLE;
 			}
 			break;
 		default:
 		     
-		     usbState = USB_STATE_IDLE;				 			 
+		     usbState = KEYBOARD_STATE_IDLE;				 			 
 	}
 }
 
@@ -677,8 +698,16 @@ void USBGetStatus()
 				 uint8_t stall = (usbEp3Stall) ? (1):(0);
 				 writeMAXReg(rEP0FIFO, stall);
 				 writeMAXReg(rEP0FIFO, 0x00);
-			      writeMAXRegAck(rEP3INBC, 2);
+			      writeMAXRegAck(rEP0BC, 2);
 			     break;
+			}
+			else if(usbSetupPacket[wIndexL] == 0x82)
+			{
+				 uint8_t stall = (usbEp2Stall) ? (1):(0);
+				 writeMAXReg(rEP0FIFO, stall);
+				 writeMAXReg(rEP0FIFO, 0x00);
+			    writeMAXRegAck(rEP0BC, 2);
+			    break;
 			}
 			else
 			{
@@ -695,13 +724,23 @@ void USBFeature(bool sc)
 {
 	uint8_t maskData = 0;
 	if(  (usbSetupPacket[bmRequestType] == 0x02) && //ENPOINT
-	     (usbSetupPacket[wValueL] == 0x00) && //EP Halt
-		(usbSetupPacket[wIndexL] == 0x83)) //IN3 = 83
+	     (usbSetupPacket[wValueL] == 0x00)) //EP Halt
 	{
-	     maskData = readMAXReg(rEPSTALLS);
-		(sc) ? (maskData |= bmSTLEP3IN) : (maskData &= ~(bmSTLEP3IN));
-		usbEp3Stall = sc;		
-		writeMAXReg(rEPSTALLS, (maskData | bmACKSTAT) );					
+		if(usbSetupPacket[wIndexL] == 0x83)//EP3
+		{
+		     maskData = readMAXReg(rEPSTALLS);
+		     (sc) ? (maskData |= bmSTLEP3IN) : (maskData &= ~(bmSTLEP3IN));
+		     usbEp3Stall = sc;		
+		     writeMAXReg(rEPSTALLS, (maskData | bmACKSTAT) );					
+		}
+		else if(usbSetupPacket[wIndexL] == 0x82)
+		{
+			maskData = readMAXReg(rEPSTALLS);
+		     (sc) ? (maskData |= bmSTLEP2IN) : (maskData &= ~(bmSTLEP2IN));
+		     usbEp2Stall = sc;		
+		     writeMAXReg(rEPSTALLS, (maskData | bmACKSTAT) );					
+		}						
+	     
 			
 	}
 	else if( (usbSetupPacket[bmRequestType] == 0x00) &&
@@ -728,14 +767,17 @@ void USBSendDescriptor()
 	switch(usbSetupPacket[wValueH])
 	{
 		case GD_DEVICE:
+		     setLED(LED_COLOR_PURPLE);
 		     desclen = DD[0];
 			p_Descriptor = DD;
 			break;
 		case GD_CONFIGURATION:
+		     setLED(LED_COLOR_YELLOW);
 		     desclen = CD[2]; 
 			p_Descriptor = CD;
 			break;
 		case GD_STRING:
+		     setLED(LED_COLOR_BLUE);
 		     switch(usbSetupPacket[wValueL])
 			{
 			     case 0:
@@ -756,14 +798,45 @@ void USBSendDescriptor()
 				 break;
 		     }
 			break;
-		case GD_HID:
-		     desclen = CD[18];
-			p_Descriptor = &(CD[18]);
+		case GD_HID:		
+		     if(usbSetupPacket[wIndexL] == 0)
+			{
+				setLED(LED_COLOR_ORANGE);
+				desclen = CD[18];
+			     p_Descriptor = &(CD[18]);
+			 }
+			 else if(usbSetupPacket[wIndexL] == 1)
+			 {
+				 setLED(LED_COLOR_TURQUOISE);
+				desclen = CD[44];
+			     p_Descriptor = &(CD[44]);
+			 }
+			 else
+			 {
+				 setLED(LED_COLOR_PURPLE);
+			 }				 			 			 						 
+		     
 			break;
 		case GD_REPORT:
-		     desclen = CD[25];
-			p_Descriptor = RepD;
+		     if(usbSetupPacket[wIndexL] == 0)
+			{
+				setLED(LED_COLOR_RED);
+				desclen = CD[25];
+			     p_Descriptor = RepD_Keyboard;
+			}
+			else if(usbSetupPacket[wIndexL] == 1)
+			{
+				setLED(LED_COLOR_WHITE);
+				desclen = CD[51];
+			     p_Descriptor = RepD_Mouse;
+			}
+			else										     
+			{
+			     setLED(LED_COLOR_BLUE);	
+			}							
 			break;
+		default:
+		     setLED(wValueH,wValueH,wValueH);
 	}
 	
 	if(desclen != 0)
@@ -778,10 +851,10 @@ void USBSendDescriptor()
 	
 	
 	
-	usbButtonTimer.callback = USBHandleFakeButton;
-	usbButtonTimer.interval = 500;	
-	usbButtonTimer.mode = TIMER_REPEAT_MODE;
-	HAL_StartAppTimer(&usbButtonTimer);	
+	usbKeyboardTimer.callback = USBHandleFakeKeyboard;
+	usbKeyboardTimer.interval = 1000;	
+	usbKeyboardTimer.mode = TIMER_REPEAT_MODE;
+	HAL_StartAppTimer(&usbKeyboardTimer);	
 	
 }
 
