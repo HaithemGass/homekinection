@@ -37,10 +37,10 @@
 *****************************************************************************/
 
 typedef enum{
-	USB_STATE_IDLE,
-	USB_STATE_RELEASE,
-	USB_STATE_WAIT
-}USB_STATE;	
+	KEYBOARD_STATE_IDLE,
+	KEYBOARD_STATE_RELEASE,
+	KEYBOARD_STATE_WAIT
+}KEYBOARD_STATE;
 
 
 /*****************************************************************************
@@ -85,11 +85,16 @@ void USBGetInterface();
 void USBSetConfiguration();
 void USBGetConfiguration();
 void USBStdRequest();
+
 void USBHandleINT3();
+void USBHandleINT2();
+
 void USBHandleSetup();
 void USBHandleINT();
 void USBHandleTimeOut();
-void USBHandleFakeButton();
+
+void USBHandleFakeKeyboard();
+void USBHandleFakeMouse();
 
 void spiCompleteCallback();
 void spiStartTransmission(uint8_t *message, uint16_t length);
