@@ -105,8 +105,9 @@ typedef enum
 	BEGIN_PACK
 	typedef struct  
 	{
-		 uint8_t ButtonMask;
-		 uint16_t Duration;
+		 uint8_t ButtonMask;	//0x01 - down (with a sickness)
+								//0x02 - (pick me) up (before you go go)
+		 uint16_t Duration; // ms
 	}PACK ShadeCommandData;
 	END_PACK
 	
@@ -117,6 +118,14 @@ typedef enum
 		 ShadeCommandData data;
 		uint8_t footer[APS_AFFIX_LENGTH - APS_ASDU_OFFSET]; //Footer
 	} PACK ShadeCommandPacket;
+	END_PACK
+	
+	BEGIN_PACK
+	typedef struct  
+	{
+		 bool UpButton;
+		 bool DownButton;
+	}PACK ShadeButtonStatus;
 	END_PACK
 	
 	static APS_RegisterEndpointReq_t shadeEndpointParams;
