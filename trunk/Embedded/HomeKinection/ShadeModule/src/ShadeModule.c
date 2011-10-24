@@ -19,15 +19,17 @@
 #include <ShadeModule.h>
 #include <gpio.h>
 #include <pwm.h>
+#include <halPwm.h>
 
-typedef enum
-{
-	APP_INTIALIZATION,
-	APP_NETWORK_WAITING_TO_JOIN,
-	APP_NETWORK_JOINED,
-	APP_NETWORK_SEND_STATUS,
-	APP_NETWORK_IDLE	
-} AppStateMachine;
+
+/*****************************************************************************
+******************************************************************************
+*                                                                            *
+*                           GLOBAL VARIALBES                                 *
+*                                                                            *
+*                                                                            *
+******************************************************************************
+*****************************************************************************/
 
 //Global State
 static AppStateMachine appState = APP_INTIALIZATION;
@@ -35,37 +37,32 @@ static AppStateMachine appState = APP_INTIALIZATION;
 //Global NetworkRequest
 static ZDO_StartNetworkReq_t startNetworkReq;
 
-static APS_DataReq_t dataReq; // Data transmission request
+static APS_DataReq_t packet; // Data transmission request
 
 //Global PWM Ch1
 HAL_PwmDescriptor_t pwmChannel1;
 
-//Definitions in a global scope
-//Application message buffer descriptor
-BEGIN_PACK
-typedef struct
-{
-	uint8_t header[APS_ASDU_OFFSET]; // Header
-	uint8_t data[1]; // Application data
-	uint8_t footer[APS_AFFIX_LENGTH - APS_ASDU_OFFSET]; //Footer
-} PACK AppMessageBuffer_t;
-END_PACK
+static ShadeCommandPacket dimmerMessage; // Dimmer Message buffer
+static StatusMessagePacket statusMessage; // Dimmer Message buffer
 
-static AppMessageBuffer_t appMessageBuffer; // Message buffer
+static ShortAddr_t myAddr;
 
-static HAL_AppTimer_t blinkTimer; 
-static HAL_AppTimer_t greenTimer;                          // Blink timer.
+static HAL_AppTimer_t retryTimer;
+static HAL_AppTimer_t blindTimer;
 
-static int ramp = 1; 
-static ShortAddr_t children[CS_MAX_CHILDREN_AMOUNT];
-static int c_children = 0;
-static bool encoderChannel1 = false;
-static bool encoderChannel2 = false;
-static void blinkTimerFired(void);                          // blinkTimer handler.
-void APS_DataIndication (APS_DataInd_t* indData);
-static void ZDO_StartNetworkConf(ZDO_StartNetworkConf_t *confirmInfo);
-void ReadGreyCode(uint8_t bn);
-void sendStatusPacket();
+static bool ableToSend = true;
+static BlindDirection blindDirection;
+static ShadeButtonStatus ButtonStatus;
+
+/*****************************************************************************
+******************************************************************************
+*                                                                            *
+*                           FUNCTION IMPL                                    *
+*                                                                            *
+*                                                                            *
+******************************************************************************
+*****************************************************************************/
+
 
 
 /*******************************************************************************
@@ -79,128 +76,117 @@ void APL_TaskHandler(void)
 {
 	switch(appState)
 	{
-		case APP_INTIALIZATION:
-		
-			BSP_OpenLeds(); // Enable LEDs 
-			GPIO_2_set();			
-			GPIO_1_clr();						
-
-			BSP_OpenButtons(ReadGreyCode, ReadGreyCode);
-						
-			DeviceType_t deviceType = DEVICE_TYPE_END_DEVICE;
-			ExtPanId_t panId = 0x0123456789ABCDEF;	
-			
-			CS_WriteParameter(CS_DEVICE_TYPE_ID,&deviceType);
-			
-			CS_WriteParameter(CS_EXT_PANID_ID, &panId);
-			
-			ExtAddr_t ownExtAddr = 0x123456788754321;
-			
-			CS_WriteParameter(CS_UID_ID, &ownExtAddr);
-			
-			appMessageBuffer.data[0]=0;
-			
-			//setup endpoint
-			//Specify endpoint descriptor
-			static SimpleDescriptor_t simpleDescriptor = {1, 1, 1, 1, 0, 0, NULL, 0, NULL};
-			//variable for registering endpoint
-			static APS_RegisterEndpointReq_t endpointParams;
-			//Set application endpoint properties
-			
-			endpointParams.simpleDescriptor = &simpleDescriptor;
-			endpointParams.APS_DataInd = APS_DataIndication;
-			//Register endpoint
-			APS_RegisterEndpointReq(&endpointParams);
-			
-			//join a network
-			startNetworkReq.ZDO_StartNetworkConf = ZDO_StartNetworkConf;
-			ZDO_StartNetworkReq(&startNetworkReq);
-			
-			
-			//setup pwm
-			HAL_OpenPwm(PWM_UNIT_1);
-			
-			pwmChannel1.unit = PWM_UNIT_1;
-			pwmChannel1.channel  = PWM_CHANNEL_0;
-			pwmChannel1.polarity = PWM_POLARITY_INVERTED;
-			
-			HAL_SetPwmFrequency(PWM_UNIT_1, 32 , PWM_PRESCALER_1024 );
-			
-			HAL_StartPwm(&pwmChannel1);
-			HAL_SetPwmCompareValue(&pwmChannel1, 0);
-			appState = APP_NETWORK_WAITING_TO_JOIN;
-			SYS_PostTask(APL_TASK_ID);
+          ///APP_INTIALIZATION
+		case APP_INTIALIZATION:		
+			initializeDevice();
+			appState = APP_NETWORK_WAITING_TO_JOIN;			
 		break;
 		
+          ///APP_INTIALIZATION
 		case APP_NETWORK_WAITING_TO_JOIN:
 		break;
 		
-		case APP_NETWORK_JOINED:
-                // Start blink timer	
+          ///APP_NETWORK_JOINED
+		case APP_NETWORK_JOINED:	
 		break;
 		
+                    ///APP_NETWORK_SEND_STATUS
 		case APP_NETWORK_SEND_STATUS:
-			sendStatusPacket();
-			appState = APP_NETWORK_IDLE;
-			SYS_PostTask(APL_TASK_ID);
-		break;
-		case APP_NETWORK_IDLE:
+		     
+			 if(ableToSend)
+			 {
+		        GPIO_0_set();
+			   sendStatusPacket(CPU_TO_LE16(0));	 				 
+			 }else{
+			   HAL_StopAppTimer(&retryTimer);
+			   retryTimer.callback = retryStatusPacket;
+			   retryTimer.interval = 10;
+			   retryTimer.mode = TIMER_ONE_SHOT_MODE;
+			   HAL_StartAppTimer(&retryTimer);
+			 }
 		
+			appState = APP_NETWORK_IDLE;			
 		break;
+          
+          ///APP_NETWORK_SEND_STATUS
+		case APP_NETWORK_SEND_DIMMER:
+                if(ableToSend)
+			 {
+		       
+			   sendStatusPacket(CPU_TO_LE16(0));	 				 
+			 }else{
+			   HAL_StopAppTimer(&retryTimer);
+			   retryTimer.callback = retryShadePacket;
+			   retryTimer.interval = 10;
+			   retryTimer.mode = TIMER_ONE_SHOT_MODE;
+			   HAL_StartAppTimer(&retryTimer);
+			 }
+			appState = APP_NETWORK_IDLE;			
+		break;
+          
+          ///APP_NETWORK_IDLE
+		case APP_NETWORK_IDLE:		
+		break;
+          
 		default:
 		break;
 	}		
   
 }
-static void blinkGreen()
-{
-	BSP_ToggleLed(LED_GREEN);   	
-}
 
-static void APS_DataConfirm(APS_DataConf_t *result)
-{			
-		if(result->status == APS_SUCCESS_STATUS){
-			// Configure blink timer
-			//GPIO_0_toggle();
-		}
-		else
-		{
-			// Configure blink timer
-			//GPIO_2_set();
-			//GPIO_1_clr();
+void sendStatusPacket(ShortAddr_t addr)
+{	
+     
 			
-		}					
-}
-
-
-void sendStatusPacket()
-{
-	HAL_SetPwmCompareValue(&pwmChannel1, appMessageBuffer.data[0]);
-	dataReq.asdu = appMessageBuffer.data;
-	dataReq.asduLength = sizeof(appMessageBuffer.data);
-	dataReq.profileId = 1;
-	dataReq.dstAddrMode = APS_SHORT_ADDRESS;
-	dataReq.dstAddress.shortAddress = CPU_TO_LE16(0);
-	dataReq.dstEndpoint = 1;
+     statusMessage.data.deviceType = SHADE_MODULE;
+     statusMessage.data.statusMessageType = 0x0000;
+     statusMessage.data.shortAddress = myAddr ;  
+	 
+	    
+	 
+	stuffStatusPacket((uint8_t*) &ButtonStatus, sizeof(ButtonStatus), &statusMessage)	 ;
+     
+	packet.asdu = (uint8_t *)(&statusMessage.data);
+	packet.asduLength = sizeof(statusMessage.data);
+	packet.profileId = 1;
+	packet.dstAddrMode = APS_SHORT_ADDRESS;
+	packet.dstAddress.shortAddress = addr;
+	
+	packet.srcEndpoint = shadeEndpoint.endpoint;
+	packet.dstEndpoint = statusEndpoint.endpoint;
   
-	dataReq.clusterId = CPU_TO_LE16(0);
-	dataReq.srcEndpoint = 1;
-	dataReq.txOptions.acknowledgedTransmission = 0;
-	dataReq.radius = 0x0;
-	dataReq.APS_DataConf = APS_DataConfirm;
-	APS_DataReq(&dataReq); 
+	packet.clusterId = CPU_TO_LE16(0);	
+	packet.txOptions.acknowledgedTransmission = 0;
+	packet.radius = 0x0;
+	packet.APS_DataConf = networkTransmissionConfirm;
+	APS_DataReq(&packet);
+	ableToSend = false; 	
 	
 }
 
-/*******************************************************************************
-  Description: button release event handler.
+void retryStatusPacket()
+{
+	appState = APP_NETWORK_SEND_STATUS;
+	SYS_PostTask(APL_TASK_ID);	
+}
 
-  Parameters: buttonNumber - released button number.
+void retryShadePacket()
+{
+	appState = APP_NETWORK_SEND_DIMMER;
+	SYS_PostTask(APL_TASK_ID);	
+}
+
+/*******************************************************************************
+  Description: Callback For Handling Data Frame Reception
+
+  Parameters: are not used.
   
   Returns: nothing.
 *******************************************************************************/
-
-
+void statusMessageReceived(APS_DataInd_t* indData)
+{	
+     indData = indData;       	
+}
 
 
 /*******************************************************************************
@@ -210,14 +196,41 @@ void sendStatusPacket()
   
   Returns: nothing.
 *******************************************************************************/
-void APS_DataIndication (APS_DataInd_t* indData)
+void shadeCommandReceived(APS_DataInd_t* indData)
 {	
-	//GPIO_2_clr();
-	GPIO_1_clr();
-	//GPIO_2_toggle();	
-	HAL_SetPwmCompareValue(&pwmChannel1, indData->asdu[0]);
+	ShadeCommandData *data = (StatusMessageData*)(indData->asdu);
+	blindTimer.interval=data->Duration;
+   HAL_StartAppTimer(&blindTimer);
+   
+   
+   
+   if( data->ButtonMask == 0x01)// & BlindDirection.DOWN)
+   {
+	GPIO_3_set();
+   }
+   if(data->ButtonMask ==0x10)//& BlindDirection.UP)
+   {
+	GPIO_4_set();
+   }
+ 
+   
 }
 
+
+/*******************************************************************************
+  Description: Callback For Sending a transmission
+
+  Parameters: are not used.
+  
+  Returns: nothing.
+*******************************************************************************/
+static void networkTransmissionConfirm(APS_DataConf_t *result)
+{			
+	//Empty Function just to make sure stuff doesn't explode... theoretically we could retry here.			
+     result = result;
+	GPIO_0_clr();
+	ableToSend = true;
+}
 
 /*******************************************************************************
   Description: Callback For Network Joining
@@ -226,10 +239,11 @@ void APS_DataIndication (APS_DataInd_t* indData)
   
   Returns: nothing.
 *******************************************************************************/
-static void ZDO_StartNetworkConf(ZDO_StartNetworkConf_t *confirmInfo)
+static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo)
 {
 	
 	if (ZDO_SUCCESS_STATUS == confirmInfo->status) {
+          myAddr = confirmInfo->shortAddr;
 		appState = APP_NETWORK_JOINED;
 		SYS_PostTask(APL_TASK_ID);
 		GPIO_2_clr();
@@ -251,12 +265,7 @@ static void ZDO_StartNetworkConf(ZDO_StartNetworkConf_t *confirmInfo)
 *******************************************************************************/
 void ZDO_MgmtNwkUpdateNotf(ZDO_MgmtNwkUpdateNotf_t *nwkParams) 
 {  
-  if(nwkParams->status == ZDO_CHILD_JOINED_STATUS)
-  {
-	 children[c_children] = nwkParams->childAddr.shortAddr;
-	 c_children ++;
-	  
-  }
+     nwkParams = nwkParams;
 }
 
 /*******************************************************************************
@@ -287,74 +296,6 @@ void ZDO_BindIndication(ZDO_BindInd_t *bindInd)
 }
 
 
-void ReadGreyCode(uint8_t bn)
-{
-	bool newEn1, newEn2, sendMessage = false;
-	uint8_t bstate = BSP_ReadButtonsState();
-	newEn1 = ((bstate & 0b00000001) != 0);
-	newEn2 = ((bstate & 0b00000010) != 0);
-	
-	(newEn2) ? GPIO_1_set() : GPIO_1_clr();
-	(newEn1) ? GPIO_2_set() : GPIO_2_clr();
-	
-	if(newEn1 == encoderChannel1)
-	{
-		if(newEn2 == encoderChannel2)
-		{
-			return;
-		}
-		else
-		{
-			encoderChannel2 = newEn2;
-			if(newEn1 == newEn2)
-			{
-				if(appMessageBuffer.data[0] < 32)
-				{
-				  appMessageBuffer.data[0]++;
-				  sendMessage = true;
-				}						
-			}
-			else
-			{
-				if(appMessageBuffer.data[0] > 0)
-				{
-				  appMessageBuffer.data[0]--;
-				  sendMessage = true;
-				}
-			}
-		}
-		
-	}
-	else
-	{
-		encoderChannel1 = newEn1;
-		if(newEn1 == newEn2)
-		{
-			if(appMessageBuffer.data[0] > 0)
-			{
-				appMessageBuffer.data[0]--;
-				sendMessage = true;				
-			}						
-		}
-		else
-		{
-			if(appMessageBuffer.data[0] < 32)
-			{
-				appMessageBuffer.data[0]++;
-				sendMessage = true;				
-			}
-		}
-		
-	}
-	encoderChannel1 = newEn1;
-	encoderChannel2 = newEn2;
-	if(sendMessage)
-	{
-		appState = APP_NETWORK_SEND_STATUS;	
-		SYS_PostTask(APL_TASK_ID);
-	}
-}
-
 /***********************************************************************************
   Stub for ZDO Unbinding Indication
 
@@ -370,6 +311,109 @@ void ZDO_UnbindIndication(ZDO_UnbindInd_t *unbindInd)
   (void)unbindInd;
 }
 #endif //_BINDING_
+
+
+/**********************************************************************//**
+  \brief intializeDecvice - setup all the peripherals we want
+
+  \param none
+  \return none
+**************************************************************************/
+void initializeDevice()
+{
+	
+	GPIO_6_make_in();
+	GPIO_7_make_in();	
+	
+	BSP_OpenButtons(handleButtonPress,handleButtonRelease);
+	 
+	 initializeLED();     		
+     initializeConfigurationServer();
+     			     
+     registerEndpoints();                          
+			
+	//join a network
+	startNetworkReq.ZDO_StartNetworkConf = networkStartConfirm;
+	ZDO_StartNetworkReq(&startNetworkReq);	     		
+	
+	
+				
+			   blindTimer.callback = stopBlindMotion;
+			   blindTimer.interval = 10;
+			   blindTimer.mode = TIMER_ONE_SHOT_MODE;
+			
+		
+}
+
+void handleButtonPress(uint8_t button)
+{
+	
+	if(button == BSP_KEY0 )
+	{
+			GPIO_3_set(); // down
+			ButtonStatus.UpButton=true;
+	}
+	if(button == BSP_KEY1)
+	{
+		GPIO_4_set(); // up
+		ButtonStatus.DownButton=true;
+	}
+	appState = APP_NETWORK_SEND_STATUS;
+	SYS_PostTask(APL_TASK_ID);	
+	
+}
+
+void handleButtonRelease(uint8_t button)
+{
+	if(button == BSP_KEY0 )
+	{
+		GPIO_3_clr();
+		ButtonStatus.UpButton=false;
+	}
+	if(button == BSP_KEY1)
+	{
+		GPIO_4_clr();	
+		ButtonStatus.DownButton=false;	
+	}
+	appState = APP_NETWORK_SEND_STATUS;
+	SYS_PostTask(APL_TASK_ID);	
+	
+}
+
+void stopBlindMotion()
+{
+	
+	   HAL_StopAppTimer(&blindTimer);
+	   GPIO_3_clr();
+	   GPIO_4_clr();
+	
+}
+
+void initializeConfigurationServer()
+{
+     static DeviceType_t deviceType = CS_DEVICE_TYPE;
+     static ExtPanId_t panId = CS_EXT_PANID;
+     static ExtAddr_t uid = CS_UID;
+     
+     CS_WriteParameter(CS_DEVICE_TYPE_ID,&deviceType);	          		
+	CS_WriteParameter(CS_EXT_PANID_ID, &panId);							
+	CS_WriteParameter(CS_UID_ID, &uid);     
+}
+
+void registerEndpoints()
+{     
+
+	     statusEndpointParams.simpleDescriptor = &statusEndpoint;
+	     statusEndpointParams.APS_DataInd = statusMessageReceived;			
+	     APS_RegisterEndpointReq(&statusEndpointParams);
+
+          shadeEndpointParams.simpleDescriptor = &shadeEndpoint;
+	     shadeEndpointParams.APS_DataInd = shadeCommandReceived;			
+	     APS_RegisterEndpointReq(&shadeEndpointParams);                         	         						                                                   
+}
+
+
+
 
 /**********************************************************************//**
   \brief Main - C program main start function
@@ -387,4 +431,4 @@ int main(void)
   }
 }
 
-//eof blink.c
+
