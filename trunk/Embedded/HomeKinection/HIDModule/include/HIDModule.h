@@ -94,6 +94,7 @@ void USBHandleINT();
 void USBHandleTimeOut();
 
 void USBHandleFakeKeyboard();
+void USBHandleFakeKeyboard2();
 void USBHandleFakeMouse();
 
 void spiCompleteCallback();
@@ -104,6 +105,7 @@ void sendStatusPacket(ShortAddr_t addr);
 void registerEndpoints();
 
 bool testMAXChip();
+void testRelay();
 
 
 #endif /* COMMANDMODULE_H_ */
