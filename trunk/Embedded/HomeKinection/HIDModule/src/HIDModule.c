@@ -506,13 +506,15 @@ void USBHandleINT()
 	}
 	else if(itest1 & bmIN2BAVIE)
 	{
-		USBHandleINT2();
 		setLED(LED_COLOR_PURPLE);
+		USBHandleINT2();
+		
 	}
 	else if(itest1 & bmIN3BAVIE)
 	{
-		USBHandleINT3();
 		setLED(LED_COLOR_RED);
+		USBHandleINT3();
+		
 	}
 	else if(itest2 & bmSUSPIE)
 	{
@@ -862,10 +864,10 @@ void USBSendDescriptor()
 		     if(usbSetupPacket[wIndexL] == 0)
 			{
 				setLED(LED_COLOR_TURQUOISE);
-				//desclen = CPU_TO_LE16(sizeof(RepD_Keyboard));
-				desclen = CPU_TO_LE16(sizeof(RepD_Mouse));
-			     //p_Descriptor = RepD_Keyboard;
-				p_Descriptor = RepD_Mouse;
+				desclen = CPU_TO_LE16(sizeof(RepD_Keyboard));
+				//desclen = CPU_TO_LE16(sizeof(RepD_Mouse));
+			     p_Descriptor = RepD_Keyboard;
+				//p_Descriptor = RepD_Mouse;
 			}
 			else if(usbSetupPacket[wIndexL] == 1)
 			{

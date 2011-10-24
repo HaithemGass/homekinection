@@ -18,7 +18,7 @@ uint8_t DD[]= // DEVICE Descriptor
 0x00,0x00,0x00, // bDeviceClass, bDeviceSubClass, bDeviceProtocol
 0x40, // bMaxPacketSize0 EP0 is 64 bytes
 0x6A,0x0B, // idVendor(L/H)--Maxim is 0B6A
-0xBE,0xEF, // idProduct(L/H)--5346
+0x13,0x37, // idProduct(L/H)--5346
 0x02,0x00, // bcdDevice--1234
 1,2,3, // iManufacturer, iProduct, iSerialNumber
 1}; // bNumConfigurations
@@ -26,8 +26,8 @@ uint8_t DD[]= // DEVICE Descriptor
 uint8_t CD[]= // CONFIGURATION Descriptor
 {0x09, // bLength
 0x02, // bDescriptorType = Config
-34,0x00, // wTotalLength(L/H) = 59 bytes
-0x01, // bNumInterfaces
+59,0x00, // wTotalLength(L/H) = 59 bytes
+0x02, // bNumInterfaces
 0x01, // bConfigValue
 0x00, // iConfiguration
 0xC0, // bmAttributes. b7=1 b6=self-powered b5=RWU supported
@@ -35,7 +35,7 @@ uint8_t CD[]= // CONFIGURATION Descriptor
 
 //KEYBOARD
 
-/*
+
 // INTERFACE Descriptor
 0x09, // length = 9
 0x04, // type = IF
@@ -61,14 +61,14 @@ uint8_t CD[]= // CONFIGURATION Descriptor
 0x82, // bEndpointAddress (EP3-IN)
 0x03, // bmAttributes (interrupt)
 0x40,0x00, // wMaxPacketSize (64)
-0xFF
-*/
+0xFF,
+
 //MOUSE
 
 // INTERFACE Descriptor
 0x09, // length = 9
 0x04, // type = IF
-0x00, // Interface #1
+0x01, // Interface #1
 0x00, // bAlternate Setting
 0x01, // bNum Endpoints
 0x03, // bInterfaceClass = HID
