@@ -28,6 +28,8 @@ using System.Windows.Shapes;
 using System.Speech;
 using System.Windows.Threading;
 
+using System.IO.Ports;
+
 using Microsoft.Research.Kinect.Nui;
 using ShapeGame_Speech;
 using ShapeGame_Utils;
@@ -63,6 +65,8 @@ namespace ShapeGame
         const double DefaultDropRate = 2.5;
         const double DefaultDropSize = 32.0;
         const double DefaultDropGravity = 1.0;
+        static SerialPort serialPort;
+        byte[] sliderValue;
 
         public MainWindow()
         {
@@ -77,6 +81,19 @@ namespace ShapeGame
                 this.Width = bounds.Width;
             }
             this.WindowState = (WindowState)Properties.Settings.Default.WindowState;
+
+            serialPort = new SerialPort();
+            serialPort.BaudRate = 9600;
+            serialPort.DataBits = 8;
+            serialPort.StopBits = StopBits.One;
+            serialPort.PortName = SerialPort.GetPortNames()[0];
+            serialPort.Parity = Parity.None;
+            serialPort.Handshake = Handshake.None;
+            serialPort.Open();
+            
+            sliderValue = new byte[1];
+
+
         }
 
         public class Player
@@ -624,11 +641,14 @@ namespace ShapeGame
 
         private void HandleGestureRecognizerFrame(SkeletalGesturePoint sgp)
         {
+            
             if (gestureRecognizer != null)
             {
                 DisplayGesture(gestureRecognizer.Update(SkeletalGesture.TransformPoint(sgp)));
                 //gestureRecognizer.Update(SkeletalGesture.TransformPoint(sgp));
                 Slider.Value = 100 * gestureRecognizer.VerticalSlider(SkeletalGesture.TransformPoint(sgp));
+                sliderValue[0] = (byte)(100 * gestureRecognizer.VerticalSlider(SkeletalGesture.TransformPoint(sgp)));
+                serialPort.Write(sliderValue,0,1);
             }
             
         }
