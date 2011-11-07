@@ -1,3 +1,9 @@
+/*******************************************************************************
+********************************************************************************
+* YOU MUST CHANGE THE NETWORK PROTOCOL IN THE C# CODE IF YOU CHANGE STUFF HERE *
+********************************************************************************
+********************************************************************************/
+
 #define DEVICE_MESSAGE_STATUS 1
 #define DEVICE_MESSAGE_DIMMER 2
 #define DEVICE_MESSAGE_SHADE 4
@@ -71,6 +77,14 @@ typedef enum
 		StatusMessageData data; // Application data
 		uint8_t footer[APS_AFFIX_LENGTH - APS_ASDU_OFFSET]; //Footer
 	} PACK StatusMessagePacket;
+	END_PACK
+	
+		BEGIN_PACK
+	typedef struct
+	{
+		uint8_t type; // Message type... will correspond to one of our other ___MessageData structs.... use our NetworkEndpoint to decide.		
+	     uint8_t data[128]; // Where to shove the actual message
+	} PACK UsartMessagePacket;
 	END_PACK
 	
 	static APS_RegisterEndpointReq_t statusEndpointParams;
