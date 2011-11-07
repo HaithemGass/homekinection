@@ -163,8 +163,8 @@ typedef enum
 	BEGIN_PACK
      typedef struct  
 	{
-		 remoteTransition transitions[64];
-		 uint8_t length;
+		uint8_t length;
+		remoteTransition transitions[64];		
 	}PACK remoteSequence;
 	END_PACK
 	 
