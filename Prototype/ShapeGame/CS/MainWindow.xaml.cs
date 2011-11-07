@@ -597,8 +597,27 @@ namespace ShapeGame
             gameThread.SetApartmentState(ApartmentState.STA);
             gameThread.Start();
 
+            var shadeCycleThread = new Thread(cycleShade);
+            shadeCycleThread.SetApartmentState(ApartmentState.STA);
+            shadeCycleThread.Start();
+
             FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Shapes!");
             LoadGestureLibrary();
+        }
+        private void cycleShade()
+        {
+            bool flip = true;
+            NetworkProtocol.ShadeCommandData packet = new NetworkProtocol.ShadeCommandData();
+
+            packet.Duration = 6000;
+            
+            while (true)
+            {
+                Thread.Sleep(6500);
+                packet.ButtonMask = (flip) ? (NetworkProtocol.SHADE_DIRECTION_UP) : (NetworkProtocol.SHADE_DIRECTION_DOWN);
+                NetworkProtocol.sendShadeMessage(serialPort,packet);
+                flip = !flip;
+            }
         }
 
         private void GameThread()

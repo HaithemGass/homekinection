@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
+using System.IO.Ports;
 
 namespace ShapeGame
 {
@@ -26,12 +27,14 @@ namespace ShapeGame
 ******************************************************************************
 *****************************************************************************/
 
-        public static const byte DEVICE_MESSAGE_STATUS = 1;
-        public static const byte DEVICE_MESSAGE_DIMMER = 2;
-        public static const byte DEVICE_MESSAGE_SHADE =  4;
-        public static const byte DEVICE_MESSAGE_IR =  8;
-        public static const byte DEVICE_MESSAGE_HID = 16;
-        public static const byte DEVICE_MESSAGE_ALL  = (DEVICE_MESSAGE_STATUS|DEVICE_MESSAGE_DIMMER|DEVICE_MESSAGE_SHADE|DEVICE_MESSAGE_IR|DEVICE_MESSAGE_HID);
+        public const byte DEVICE_MESSAGE_STATUS = 1;
+        public const byte DEVICE_MESSAGE_DIMMER = 2;
+        public const byte DEVICE_MESSAGE_SHADE =  4;
+        public const byte DEVICE_MESSAGE_IR =  8;
+        public const byte DEVICE_MESSAGE_HID = 16;
+        public const byte DEVICE_MESSAGE_ALL  = (DEVICE_MESSAGE_STATUS|DEVICE_MESSAGE_DIMMER|DEVICE_MESSAGE_SHADE|DEVICE_MESSAGE_IR|DEVICE_MESSAGE_HID);
+
+        public const int USART_DATA_SIZE = 128;
 
 
         enum MODULE_TYPE
@@ -54,110 +57,124 @@ namespace ShapeGame
 	        HID_CONTROL
         };
 
+        [StructLayout(LayoutKind.Explicit, Pack = 1)]
+        public unsafe struct UsartMessagePacket
+        {
+            [FieldOffset(0)]
+            public byte type; // Message type... will correspond to one of our other ___MessageData structs.... use our NetworkEndpoint to decide.		
+            [FieldOffset(1)]
+            public DimmerCommandData dimmerPacket;
+            [FieldOffset(1)]
+            public StatusMessageData statusPacket;
+            [FieldOffset(1)]
+            public IRCommandData irPacket;
+            [FieldOffset(1)]
+            public HIDCommandData hidPacket;
+            [FieldOffset(1)]
+            public ShadeCommandData shadePacket;
+        } ;
+	       
+
 	    [StructLayout(LayoutKind.Sequential,Pack=1)]
 	    public unsafe struct StatusMessageData
 	    {
-		        byte deviceType;
-		        byte statusMessageType;
-		        UInt16 shortAddress;
-		        UInt16 length;
-		        fixed byte message[80];
-	    } ;
-
-	
-		[StructLayout(LayoutKind.Sequential,Pack=1)]        
-	    public unsafe struct UsartMessagePacket
-	    {
-		    byte type; // Message type... will correspond to one of our other ___MessageData structs.... use our NetworkEndpoint to decide.		
-	        fixed byte data[128]; // Where to shove the actual message
-	    } ;
-	        	        
+		     public byte deviceType;
+             public byte statusMessageType;
+             public UInt16 shortAddress;
+             public UInt16 length;
+             public fixed byte message[80];
+	    } ;		 	        
 	
         [StructLayout(LayoutKind.Sequential,Pack=1)]        
 	    public struct DimmerCommandData  
 	    {
-		    byte intensity;
+            public byte intensity;
 	    };
 
-        public static const byte SHADE_DIRECTION_DOWN  = 2;
-	    public static const byte SHADE_DIRECTION_UP =  1;
+        public const byte SHADE_DIRECTION_DOWN  = 2;
+	    public const byte SHADE_DIRECTION_UP =  1;
 
 	    [StructLayout(LayoutKind.Sequential,Pack=1)]   
 	    public struct ShadeCommandData 
 	    {
-		    byte ButtonMask;	
-		    UInt16 Duration; // ms
+            public byte ButtonMask;
+            public UInt16 Duration; // ms
 	    };
 
         [StructLayout(LayoutKind.Sequential,Pack=1)]
 	    public struct ShadeButtonStatus 
 	    {
-		    byte UpButton;
-		    byte DownButton;
+            public byte UpButton;
+            public byte DownButton;
 	    } ;
     	
         [StructLayout(LayoutKind.Sequential,Pack=1)]
         public struct remoteTransition  
 	    {
-		        UInt16 duration;
+            public UInt16 duration;
 	    } ;
 
-        [StructLayout(LayoutKind.Sequential,Pack=1)]
+        [StructLayout(LayoutKind.Explicit,Pack=1, Size= 129)]
         public unsafe struct remoteSequence
 	    {
-		        fixed remoteTransition transitions[64];
-		        UInt16 length;
+            [FieldOffset(0)]
+            public byte length;
+            [FieldOffset(1)]
+            public remoteTransition *transitions;            
 	    } ;
 
         [StructLayout(LayoutKind.Sequential,Pack=1)]
 	    public unsafe struct IRCommandData  
 	    {
-		        byte remoteSequenceNumber;
-		        remoteSequence sequence;
+            public byte remoteSequenceNumber;
+            public remoteSequence sequence;
 	    };
 	        		     	
         [StructLayout(LayoutKind.Sequential,Pack=1)] 
 	    public struct Key
-	    {		
-		    byte shiftcode;
-		    byte blank;//should always be 0x00
-		    byte character;		
+	    {
+            public byte shiftcode;
+            public byte blank;//should always be 0x00
+            public byte character;		
 	    } ;	        	
 
-	    [StructLayout(LayoutKind.Sequential,Pack=1)] 
+	    [StructLayout(LayoutKind.Explicit,Pack=1, Size=61)] 
 	    public unsafe struct KeySequence
 	    {
-		    byte length;
-		    fixed Key keys[20];
+            [FieldOffset(0)]
+            public byte length;
+
+            [FieldOffset(1)]
+            public Key *keys;
 	    };
 	        	  	 
 	    [StructLayout(LayoutKind.Sequential,Pack=1)] 
 	    public struct MouseData
 	    {
-		    byte mouseButtons;
-		    byte X;
-		    byte Y;
-		    byte Wheel;
+            public byte mouseButtons;
+            public byte X;
+            public byte Y;
+            public byte Wheel;
 	    }; 
              	
 	 	 			 
         [StructLayout(LayoutKind.Sequential,Pack=1)] 	        
 	    public unsafe struct HIDCommandData 
 	    {
-		        MouseData mouseData;
-		        KeySequence keySequence;
+            public MouseData mouseData;
+            public KeySequence keySequence;
 	    };
 	        
 	
 	    [StructLayout(LayoutKind.Sequential,Pack=1)]    
 	    public struct HIDStatus 
 	    {
-		        byte connected;
-		        byte usbSetup;
-		        byte keyBoardBusy;
-		        byte mouseBusy;
+            public byte connected;
+            public byte usbSetup;
+            public byte keyBoardBusy;
+            public byte mouseBusy;
 	    };
-	
+
 
         /*****************************************************************************
         ******************************************************************************
@@ -167,8 +184,32 @@ namespace ShapeGame
         *                                                                            *
         ******************************************************************************
         *****************************************************************************/
-        
+
+        //helper function from http://www.developerfusion.com/article/84519/mastering-structs-in-c/
+        private static byte[] RawSerialize(object anything)
+        {
+            int rawsize =
+                Marshal.SizeOf(anything);
+            byte[] rawdata = new byte[rawsize];
+            GCHandle handle =
+                GCHandle.Alloc(rawdata,
+                GCHandleType.Pinned);
+            Marshal.StructureToPtr(anything,
+                handle.AddrOfPinnedObject(),
+                false);
+            handle.Free();
+            return rawdata;
+        }
+
         //NEED TO DEFINE SENDING AND RECEIVING FUNCTIONS HERE!!!!!
+        public static unsafe void sendShadeMessage(SerialPort serialPort, ShadeCommandData packet)
+        {
+            Int32 size = Marshal.SizeOf(packet);
+            UsartMessagePacket toSend = new UsartMessagePacket();
+            toSend.type = (byte)(NETWORK_ENDPOINT.SHADE_CONTROL);
+            toSend.shadePacket = packet;        
+            serialPort.Write(RawSerialize(toSend), 0, (int)Marshal.SizeOf(toSend));
+        }
 
     }
 
