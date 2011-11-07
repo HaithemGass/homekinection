@@ -453,8 +453,7 @@ void playIR()
 }
 
 void initializeTimer()
-{
-	
+{	
 	TCCR5B = (1 << CS51);
 	OCR5C = RECORD_TIMEOUT;
 	TIMSK5 |= (1 << 3);

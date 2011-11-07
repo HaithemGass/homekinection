@@ -68,10 +68,13 @@ void sendStatusPacket(ShortAddr_t addr);
 
 void retryDimmerPacket();
 void retryStatusPacket();
-
+void setDimmerBrightness(uint16_t i);
 void readGreyCode();
 void readButton();
 void resetPWM();
+
+void initializeTimer();
+void resetTimer();
 
 
 #endif /* DIMMERMODULE_H_ */

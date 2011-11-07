@@ -17,10 +17,10 @@
 #include <appTimer.h>
 #include <zdo.h>
 #include <DimmerModule.h>
+#include "helpers.h"
 #include <gpio.h>
 #include <pwm.h>
 #include <halPwm.h>
-
 
 /*****************************************************************************
 ******************************************************************************
@@ -94,8 +94,8 @@ void APL_TaskHandler(void)
 		case APP_NETWORK_SEND_STATUS:
 		     
 			 if(ableToSend)
-			 {
-		        GPIO_0_set();
+			 {		 
+			   setLED(LED_COLOR_LIME);       
 			   sendStatusPacket(CPU_TO_LE16(0));	 				 
 			 }else{
 			   HAL_StopAppTimer(&retryTimer);
@@ -111,8 +111,7 @@ void APL_TaskHandler(void)
           ///APP_NETWORK_SEND_STATUS
 		case APP_NETWORK_SEND_DIMMER:
                 if(ableToSend)
-			 {
-		        GPIO_0_set();
+			 {		        
 			   sendStatusPacket(CPU_TO_LE16(0));	 				 
 			 }else{
 			   HAL_StopAppTimer(&retryTimer);
@@ -134,28 +133,36 @@ void APL_TaskHandler(void)
   
 }
 
-void sendStatusPacket(ShortAddr_t addr)
-{	
-     
+void setDimmerBrightness(uint16_t i)
+{
+	static bool full = false;
 	uint16_t temp;
 	if(lampOn)
 	{
 		//to avoid overflow
-		if(intensity > 50)
+		if(i > 50)
 		{
-		  temp = (MAX_DIMMER_BRIGHTNESS * (intensity-50)/50);
-		  temp = temp + (MAX_DIMMER_BRIGHTNESS)/2; 
+		  temp = (MAX_DIMMER_BRIGHTNESS * (i-50)/100);
+		  temp = temp + (MAX_DIMMER_BRIGHTNESS)/2;		  	   
 		}
 		else
 		{
-		  temp = ((MAX_DIMMER_BRIGHTNESS * intensity)/100); 
+		  temp = ((MAX_DIMMER_BRIGHTNESS * i)/100); 
 		}					
      }
 	else
 	{
 	     temp = 0;
 	}			 
-	HAL_SetPwmCompareValue(&pwmChannel1,(MAX_DIMMER_BRIGHTNESS - temp) ); 
+
+	//HAL_SetPwmCompareValue(&pwmChannel1,(MAX_DIMMER_BRIGHTNESS - temp) ); 		
+	halMoveWordToRegister(&OCR5C, MAX_DIMMER_BRIGHTNESS - temp);
+}
+
+void sendStatusPacket(ShortAddr_t addr)
+{	
+     
+	setDimmerBrightness(intensity);
 		
      statusMessage.data.deviceType = DIMMER_MODULE;
      statusMessage.data.statusMessageType = 0x0000;
@@ -239,18 +246,9 @@ void statusMessageReceived(APS_DataInd_t* indData)
 void dimmerCommandReceived(APS_DataInd_t* indData)
 {	
 	DimmerCommandData *data = (StatusMessageData*)(indData->asdu);
-	uint16_t temp;
 	lampOn = true;
-	if(data->intensity > 50){
-	     temp = (MAX_DIMMER_BRIGHTNESS * (data->intensity-50)/50);
-		temp = temp + (MAX_DIMMER_BRIGHTNESS)/2; 
-	}
-	else
-	{
-		temp = ((MAX_DIMMER_BRIGHTNESS * data->intensity)/100); 
-	}			
-	HAL_SetPwmCompareValue(&pwmChannel1, MAX_DIMMER_BRIGHTNESS - temp);	
-}
+	setDimmerBrightness(data->intensity);
+}	
 
 
 /*******************************************************************************
@@ -263,9 +261,9 @@ void dimmerCommandReceived(APS_DataInd_t* indData)
 static void networkTransmissionConfirm(APS_DataConf_t *result)
 {			
 	//Empty Function just to make sure stuff doesn't explode... theoretically we could retry here.			
-     result = result;
-	GPIO_0_clr();
+     result = result;	
 	ableToSend = true;
+	setLED(LED_COLOR_OFF);
 }
 
 /*******************************************************************************
@@ -282,13 +280,10 @@ static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo)
           myAddr = confirmInfo->shortAddr;
 		appState = APP_NETWORK_JOINED;
 		SYS_PostTask(APL_TASK_ID);
-		GPIO_2_clr();
-		GPIO_1_set();
+          setLED(LED_COLOR_YELLOW);
 		// Configure blink timer
 	}else{
-		GPIO_0_set();
-		GPIO_1_set();
-		GPIO_2_set();
+		startLEDBlink(LED_COLOR_RED, LED_BLINK_MEDIUM);
 	}
 }
 
@@ -358,20 +353,9 @@ void ZDO_UnbindIndication(ZDO_UnbindInd_t *unbindInd)
 void initializeDevice()
 {
 	
-	BSP_OpenLeds(); // Enable LEDs 
-	GPIO_2_set();			
-	GPIO_1_clr();	
-	
-	/*buttonTimer.interval = 10;
-	buttonTimer.mode = TIMER_REPEAT_MODE;
-	buttonTimer.callback = readGreyCode;
-
-     GPIO_6_make_in();
-	GPIO_7_make_in();	
-	
-     HAL_StartAppTimer(&buttonTimer);*/
-	 
-	                      		
+	initializeLED();	
+	setLED(LED_COLOR_RED);
+		 	                      		
      initializeConfigurationServer();
      			     
      registerEndpoints();                          
@@ -380,17 +364,31 @@ void initializeDevice()
 	startNetworkReq.ZDO_StartNetworkConf = networkStartConfirm;
 	ZDO_StartNetworkReq(&startNetworkReq);	     		
 	
-    initializePWM();
-	initializeRotaryEncoder();	
-	initializeZeroDetect();		
+    //initializePWM();
+    initializeTimer();
+    initializeRotaryEncoder();	
+    initializeZeroDetect();		
 }
 
-void initializeZeroDetect()
+void initializeTimer()
 {
-	
-	HAL_RegisterIrq(IRQ_6,IRQ_ANY_EDGE,resetPWM);
-	HAL_EnableIrq(IRQ_6);
-      
+	GPIO_8_make_out();
+	GPIO_8_clr();
+	TCCR5B = (1 << CS51);
+	TCCR5B |= (1 << CS50);
+	OCR5C = MAX_DIMMER_BRIGHTNESS;
+	TIMSK5 |= (1 << 3);	
+}
+
+ISR(TIMER5_COMPC_vect)
+{
+	GPIO_8_set();
+}	
+
+void initializeZeroDetect()
+{	
+	HAL_RegisterIrq(IRQ_6,IRQ_ANY_EDGE,resetTimer);
+	HAL_EnableIrq(IRQ_6);      
 }
 
 void initializeRotaryEncoder()
@@ -417,8 +415,7 @@ void initializeRotaryEncoder()
 
 void initializePWM()
 {
-	//setup pwm
-	GPIO_3_make_out();
+	//setup pwm	
 	
 	HAL_OpenPwm(PWM_UNIT_3);			
 	pwmChannel1.unit = PWM_UNIT_3;
@@ -426,7 +423,7 @@ void initializePWM()
 	pwmChannel1.polarity = PWM_POLARITY_NON_INVERTED;			
 	HAL_SetPwmFrequency(PWM_UNIT_3, MAX_DIMMER_BRIGHTNESS , PWM_PRESCALER_64 );			
 	HAL_StartPwm(&pwmChannel1);	
-     HAL_SetPwmCompareValue(&pwmChannel1, 0); 
+     setDimmerBrightness(0);
 	
 	encoderChannel1 = ((PIND & (1 << PIND2)) != 0);
 	encoderChannel2 = ((PIND & (1 << PIND3)) != 0);    	
@@ -445,14 +442,13 @@ void initializeConfigurationServer()
 
 void registerEndpoints()
 {     
+	statusEndpointParams.simpleDescriptor = &statusEndpoint;
+	statusEndpointParams.APS_DataInd = statusMessageReceived;			
+	APS_RegisterEndpointReq(&statusEndpointParams);
 
-	     statusEndpointParams.simpleDescriptor = &statusEndpoint;
-	     statusEndpointParams.APS_DataInd = statusMessageReceived;			
-	     APS_RegisterEndpointReq(&statusEndpointParams);
-
-          dimmerEndpointParams.simpleDescriptor = &dimmerEndpoint;
-	     dimmerEndpointParams.APS_DataInd = dimmerCommandReceived;			
-	     APS_RegisterEndpointReq(&dimmerEndpointParams);                         	         						                                                   
+     dimmerEndpointParams.simpleDescriptor = &dimmerEndpoint;
+	dimmerEndpointParams.APS_DataInd = dimmerCommandReceived;			
+	APS_RegisterEndpointReq(&dimmerEndpointParams);                         	         						                                                   
 }
 
 void readButton()
@@ -487,8 +483,7 @@ ISR(INT3_vect)
 
 ISR(TIMER3_COMPA_vect)
 {
-     GPIO_2_toggle();	
-	GPIO_3_set();
+     setLED(LED_COLOR_LIME);
 }
 
 void readGreyCode()
@@ -496,8 +491,6 @@ void readGreyCode()
 	bool newEn1, newEn2, sendMessage = false;	
 	newEn1 = ((PIND & (1 << PIND2)) != 0);
 	newEn2 = ((PIND & (1 << PIND3)) != 0);
-	GPIO_1_clr();
-	GPIO_2_clr();
 	
 	if(newEn1 == encoderChannel1)
 	{
@@ -510,7 +503,7 @@ void readGreyCode()
 			encoderChannel2 = newEn2;
 			if(newEn1 == newEn2)
 			{				
-				if(intensity < 99)
+				if(intensity < 100)
 				{				  
 				  intensity++;
 				  sendMessage = true;
@@ -541,7 +534,7 @@ void readGreyCode()
 		}
 		else
 		{		
-			if(intensity < 99)
+			if(intensity < 100)
 			{
 				intensity++;
 				sendMessage = true;				
@@ -561,6 +554,15 @@ void readGreyCode()
 void resetPWM()
 {
 	  halMoveWordToRegister(&TCNTn(PWM_UNIT_3), 0x0000);	 
+}
+
+void resetTimer()
+{
+	  TCNT5 = 0x0000;
+	  if(intensity != 100)
+	  {
+          GPIO_8_clr();
+	  }		  
 }
 
 /**********************************************************************//**
