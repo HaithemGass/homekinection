@@ -30,8 +30,8 @@ uint8_t CD[]= // CONFIGURATION Descriptor
 0x02, // bNumInterfaces
 0x01, // bConfigValue
 0x00, // iConfiguration
-0xC0, // bmAttributes. b7=1 b6=self-powered b5=RWU supported
-50, // MaxPower is 2 ma
+0xA0, // bmAttributes. b7=1 b6=self-powered b5=RWU supported
+50, // MaxPower is 100 ma
 
 //KEYBOARD
 

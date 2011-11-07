@@ -102,6 +102,10 @@ typedef enum
 
 //-------------------------SHADE
 #if ((DEVICE_MESSAGE_SUPPORT & DEVICE_MESSAGE_SHADE) != 0)
+
+     #define SHADE_DIRECTION_DOWN 2
+	#define SHADE_DIRECTION_UP   1
+
 	BEGIN_PACK
 	typedef struct  
 	{
@@ -169,6 +173,67 @@ typedef enum
 	
 	static APS_RegisterEndpointReq_t irEndpointParams;
      static SimpleDescriptor_t irEndpoint = {IR_CONTROL,1, 1, 1, 0, 0, NULL, 0, NULL};
+#endif
+
+//-------------------------HID
+#if ((DEVICE_MESSAGE_SUPPORT & DEVICE_MESSAGE_HID) != 0)
+     BEGIN_PACK
+	typedef struct  
+	{		
+		uint8_t shiftcode;
+		uint8_t blank;//should always be 0x00
+		uint8_t character;		
+	}PACK Key;
+	END_PACK
+	
+	BEGIN_PACK
+	typedef struct  
+	{
+		uint8_t length;
+		Key keys[20];
+	}PACK KeySequence;
+	END_PACK	  
+	 
+	BEGIN_PACK
+	typedef struct  
+	{
+		uint8_t mouseButtons;
+		uint8_t X;
+		uint8_t Y;
+		uint8_t Wheel;
+	}PACK MouseData; 
+     END_PACK	
+	 	 			 
+	BEGIN_PACK
+	typedef struct  
+	{
+		 MouseData mouseData;
+		 KeySequence keySequence;
+	}PACK HIDCommandData;
+	END_PACK
+	
+	BEGIN_PACK
+	typedef struct  
+	{
+		 bool connected;
+		 bool usbSetup;
+		 bool keyBoardBusy;
+		 bool mouseBusy;
+	}PACK HIDStatus;
+	
+	END_PACK		
+	
+	BEGIN_PACK
+	typedef struct
+	{
+		uint8_t header[APS_ASDU_OFFSET]; // Header
+		HIDCommandData data;
+		uint8_t footer[APS_AFFIX_LENGTH - APS_ASDU_OFFSET]; //Footer
+	} PACK HIDCommandPacket;
+	END_PACK
+	
+	static APS_RegisterEndpointReq_t hidEndpointParams;
+     static SimpleDescriptor_t hidEndpoint = {HID_CONTROL,1, 1, 1, 0, 0, NULL, 0, NULL};
 #endif
 
 /*****************************************************************************

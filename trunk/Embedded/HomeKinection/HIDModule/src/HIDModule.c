@@ -48,6 +48,9 @@ HAL_AppTimer_t usbTimeOut;
 HAL_AppTimer_t usbKeyboardTimer;
 HAL_AppTimer_t usbMouseTimer;
 HAL_AppTimer_t testRelayTimer;
+HAL_AppTimer_t retryTimer;
+
+static ShortAddr_t myAddr;
 
 //Gloabl Usart Channel
 HAL_SpiDescriptor_t spiChannel0;
@@ -56,16 +59,26 @@ static ShortAddr_t children[CS_MAX_CHILDREN_AMOUNT];
 static ShortAddr_t childToSendTo = 0;
 static int c_children = 0;
 
+static bool ableToSend = true;
 
-static KEYBOARD_STATE usbState;
+HIDStatus statusPacket;
+static StatusMessagePacket statusMessage; // Dimmer Message buffer
+
+static KEYBOARD_STATE usbKeyboardState;
 static uint8_t usbRWUEnabled;
 static uint8_t usbConfigValue;
 
 static bool usbEp3Stall;
 static bool usbEp2Stall;
 
-static bool usbKeyboard;
-static bool usbMouse;
+static bool usbKeyboardBusy;
+static bool usbMouseBusy;
+
+static KeySequence usbKeySequence;
+static KeySequence defaultSequence = DEFAULT_KEY_SEQUENCE;
+static uint8_t usbKeyIndex;
+
+static MouseData usbMouseData;
 
 static bool usbSuspended;
 static uint8_t usbSetupPacket[8];
@@ -108,6 +121,18 @@ void APL_TaskHandler(void)
 		
           ///APP_NETWORK_SEND_STATUS
 		case APP_NETWORK_SEND_STATUS:
+		     if(ableToSend)
+			 {		        
+			   sendStatusPacket(CPU_TO_LE16(0));	 				 
+			 }else{
+			   HAL_StopAppTimer(&retryTimer);
+			   retryTimer.callback = retryStatusPacket;
+			   retryTimer.interval = 10;
+			   retryTimer.mode = TIMER_ONE_SHOT_MODE;
+			   HAL_StartAppTimer(&retryTimer);
+			 }
+		
+			appState = APP_NETWORK_IDLE;
 		break;
           
           ///APP_NETWORK_IDLE
@@ -120,14 +145,72 @@ void APL_TaskHandler(void)
   
 }
 
+void retryStatusPacket()
+{
+	appState = APP_NETWORK_SEND_STATUS;
+	SYS_PostTask(APL_TASK_ID);	
+}
+
 void hidCommandReceived(APS_DataInd_t* indData)
 {		
-     indData = indData;
+     HIDCommandData *data = (HIDCommandData*)(indData->asdu);
+	usbKeyIndex = 0;
+	if(usbKeyboardBusy)
+	{
+		statusPacket.keyBoardBusy = usbKeyboardBusy;
+	     appState = APP_NETWORK_SEND_STATUS;
+	     SYS_PostTask(APL_TASK_ID);
+	}
+	else
+	{
+		
+	     usbKeySequence = data->keySequence;	     
+     	usbKeyboardBusy = true;			
+	}
+	if(usbMouseBusy)
+	{
+		statusPacket.keyBoardBusy = usbKeyboardBusy;
+	     appState = APP_NETWORK_SEND_STATUS;
+	     SYS_PostTask(APL_TASK_ID);
+		
+	}
+	else
+	{
+		usbMouseData = data->mouseData;
+		usbMouseBusy = true;
+	}
+	
 }
 
 void statusMessageReceived(APS_DataInd_t* indData)
 {		
      indData = indData;	 
+}
+
+void sendStatusPacket(ShortAddr_t addr)
+{	
+		
+     statusMessage.data.deviceType = HID_MODULE;
+     statusMessage.data.statusMessageType = 0x0000;
+     statusMessage.data.shortAddress = myAddr ;     
+	 
+	stuffStatusPacket((uint8_t*) &statusPacket, sizeof(statusPacket), &statusMessage);
+     
+	packet.asdu = (uint8_t *)(&statusMessage.data);
+	packet.asduLength = sizeof(statusMessage.data);
+	packet.profileId = 1;
+	packet.dstAddrMode = APS_SHORT_ADDRESS;
+	packet.dstAddress.shortAddress = addr;
+	
+	packet.srcEndpoint = hidEndpoint.endpoint;
+	packet.dstEndpoint = statusEndpoint.endpoint;
+  
+	packet.clusterId = CPU_TO_LE16(0);	
+	packet.txOptions.acknowledgedTransmission = 0;
+	packet.radius = 0x0;
+	packet.APS_DataConf = networkTransmissionConfirm;
+	APS_DataReq(&packet);
+	ableToSend = false; 	
 }
 
 /*******************************************************************************
@@ -140,7 +223,8 @@ void statusMessageReceived(APS_DataInd_t* indData)
 static void networkTransmissionConfirm(APS_DataConf_t *result)
 {			
 	//Empty Function just to make sure stuff doesn't explode... theoretically we could retry here.			
-     result = result;
+     result = result;	
+	ableToSend = true;
 }
 
 /*******************************************************************************
@@ -154,12 +238,13 @@ static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo)
 {
 	
 	if (ZDO_SUCCESS_STATUS == confirmInfo->status) {
+		
+		myAddr = confirmInfo->shortAddr;
 		appState = APP_NETWORK_JOINED;
 		SYS_PostTask(APL_TASK_ID);
-		//startLEDBlink(LED_COLOR_GREEN, LED_BLINK_SLOW_HEARTBEAT);
-		// Configure blink timer
+		
 	}else{
-		setLED(LED_COLOR_TURQUOISE);
+		startLEDBlink(LED_COLOR_RED, LED_BLINK_MEDIUM);
 	}
 }
 
@@ -238,15 +323,18 @@ void initializeDevice()
      initializeConfigurationServer();
      			     
      registerEndpoints();                             
+	
+	statusPacket.connected = false;
+	statusPacket.keyBoardBusy = usbKeyboardBusy;
+	statusPacket.usbSetup = false;
 			
 	//join a network
-	//startNetworkReq.ZDO_StartNetworkConf = networkStartConfirm;
-	//ZDO_StartNetworkReq(&startNetworkReq);	     		
+	startNetworkReq.ZDO_StartNetworkConf = networkStartConfirm;
+	ZDO_StartNetworkReq(&startNetworkReq);	     		
 	     			
 	initializeSPI();	
 	GPIO_8_make_out();
 	GPIO_8_set();
-	
 	
 	GPIO_3_make_out();
 	GPIO_3_set();
@@ -256,9 +344,11 @@ void initializeDevice()
 	testRelayTimer.mode = TIMER_REPEAT_MODE;
 	HAL_StartAppTimer(&testRelayTimer);
 	
-	initializeUSB();
+	initializeUSB();		
 	
-	
+	statusPacket.usbSetup = true;
+	appState = APP_NETWORK_SEND_STATUS;
+	SYS_PostTask(APL_TASK_ID);
 }
 
 void testRelay()
@@ -381,7 +471,7 @@ void initializeUSB()
 	writeMAXReg(rPINCTL, (bmFDUPSPI | bmPOSINT)); //default interrupt is edge-active 1->0
 	resetMax();	
 	
-	usbState = KEYBOARD_STATE_IDLE;		
+	usbKeyboardBusy = false;	
 	
 	while(!testMAXChip()); //keep trying till we are successful.
 	setLED(LED_COLOR_GREEN);
@@ -393,24 +483,18 @@ void initializeUSB()
 	
 	HAL_RegisterIrq(IRQ_6,IRQ_RISING_EDGE,USBHandleINT);
 	HAL_EnableIrq(IRQ_6);	
-
-	
-   
 	
 	usbTimeOut.callback = USBHandleTimeOut;
 	usbTimeOut.interval = 8000;	
 	usbTimeOut.mode = TIMER_REPEAT_MODE;
 	HAL_StartAppTimer(&usbTimeOut);	  
-	
-	usbKeyboard = false;	
-	
+		
 
 }
 
 bool testMAXChip()
 {
-	static uint8_t c_pass = 0;
-	bool ret = false;
+	static uint8_t c_pass = 0;	
 	uint8_t j,wr,rd;
 	uint8_t correct[] = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80};
 	//lets test our connection
@@ -458,7 +542,8 @@ bool testMAXChip()
 					 c_pass++;
 					 break;
 			}
-		}else
+		}
+		else
 		{
 			c_pass = 0;
 		}						  
@@ -483,15 +568,29 @@ void USBHandleTimeOut()
 
 void USBHandleFakeKeyboard()
 {
-	usbKeyboard = true;
+	usbKeyIndex = 0;
+	usbKeySequence.length = 1;
+	usbKeySequence.keys[0].character = rand();
+	usbKeySequence.keys[0].shiftcode = rand();
+	usbKeyboardBusy = true;
 }	
+
+void USBHandleFakeMouse()
+{	
+	
+	usbMouseBusy = true;
+	usbMouseData.X = rand();
+	usbMouseData.Y = rand();
+	usbMouseData.mouseButtons = rand();
+	usbMouseData.Wheel = rand();
+	
+}
 
 void USBHandleINT()
 {	
 	static uint8_t itest1,itest2;
 	
-	
-	
+     setLED(LED_COLOR_CERULEAN);
 	HAL_StopAppTimer(&usbTimeOut);
 	HAL_StartAppTimer(&usbTimeOut);	
 	
@@ -501,18 +600,15 @@ void USBHandleINT()
 	if(itest1 & bmSUDAVIE)
 	{
 		writeMAXReg(rEPIRQ, bmSUDAVIRQ);
-		USBHandleSetup();
-		//setLED(LED_COLOR_GREEN);
+		USBHandleSetup();		
 	}
 	else if(itest1 & bmIN2BAVIE)
-	{
-		setLED(LED_COLOR_PURPLE);
+	{		
 		USBHandleINT2();
 		
 	}
 	else if(itest1 & bmIN3BAVIE)
-	{
-		setLED(LED_COLOR_RED);
+	{		
 		USBHandleINT3();
 		
 	}
@@ -524,7 +620,6 @@ void USBHandleINT()
 		writeMAXReg(rUSBIRQ, bmBUSACTIRQ);
 		SETBIT(rUSBIEN, bmBUSACTIE);
 		usbSuspended = true;
-//		setLED(LED_COLOR_YELLOW);
 	}
 	else if(itest2 & bmBUSACTIE)
 	{
@@ -532,22 +627,19 @@ void USBHandleINT()
 		CLRBIT(rUSBIEN, bmBUSACTIE);
 		SETBIT(rUSBIEN, bmSUSPIE);
 		usbSuspended = false;
-//		setLED(LED_COLOR_TURQUOISE);
 	}
 	else if(itest2 & bmURESIE)
 	{
 		writeMAXReg(rUSBIRQ, bmURESIRQ);
-//		setLED(LED_COLOR_RED);
 	}
 	else if(itest2 & bmURESDNIE)
 	{
 		writeMAXReg(rUSBIRQ, bmURESDNIRQ);
 		enableUSBInit();
-//		setLED(LED_COLOR_ORANGE);
 	}else{
-
+     
 	}
-	
+	setLED(LED_COLOR_OFF);
 }
 
 void USBHandleSetup()
@@ -573,57 +665,65 @@ void USBHandleSetup()
 
 void USBHandleINT3()
 {	
-     //do nothing with the mouse right now.
-	writeMAXReg(rEP3INFIFO, 0x00); //Buttons
-	writeMAXReg(rEP3INFIFO, 0x7F);//x
-	writeMAXReg(rEP3INFIFO, 0x7F); //y	
-	writeMAXReg(rEP3INFIFO, 0x00); //y	
-	writeMAXReg(rEP3INBC, 4);	 
+     
+	writeMAXReg(rEP3INFIFO, usbMouseData.mouseButtons); //Buttons
+	writeMAXReg(rEP3INFIFO, usbMouseData.X);//x
+	writeMAXReg(rEP3INFIFO, usbMouseData.Y); //y	
+	writeMAXReg(rEP3INFIFO, usbMouseData.Wheel); //wheel	
+	writeMAXReg(rEP3INBC, 4);
+	
+	usbMouseData.mouseButtons = 0;	 
+	usbMouseData.X = 0;
+	usbMouseData.Y = 0;
+	usbMouseData.Wheel = 0;
+	usbMouseBusy = false;
 }
 
 
 void USBHandleINT2()
 {
-	switch(usbState)
+	static bool printChar = false;
+	if(usbKeyboardBusy)
 	{
-		case KEYBOARD_STATE_IDLE:
-		     setLED(LED_COLOR_ORANGE);
-		     if(usbKeyboard)
+		if(printChar)
+		{
+			
+			if(usbKeyIndex < usbKeySequence.length)
 			{
-				 usbKeyboard = false;
-				 writeMAXReg(rEP2INFIFO, 0x08);
-				 writeMAXReg(rEP2INFIFO, 0x0);
-				 writeMAXReg(rEP2INFIFO, 0x07);
-				 writeMAXReg(rEP2INBC, 3);
-				 usbState = KEYBOARD_STATE_RELEASE;				 				
+			     writeMAXReg(rEP2INFIFO, usbKeySequence.keys[usbKeyIndex].shiftcode);
+			     writeMAXReg(rEP2INFIFO, 0x0);
+			     writeMAXReg(rEP2INFIFO, usbKeySequence.keys[usbKeyIndex].character);
+			     writeMAXReg(rEP2INBC, 3);
+				usbKeyIndex++;
 			}
 			else
 			{
-			     writeMAXReg(rEP2INFIFO, 0x00); //KEY UP
-			     writeMAXReg(rEP2INFIFO, 0x00);
-			     writeMAXReg(rEP2INFIFO, 0x00); //KEY UP
-			     writeMAXReg(rEP2INBC, 3);
-			}
-			break;
-		case KEYBOARD_STATE_RELEASE:		     
-		     setLED(LED_COLOR_TURQUOISE);
-			writeMAXReg(rEP2INFIFO, 0x00); //KEY UP
-			writeMAXReg(rEP2INFIFO, 0x00);
-			writeMAXReg(rEP2INFIFO, 0x00); //KEY UP
-			writeMAXReg(rEP2INBC, 3);
-			usbState = KEYBOARD_STATE_IDLE;
-			break;
-		case KEYBOARD_STATE_WAIT:
-		     setLED(LED_COLOR_PINK);
-		     if(!usbKeyboard)
-			{
-			     usbState = KEYBOARD_STATE_IDLE;
-			}
-			break;
-		default:
-		     
-		     usbState = KEYBOARD_STATE_IDLE;				 			 
+				usbKeyboardBusy = false;
+				statusPacket.keyBoardBusy = usbKeyboardBusy;
+	               appState = APP_NETWORK_SEND_STATUS;
+	               SYS_PostTask(APL_TASK_ID);
+			}			
+			
+			
+		}
+		else
+		{		     
+		     writeMAXReg(rEP2INFIFO, 0x00); //KEY UP
+		     writeMAXReg(rEP2INFIFO, 0x00);
+	     	writeMAXReg(rEP2INFIFO, 0x00); //KEY UP
+    		     writeMAXReg(rEP2INBC, 3);	
+			
+		}
+		printChar = !printChar;	
 	}
+	else
+	{
+		writeMAXReg(rEP2INFIFO, 0x00); //KEY UP
+		writeMAXReg(rEP2INFIFO, 0x00);
+		writeMAXReg(rEP2INFIFO, 0x00); //KEY UP
+		writeMAXReg(rEP2INBC, 3);	
+	}
+		
 }
 
 void USBStdRequest()
@@ -658,8 +758,7 @@ void USBStdRequest()
 		case SR_SET_ADDRESS:
 		     temp = readMAXRegAck(rFNADDR);
 			break;
-		default:				
-		     setLED(wValueH,wValueH,wValueH);
+		default:						     
 		     STALL_EP0; //NAK
 			break;
 	}
@@ -720,8 +819,7 @@ void USBGetInterface()
 }
 
 void USBGetStatus()
-{
-	setLED(LED_COLOR_BLUE);
+{	
 	uint8_t testByte = usbSetupPacket[bmRequestType];	
 	switch(testByte)
 	{
@@ -809,18 +907,15 @@ void USBSendDescriptor()
 	reqlen = usbSetupPacket[wLengthL] + 256 * usbSetupPacket[wLengthH];
 	switch(usbSetupPacket[wValueH])
 	{
-		case GD_DEVICE:
-		     setLED(LED_COLOR_WHITE);
+		case GD_DEVICE:		     
 		     desclen = DD[0];
 			p_Descriptor = DD;
 			break;
-		case GD_CONFIGURATION:
-		     setLED(LED_COLOR_PINK);
+		case GD_CONFIGURATION:		     
 		     desclen = CD[2]; 
 			p_Descriptor = CD;
 			break;
 		case GD_STRING:
-		     setLED(LED_COLOR_BLUE);
 		     switch(usbSetupPacket[wValueL])
 			{
 			     case 0:
@@ -844,34 +939,31 @@ void USBSendDescriptor()
 		case GD_HID:		
 		     if(usbSetupPacket[wIndexL] == 0)
 			{
-				setLED(LED_COLOR_ORANGE);
 				desclen = CD[18];
 			     p_Descriptor = &(CD[18]);
 			 }
 			 else if(usbSetupPacket[wIndexL] == 1)
 			 {
-				 setLED(LED_COLOR_TURQUOISE);
 				 desclen = CD[43];
 			      p_Descriptor = &(CD[43]);				 
 			 }
 			 else
 			 {
-				 setLED(LED_COLOR_TURQUOISE);
+				 //OH NOES
+				 startLEDBlink(LED_COLOR_ORANGE, LED_BLINK_MEDIUM);
 			 }				 			 			 						 
 		     
 			break;
 		case GD_REPORT:
 		     if(usbSetupPacket[wIndexL] == 0)
-			{
-				setLED(LED_COLOR_TURQUOISE);
+			{				
 				desclen = CPU_TO_LE16(sizeof(RepD_Keyboard));
 				//desclen = CPU_TO_LE16(sizeof(RepD_Mouse));
 			     p_Descriptor = RepD_Keyboard;
 				//p_Descriptor = RepD_Mouse;
 			}
 			else if(usbSetupPacket[wIndexL] == 1)
-			{
-				setLED(LED_COLOR_GREEN);
+			{				
 				//desclen = CPU_TO_LE16(sizeof(RepD_Keyboard));
 				desclen = CPU_TO_LE16(sizeof(RepD_Mouse));
 			     //p_Descriptor = RepD_Keyboard;
@@ -879,11 +971,9 @@ void USBSendDescriptor()
 			}
 			else										     
 			{
-			     setLED(LED_COLOR_BLUE);	
+				startLEDBlink(LED_COLOR_YELLOW, LED_BLINK_MEDIUM);			     
 			}							
-			break;
-		default:
-		     setLED(wValueH,wValueH,wValueH);
+			break;		
 	}
 	
 	if(desclen != 0)
@@ -899,16 +989,20 @@ void USBSendDescriptor()
 	
 	
 	usbKeyboardTimer.callback = USBHandleFakeKeyboard;
-	usbKeyboardTimer.interval = 1000;	
+	usbKeyboardTimer.interval = 36;	
 	usbKeyboardTimer.mode = TIMER_REPEAT_MODE;
 	HAL_StartAppTimer(&usbKeyboardTimer);	
+	
+	usbMouseTimer.callback = USBHandleFakeMouse;
+	usbMouseTimer.interval = 20;	
+	usbMouseTimer.mode = TIMER_REPEAT_MODE;
+	HAL_StartAppTimer(&usbMouseTimer);
 	
 }
 
 void USBClassRequest()
 {
-	STALL_EP0;
-	setLED(LED_COLOR_PURPLE);
+	STALL_EP0;	
 }
 
 void USBVendorRequest()
@@ -943,7 +1037,10 @@ void registerEndpoints()
 	statusEndpointParams.simpleDescriptor = &statusEndpoint;
 	statusEndpointParams.APS_DataInd = statusMessageReceived;			
 	APS_RegisterEndpointReq(&statusEndpointParams);     
-    						                                                   
+	
+	hidEndpointParams.simpleDescriptor = &hidEndpoint;
+	hidEndpointParams.APS_DataInd = hidCommandReceived;			
+	APS_RegisterEndpointReq(&hidEndpointParams);     						                                                   
 }
 
 /**********************************************************************//**

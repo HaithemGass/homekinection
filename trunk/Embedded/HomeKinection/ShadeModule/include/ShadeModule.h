@@ -79,6 +79,8 @@ void handleButtonRelease(uint8_t buttons);
 
 void stopBlindMotion();
 
+void fakeMessage();
+
 
 #endif /* DIMMERMODULE_H_ */
 

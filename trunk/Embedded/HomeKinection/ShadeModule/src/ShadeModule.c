@@ -49,6 +49,7 @@ static ShortAddr_t myAddr;
 
 static HAL_AppTimer_t retryTimer;
 static HAL_AppTimer_t blindTimer;
+static HAL_AppTimer_t fakeMessageTimer;
 
 static bool ableToSend = true;
 static BlindDirection blindDirection;
@@ -94,8 +95,7 @@ void APL_TaskHandler(void)
 		case APP_NETWORK_SEND_STATUS:
 		     
 			 if(ableToSend)
-			 {
-		        GPIO_0_set();
+			 {		        
 			   sendStatusPacket(CPU_TO_LE16(0));	 				 
 			 }else{
 			   HAL_StopAppTimer(&retryTimer);
@@ -198,18 +198,21 @@ void statusMessageReceived(APS_DataInd_t* indData)
 *******************************************************************************/
 void shadeCommandReceived(APS_DataInd_t* indData)
 {	
-	ShadeCommandData *data = (StatusMessageData*)(indData->asdu);
-	blindTimer.interval=data->Duration;
-   HAL_StartAppTimer(&blindTimer);
+	setLED(LED_COLOR_CRIMSON);
+	ShadeCommandData *data = (ShadeCommandData *)(indData->asdu);
+     blindTimer.interval=data->Duration;
+     HAL_StartAppTimer(&blindTimer);
    
    
    
-   if( data->ButtonMask == 0x01)// & BlindDirection.DOWN)
+   if( data->ButtonMask == SHADE_DIRECTION_DOWN)// & BlindDirection.DOWN)
    {
+	setLED(LED_COLOR_CRIMSON);
 	GPIO_3_set();
    }
-   if(data->ButtonMask ==0x10)//& BlindDirection.UP)
+   else   
    {
+	setLED(LED_COLOR_LIME);
 	GPIO_4_set();
    }
  
@@ -246,13 +249,10 @@ static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo)
           myAddr = confirmInfo->shortAddr;
 		appState = APP_NETWORK_JOINED;
 		SYS_PostTask(APL_TASK_ID);
-		GPIO_2_clr();
-		GPIO_1_set();
+		setLED(LED_COLOR_GREEN);		
 		// Configure blink timer
 	}else{
-		GPIO_0_set();
-		GPIO_1_set();
-		GPIO_2_set();
+		startLEDBlink(LED_COLOR_CRIMSON,LED_BLINK_MEDIUM);
 	}
 }
 
@@ -325,9 +325,13 @@ void initializeDevice()
 	GPIO_6_make_in();
 	GPIO_7_make_in();	
 	
+	GPIO_3_make_out();	
+	GPIO_4_make_out();	
+	
 	BSP_OpenButtons(handleButtonPress,handleButtonRelease);
 	 
-	 initializeLED();     		
+	initializeLED();     		
+	setLED(LED_COLOR_RED);
      initializeConfigurationServer();
      			     
      registerEndpoints();                          
@@ -342,7 +346,33 @@ void initializeDevice()
 			   blindTimer.interval = 10;
 			   blindTimer.mode = TIMER_ONE_SHOT_MODE;
 			
-		
+	fakeMessageTimer.callback = fakeMessage;
+	fakeMessageTimer.interval = 6500;
+	fakeMessageTimer.mode = TIMER_REPEAT_MODE;
+	//HAL_StartAppTimer(&fakeMessageTimer);
+}
+
+void fakeMessage()
+{
+   static bool direction = true;
+   blindTimer.interval=6000;
+   HAL_StartAppTimer(&blindTimer);
+   
+   
+   
+   if(direction)// & BlindDirection.DOWN)
+   {
+	setLED(LED_COLOR_LILAC);
+	GPIO_3_set();
+   }
+   else   
+   {
+	setLED(LED_COLOR_LIME);
+	GPIO_4_set();
+   }
+   
+   direction = !direction;
+	
 }
 
 void handleButtonPress(uint8_t button)
@@ -382,7 +412,7 @@ void handleButtonRelease(uint8_t button)
 
 void stopBlindMotion()
 {
-	
+	   setLED(LED_COLOR_OFF);
 	   HAL_StopAppTimer(&blindTimer);
 	   GPIO_3_clr();
 	   GPIO_4_clr();

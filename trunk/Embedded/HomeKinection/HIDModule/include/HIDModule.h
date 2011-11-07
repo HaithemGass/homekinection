@@ -17,7 +17,8 @@
 ******************************************************************************
 *****************************************************************************/
 #define DEVICE_MESSAGE_SUPPORT (DEVICE_MESSAGE_HID | DEVICE_MESSAGE_STATUS)
-
+#define WINDOWS_D {0x08,0x00,0x07}
+#define DEFAULT_KEY_SEQUENCE {1,{WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D}}
 /******************************************************************************
                     Includes section
 ******************************************************************************/
@@ -63,8 +64,6 @@ void initializeConfigurationServer();
 void initializeSPI();
 void initializeUSB();
 
-
-
 void resetMAX();
 void writeMAXReg(uint8_t addr, uint8_t data);
 void writeMAXRegAck(uint8_t addr, uint8_t data);
@@ -101,6 +100,7 @@ void spiCompleteCallback();
 void spiStartTransmission(uint8_t *message, uint16_t length);
 
 void sendStatusPacket(ShortAddr_t addr);
+void retryStatusPacket();
 
 void registerEndpoints();
 
