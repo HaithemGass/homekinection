@@ -207,7 +207,9 @@ namespace HomeKinection
             Int32 size = Marshal.SizeOf(packet);
             UsartMessagePacket toSend = new UsartMessagePacket();
             toSend.type = (byte)(NETWORK_ENDPOINT.SHADE_CONTROL);
-            toSend.shadePacket = packet;        
+            toSend.shadePacket = packet; 
+            
+            if(serialPort.IsOpen)
             serialPort.Write(RawSerialize(toSend), 0, (int)Marshal.SizeOf(toSend));
         }
 
@@ -218,6 +220,8 @@ namespace HomeKinection
             UsartMessagePacket toSend = new UsartMessagePacket();
             toSend.type = (byte)(NETWORK_ENDPOINT.HID_CONTROL);
             toSend.hidPacket = packet;
+
+            if (serialPort.IsOpen)
             serialPort.Write(RawSerialize(toSend), 0, (int)Marshal.SizeOf(toSend));
         }
 
