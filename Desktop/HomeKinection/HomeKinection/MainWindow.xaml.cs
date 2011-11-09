@@ -675,7 +675,7 @@ namespace HomeKinection
                     hidPacket.mouseData.Y = (byte)(System.Convert.ToSByte(-1* (ySlider.Value-50)));
 
                     if (Math.Abs(xSlider.Value- 50) + Math.Abs(ySlider.Value- 50)> 20)
-                    NetworkProtocol.sendHIDMessage(serialPort, hidPacket);
+                    //NetworkProtocol.sendHIDMessage(serialPort, hidPacket);
 
 
                     if (ySlider.Value > 85)
