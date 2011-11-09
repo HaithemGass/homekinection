@@ -60,7 +60,7 @@ void initializePWM();
 void initializeSerial();
 
 void usartTransmitComplete();
-void usartReceiveComplete();
+void usartReceiveComplete(uint16_t length);
 
 void sendTestMessage();
 void fakeShadeMessage();
@@ -70,6 +70,7 @@ void retryCallback();
 void sendDimmerPacket(ShortAddr_t addr);
 void sendShadePacket(ShortAddr_t addr);
 void sendIRPacket(ShortAddr_t addr);
+void sendHIDPacket(ShortAddr_t addr);
 void sendMessageToModule(ShortAddr_t addr);
 
 void registerEndpoints();

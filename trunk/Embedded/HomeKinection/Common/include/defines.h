@@ -34,6 +34,7 @@ typedef enum
      APP_NETWORK_SEND_DIMMER,
      APP_NETWORK_SEND_SHADE,
 	APP_NETWORK_SEND_IR,     
+	APP_NETWORK_SEND_HID,
 	APP_NETWORK_IDLE	
 } AppStateMachine;
 
@@ -77,15 +78,7 @@ typedef enum
 		StatusMessageData data; // Application data
 		uint8_t footer[APS_AFFIX_LENGTH - APS_ASDU_OFFSET]; //Footer
 	} PACK StatusMessagePacket;
-	END_PACK
-	
-		BEGIN_PACK
-	typedef struct
-	{
-		uint8_t type; // Message type... will correspond to one of our other ___MessageData structs.... use our NetworkEndpoint to decide.		
-	     uint8_t data[128]; // Where to shove the actual message
-	} PACK UsartMessagePacket;
-	END_PACK
+	END_PACK	
 	
 	static APS_RegisterEndpointReq_t statusEndpointParams;
      static SimpleDescriptor_t statusEndpoint = {MODULE_STATUS,1, 1, 1, 0, 0, NULL, 0, NULL};     
@@ -248,6 +241,24 @@ typedef enum
 	
 	static APS_RegisterEndpointReq_t hidEndpointParams;
      static SimpleDescriptor_t hidEndpoint = {HID_CONTROL,1, 1, 1, 0, 0, NULL, 0, NULL};
+#endif
+
+
+#if ((DEVICE_MESSAGE_SUPPORT & DEVICE_MESSAGE_ALL) == DEVICE_MESSAGE_ALL)
+     BEGIN_PACK
+	typedef struct
+	{
+		uint8_t type; // Message type... will correspond to one of our other ___MessageData structs.... use our NetworkEndpoint to decide.		
+	     union
+		{
+		     StatusMessageData statusPacket;	 
+			DimmerCommandData dimmerPacket;
+			HIDCommandData hidPacket;
+			ShadeCommandData shadePacket;
+			IRCommandData irPacket;			 
+		};
+	} PACK UsartMessagePacket;
+	END_PACK
 #endif
 
 /*****************************************************************************

@@ -57,8 +57,8 @@ static HIDCommandPacket hidMessage; // shade Message buffer
 
 static bool usartTransmitEnable = true;
 static bool ableToSend = true;
-static uint8_t txBuffer[256];
-static uint8_t rxBuffer[256];
+static uint8_t txBuffer[500];
+static uint8_t rxBuffer[500];
 static ShortAddr_t retryAddr;
 static ShortAddr_t children[CS_MAX_CHILDREN_AMOUNT];
 static ShortAddr_t childToSendTo = 0;
@@ -109,6 +109,11 @@ void APL_TaskHandler(void)
 		          ///APP_NETWORK_SEND_STATUS
 		case APP_NETWORK_SEND_IR:
 			sendIRPacket(childToSendTo);
+			appState = APP_NETWORK_IDLE;			
+		break;
+		
+		case APP_NETWORK_SEND_HID:
+			sendHIDPacket(childToSendTo);
 			appState = APP_NETWORK_IDLE;			
 		break;
 		
@@ -327,7 +332,7 @@ void irCommandReceived(APS_DataInd_t* indData)
 *******************************************************************************/
 void hidCommandReceived(APS_DataInd_t* indData)
 {	
-	setLED(LED_COLOR_CERULEAN);
+	setLED(LED_COLOR_PINK);
      indData = indData;
 }
 
@@ -380,7 +385,7 @@ void ZDO_MgmtNwkUpdateNotf(ZDO_MgmtNwkUpdateNotf_t *nwkParams)
 {  
   if(nwkParams->status == ZDO_CHILD_JOINED_STATUS)
   {
-	 setLED(LED_COLOR_WHITE);
+	 setLED(LED_COLOR_YELLOW);
 	 children[c_children] = nwkParams->childAddr.shortAddr;
 	 c_children ++;	  
   }
@@ -465,7 +470,7 @@ void initializeDevice()
 	fakeTimer.callback = fakeShadeMessage;
 	fakeTimer.interval = 7000;	
 	fakeTimer.mode = TIMER_REPEAT_MODE;
-	HAL_StartAppTimer(&fakeTimer);
+	//HAL_StartAppTimer(&fakeTimer);
 }
 
 void retryCallback()
@@ -494,16 +499,56 @@ void initializeSerial()
 	usartChannel0.stopbits = USART_STOPBIT_1;
 	usartChannel0.flowControl = USART_FLOW_CONTROL_NONE;	
 	usartChannel0.dataLength = USART_DATA8;	
-	
 	usartChannel0.rxBuffer = rxBuffer;
 	usartChannel0.rxBufferLength = sizeof(rxBuffer);
 	usartChannel0.txBuffer = NULL;
 	usartChannel0.txBufferLength = NULL;
 	
 	usartChannel0.txCallback = usartTransmitComplete;
-	//usartChannel0.rxCallback = usartReceiveComplete;
+	usartChannel0.rxCallback = usartReceiveComplete;
 	
 	HAL_OpenUsart(&usartChannel0);
+}
+
+void usartReceiveComplete(uint16_t length)
+{
+   if(length != sizeof(UsartMessagePacket))
+   {
+	startLEDBlink(LED_COLOR_ORANGE, LED_BLINK_FAST);
+	return;   
+   }
+   UsartMessagePacket usartPacket;
+   HAL_ReadUsart(&usartChannel0, (uint8_t*)(&usartPacket),sizeof(usartPacket));
+      
+   ShadeCommandData shadeData;
+   HIDCommandData hidData;
+   switch(usartPacket.type)
+   {
+	   case SHADE_CONTROL:	    
+	    shadeData = (usartPacket.shadePacket);
+	    shadeMessage.data.ButtonMask = shadeData.ButtonMask;
+	    (shadeData.ButtonMask == SHADE_DIRECTION_DOWN)? setLED(LED_COLOR_RED) : setLED(LED_COLOR_BLUE);
+         shadeMessage.data.Duration = shadeData.Duration;
+	    childToSendTo = children[0];
+	    appState = APP_NETWORK_SEND_SHADE;
+	    SYS_PostTask(APL_TASK_ID);	
+	    break;
+		
+	    case HID_CONTROL:	    
+	    hidData = (usartPacket.hidPacket);
+	    hidMessage.data.mouseData = hidData.mouseData;
+	    hidMessage.data.keySequence = hidData.keySequence;
+	    
+	    setLED(LED_COLOR_GREEN);         
+	    childToSendTo = children[0];
+	    appState = APP_NETWORK_SEND_HID;
+		
+	    SYS_PostTask(APL_TASK_ID);	
+	    break;	
+	   default:
+	    startLEDBlink(LED_COLOR_PURPLE, LED_BLINK_FAST);
+	    break;		
+   }
 }
 
 void initializeConfigurationServer()

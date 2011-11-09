@@ -152,7 +152,8 @@ void retryStatusPacket()
 }
 
 void hidCommandReceived(APS_DataInd_t* indData)
-{		
+{	
+	
      HIDCommandData *data = (HIDCommandData*)(indData->asdu);
 	usbKeyIndex = 0;
 	if(usbKeyboardBusy)
@@ -176,6 +177,7 @@ void hidCommandReceived(APS_DataInd_t* indData)
 	}
 	else
 	{
+		setLED(LED_COLOR_PURPLE);
 		usbMouseData = data->mouseData;
 		usbMouseBusy = true;
 	}
@@ -336,24 +338,11 @@ void initializeDevice()
 	GPIO_8_make_out();
 	GPIO_8_set();
 	
-	GPIO_3_make_out();
-	GPIO_3_set();
-	
-	testRelayTimer.callback = testRelay;
-	testRelayTimer.interval = 500;	
-	testRelayTimer.mode = TIMER_REPEAT_MODE;
-	HAL_StartAppTimer(&testRelayTimer);
-	
 	initializeUSB();		
 	
 	statusPacket.usbSetup = true;
 	appState = APP_NETWORK_SEND_STATUS;
 	SYS_PostTask(APL_TASK_ID);
-}
-
-void testRelay()
-{
-	GPIO_3_toggle();	
 }
 
 void spiStartTransmission(uint8_t *message, uint16_t length)
@@ -568,21 +557,21 @@ void USBHandleTimeOut()
 
 void USBHandleFakeKeyboard()
 {
-	usbKeyIndex = 0;
-	usbKeySequence.length = 1;
-	usbKeySequence.keys[0].character = rand();
-	usbKeySequence.keys[0].shiftcode = rand();
-	usbKeyboardBusy = true;
+	//usbKeyIndex = 0;
+	//usbKeySequence.length = 1;
+	//usbKeySequence.keys[0].character = rand();
+	//usbKeySequence.keys[0].shiftcode = rand();
+	//usbKeyboardBusy = true;
 }	
 
 void USBHandleFakeMouse()
 {	
 	
-	usbMouseBusy = true;
-	usbMouseData.X = rand();
-	usbMouseData.Y = rand();
-	usbMouseData.mouseButtons = rand();
-	usbMouseData.Wheel = rand();
+	//usbMouseBusy = true;
+	//usbMouseData.X = rand();
+	//usbMouseData.Y = rand();
+	//usbMouseData.mouseButtons = rand();
+	//usbMouseData.Wheel = rand();
 	
 }
 
@@ -590,7 +579,7 @@ void USBHandleINT()
 {	
 	static uint8_t itest1,itest2;
 	
-     setLED(LED_COLOR_CERULEAN);
+     //setLED(LED_COLOR_CERULEAN);
 	HAL_StopAppTimer(&usbTimeOut);
 	HAL_StartAppTimer(&usbTimeOut);	
 	
@@ -677,6 +666,7 @@ void USBHandleINT3()
 	usbMouseData.Y = 0;
 	usbMouseData.Wheel = 0;
 	usbMouseBusy = false;
+	setLED(LED_COLOR_OFF);
 }
 
 
@@ -985,9 +975,7 @@ void USBSendDescriptor()
 		STALL_EP0;
 	}
 	
-	
-	
-	
+			
 	usbKeyboardTimer.callback = USBHandleFakeKeyboard;
 	usbKeyboardTimer.interval = 36;	
 	usbKeyboardTimer.mode = TIMER_REPEAT_MODE;
