@@ -85,10 +85,16 @@ namespace HomeKinection
             serialPort.BaudRate = 9600;
             serialPort.DataBits = 8;
             serialPort.StopBits = StopBits.One;
-            serialPort.PortName = SerialPort.GetPortNames()[0];
-            serialPort.Parity = Parity.None;
-            serialPort.Handshake = Handshake.None;
-            serialPort.Open();                        
+
+            if (SerialPort.GetPortNames().GetLength(0) >= 1)
+            {
+                serialPort.PortName = SerialPort.GetPortNames()[0];
+                serialPort.Parity = Parity.None;
+                serialPort.Handshake = Handshake.None;
+                serialPort.Open();   
+            }
+
+                                 
 
 
         }
