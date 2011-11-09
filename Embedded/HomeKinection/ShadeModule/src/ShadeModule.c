@@ -42,7 +42,7 @@ static APS_DataReq_t packet; // Data transmission request
 //Global PWM Ch1
 HAL_PwmDescriptor_t pwmChannel1;
 
-static ShadeCommandPacket dimmerMessage; // Dimmer Message buffer
+static ShadeCommandPacket shadeMessage; // Dimmer Message buffer
 static StatusMessagePacket statusMessage; // Dimmer Message buffer
 
 static ShortAddr_t myAddr;
@@ -52,7 +52,6 @@ static HAL_AppTimer_t blindTimer;
 static HAL_AppTimer_t fakeMessageTimer;
 
 static bool ableToSend = true;
-static BlindDirection blindDirection;
 static ShadeButtonStatus ButtonStatus;
 
 /*****************************************************************************
@@ -197,8 +196,7 @@ void statusMessageReceived(APS_DataInd_t* indData)
   Returns: nothing.
 *******************************************************************************/
 void shadeCommandReceived(APS_DataInd_t* indData)
-{	
-	setLED(LED_COLOR_CRIMSON);
+{		
 	ShadeCommandData *data = (ShadeCommandData *)(indData->asdu);
      blindTimer.interval=data->Duration;
      HAL_StartAppTimer(&blindTimer);
@@ -208,12 +206,20 @@ void shadeCommandReceived(APS_DataInd_t* indData)
    if( data->ButtonMask == SHADE_DIRECTION_DOWN)// & BlindDirection.DOWN)
    {
 	setLED(LED_COLOR_CRIMSON);
-	GPIO_3_set();
+	GPIO_4_set();
    }
-   else   
+   else if(data->ButtonMask == SHADE_DIRECTION_UP)
    {
 	setLED(LED_COLOR_LIME);
-	GPIO_4_set();
+	GPIO_3_set();
+   }
+   else
+   {
+	setLED(LED_COLOR_WHITE);
+	
+	GPIO_3_clr();
+	GPIO_4_clr();
+	   
    }
  
    
