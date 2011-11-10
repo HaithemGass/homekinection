@@ -52,19 +52,15 @@ namespace HomeKinection
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     /// 
+
+   
+
     public partial class MainWindow : Window
     {
         const int TimerResolution = 2;  // ms
         const int NumIntraFrames = 3;
-        const int MaxShapes = 80;
         const double MaxFramerate = 70;
-        const double MinFramerate = 15;
-        const double MinShapeSize = 12;
-        const double MaxShapeSize = 90;
-        const double DefaultDropRate = 2.5;
-        const double DefaultDropSize = 32.0;
-        const double DefaultDropGravity = 1.0;
-        static SerialPort serialPort;    
+        const double MinFramerate = 15; 
 		
 
         public MainWindow()
@@ -79,24 +75,7 @@ namespace HomeKinection
                // this.Height = bounds.Height;
              //   this.Width = bounds.Width;
            // }
-            //this.WindowState = (WindowState)Properties.Settings.Default.WindowState;
-
-            serialPort = new SerialPort();
-            serialPort.BaudRate = 9600;
-            serialPort.DataBits = 8;
-            serialPort.StopBits = StopBits.One;
-
-            if (SerialPort.GetPortNames().GetLength(0) >= 1)
-            {
-                serialPort.PortName = SerialPort.GetPortNames()[0];
-                serialPort.Parity = Parity.None;
-                serialPort.Handshake = Handshake.None;
-                serialPort.Open();   
-            }
-
-                                 
-
-
+            //this.WindowState = (WindowState)Properties.Settings.Default.WindowState;                            
         }
 
         public class Player
@@ -249,9 +228,6 @@ namespace HomeKinection
 
         public Dictionary<int, Player> players = new Dictionary<int, Player>();      
         
-        double dropRate = DefaultDropRate;
-        double dropSize = DefaultDropSize;
-        double dropGravity = DefaultDropGravity;
         DateTime lastFrameDrawn = DateTime.MinValue;
         DateTime predNextFrame = DateTime.MinValue;
         double actualFrameTime = 0;
@@ -259,7 +235,6 @@ namespace HomeKinection
         // Player(s) placement in scene (z collapsed):
         Rect playerBounds;
         Rect screenRect;
-        SpeechSynthesizer speaker = new SpeechSynthesizer();
         double targetFramerate = MaxFramerate;
         int frameCount = 0;
 
@@ -275,15 +250,9 @@ namespace HomeKinection
 
         bool runningGameThread = false;
         bool nuiInitialized = false;
-        //FallingThings fallingThings = null;
-        int playersAlive = 0;
-        SoundPlayer popSound = new SoundPlayer();
-        SoundPlayer hitSound = new SoundPlayer();
-        SoundPlayer squeezeSound = new SoundPlayer();
 
         Runtime nui = Runtime.Kinects[0];
         Recognizer recognizer = null;
-
 
         void LoadGestureLibrary()
         {
@@ -303,12 +272,16 @@ namespace HomeKinection
                 System.Console.WriteLine("There seems to be a problem with your file structure.\n" + e.Message);
             }
 
+            
             GestureLibraryBox.Items.Clear();
+			IdleGesturePicker.Items.Clear();
+            
             foreach (System.IO.FileInfo fi in files)
             {
                 SkeletalGesture sg = SkeletalGesture.DeSerialize(fi.FullName) ;
                 gestureLibrary.Add(sg);
                 GestureLibraryBox.Items.Add(sg);
+				IdleGesturePicker.Items.Add(sg);
             }
 
             gestureRecognizer = new RecognitionEngine(gestureLibrary);
@@ -393,8 +366,11 @@ namespace HomeKinection
                     // Update player's bone and joint positions
                     if (data.Joints.Count > 0)
                     {
-                        Dispatcher.Invoke(DispatcherPriority.Send,
+                        if (firstPlayer)
+                        {
+                            Dispatcher.Invoke(DispatcherPriority.Send,
                             new Action<SkeletalGesturePoint>(HandleGestureRecognizerFrame), new SkeletalGesturePoint(data, DateTime.Now));
+                        }
 
                         //only record Player 1?
                         if (isRecording && firstPlayer)
@@ -466,20 +442,6 @@ namespace HomeKinection
                 if (player.Value.isAlive)
                     alive++;
             }
-            if (alive != playersAlive)
-            {
-               // if (alive == 2)
-                    //fallingThings.SetGameMode(FallingThings.GameMode.TwoPlayer);
-              //  else if (alive == 1)
-                    //fallingThings.SetGameMode(FallingThings.GameMode.Solo);
-               // else if (alive == 0)
-                    //fallingThings.SetGameMode(FallingThings.GameMode.Off);
-
-                if ((playersAlive == 0) && (recognizer != null))
-                    BannerText.NewBanner(Properties.Resources.Vocabulary, screenRect, true, Color.FromArgb(200, 255, 255, 255));
-
-                playersAlive = alive;
-            }
         }
 
         void nui_ColorFrameReady(object sender, ImageFrameReadyEventArgs e)
@@ -550,20 +512,14 @@ namespace HomeKinection
                 //fallingThings.SetBoundaries(rFallingBounds);
            // }
         }
-        
+
+
+        private NetworkProtocol networkProtocol;
         private void Window_Loaded(object sender, EventArgs e)
         {
             skeletalVideo.ClipToBounds = true;
 
-            //fallingThings = new FallingThings(MaxShapes, targetFramerate, NumIntraFrames);
-
             UpdatePlayfieldSize();
-            
-           // fallingThings.SetGravity(dropGravity);
-           // fallingThings.SetDropRate(dropRate);
-          //  fallingThings.SetSize(dropSize);
-          //  fallingThings.SetPolies(PolyType.All);
-          //  fallingThings.SetGameMode(FallingThings.GameMode.Off);
 
             if ((nui != null) && InitializeNui())
             {
@@ -591,21 +547,23 @@ namespace HomeKinection
                 BannerText.NewBanner(Properties.Resources.NoKinectError, screenRect, false, Color.FromArgb(90, 255, 255, 255));
             }
 
-            popSound.Stream = Properties.Resources.Pop_5;
-            hitSound.Stream = Properties.Resources.Hit_2;
-            squeezeSound.Stream = Properties.Resources.Squeeze;
-
-            popSound.Play();
-
             Win32.timeBeginPeriod(TimerResolution);
             var gameThread = new Thread(GameThread);
             gameThread.SetApartmentState(ApartmentState.STA);
             gameThread.Start();
 
+            var networkThread = new Thread(NetworkThread);
+            networkThread.SetApartmentState(ApartmentState.STA);
+            networkThread.Start();
+
             FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Shapes!");
             LoadGestureLibrary();
         }
- 
+
+        private void NetworkThread()
+        {
+            networkProtocol = new NetworkProtocol(); //make sure a different thread owns network protocol.
+        }
 
         private void GameThread()
         {
@@ -650,6 +608,7 @@ namespace HomeKinection
         {
             NetworkProtocol.ShadeCommandData shadePacket = new NetworkProtocol.ShadeCommandData();
             NetworkProtocol.HIDCommandData hidPacket = new NetworkProtocol.HIDCommandData();
+            NetworkProtocol.DimmerCommandData dimmerPacket = new NetworkProtocol.DimmerCommandData();
             shadePacket.Duration = 6000;
             hidPacket.keySequence.length = 0;
             
@@ -657,7 +616,7 @@ namespace HomeKinection
 
                 if (gestureRecognizer != null)
                 {
-                    DisplayGesture(gestureRecognizer.Update(SkeletalGesture.TransformPoint(sgp)));
+                    gestureRecognizer.Update(SkeletalGesture.TransformPoint(sgp));
                     double yPrev = ySlider.Value;
                     ySlider.Value = 100 * gestureRecognizer.VerticalSlider(SkeletalGesture.TransformPoint(sgp));
 
@@ -671,11 +630,25 @@ namespace HomeKinection
                     hidPacket.mouseData.Wheel = 0;
                     hidPacket.mouseData.mouseButtons = 0;
 
-                    hidPacket.mouseData.X = (byte)(System.Convert.ToSByte(xSlider.Value-50));
-                    hidPacket.mouseData.Y = (byte)(System.Convert.ToSByte(-1* (ySlider.Value-50)));
+                    hidPacket.mouseData.X = (byte)(System.Convert.ToSByte(.8*(xSlider.Value-50)));
+                    hidPacket.mouseData.Y = (byte)(System.Convert.ToSByte(-.8* (ySlider.Value-50)));
 
-                    if (Math.Abs(xSlider.Value- 50) + Math.Abs(ySlider.Value- 50)> 20)
-                    //NetworkProtocol.sendHIDMessage(serialPort, hidPacket);
+                    dimmerPacket.intensity = System.Convert.ToByte(ySlider.Value);
+
+                    if (ySlider.Value != yPrev)
+                    {
+                       // Dispatcher.Invoke(DispatcherPriority.Send,
+                        //    new Action<NetworkProtocol.DimmerCommandData>(networkProtocol.sendDimmerMessage), dimmerPacket);
+                       // networkProtocol.sendDimmerMessage(dimmerPacket);
+                    }
+
+                    if (Math.Sqrt(Math.Pow((xSlider.Value - 50),2) + Math.Pow((ySlider.Value - 50),2)) > 10)
+                    {
+
+                        //NetworkProtocol.sendHIDMessage(serialPort, hidPacket);
+                        Dispatcher.Invoke(DispatcherPriority.Send,
+                            new Action<NetworkProtocol.HIDCommandData>(networkProtocol.sendHIDMessage), hidPacket);
+                    }
 
 
                     if (ySlider.Value > 85)
@@ -683,7 +656,7 @@ namespace HomeKinection
                         if (yPrev < 85)
                         {
                             shadePacket.ButtonMask = NetworkProtocol.SHADE_DIRECTION_UP;
-                            NetworkProtocol.sendShadeMessage(serialPort, shadePacket);
+                            //NetworkProtocol.sendShadeMessage(serialPort, shadePacket);
                             allowstop = true;
                         }
                     }
@@ -692,7 +665,7 @@ namespace HomeKinection
                         if (yPrev > 15)
                         {
                             shadePacket.ButtonMask = NetworkProtocol.SHADE_DIRECTION_DOWN;
-                            NetworkProtocol.sendShadeMessage(serialPort, shadePacket);
+                            //NetworkProtocol.sendShadeMessage(serialPort, shadePacket);
                             allowstop = true;
                         }
                     }
@@ -701,7 +674,7 @@ namespace HomeKinection
                         if (allowstop)
                         {
                             shadePacket.ButtonMask = 0;
-                            NetworkProtocol.sendShadeMessage(serialPort, shadePacket);
+                            //NetworkProtocol.sendShadeMessage(serialPort, shadePacket);
                             allowstop = false;
                         }
                     }
@@ -754,18 +727,17 @@ namespace HomeKinection
 				player.Value.Draw(skeletalVideo.Children);
 			    if(!replayInProgress)player.Value.Draw(recordedVideo.Children);
 			}
+
+            PeekingText.Draw(skeletalVideo.Children);
             BannerText.Draw(skeletalVideo.Children);
-            FlyingText.Draw(skeletalVideo.Children);
+            FlyingText.Draw(skeletalVideo.Children);            
 
             CheckPlayers();
         }
 
         void gestureRecognizer_SawSomething(object sender, RecognitionEngine.SawSomethingArgs e)
         {
-            FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), e.Gesture.ToString());
-            speaker.Volume = 100;
-            speaker.Rate = 1;
-            //speaker.Speak(e.Gesture.ToString());
+            PeekingText.NewPeek(e.Gesture.ToString(), screenRect, .05, Color.FromArgb(200, 255, 255, 255));
             GestureTextBox.Text = GestureTextBox.Text + e.Gesture.ToString() + "\n";
         }
 
@@ -776,78 +748,7 @@ namespace HomeKinection
             AudioTextBox.Text = AudioTextBox.Text + e.Matched + "\n";
             switch (e.Verb)
             {
-                case Recognizer.Verbs.Pause:
-                  //  fallingThings.SetDropRate(0);
-                 //   fallingThings.SetGravity(0);
-                    break;
-                case Recognizer.Verbs.Resume:
-                  //  fallingThings.SetDropRate(dropRate);
-                  //  fallingThings.SetGravity(dropGravity);
-                    break;
-                case Recognizer.Verbs.Reset:
-                    dropRate = DefaultDropRate;
-                    dropSize = DefaultDropSize;
-                    dropGravity = DefaultDropGravity;
-                   // fallingThings.SetPolies(PolyType.All);
-                   // fallingThings.SetDropRate(dropRate);
-                  //  fallingThings.SetGravity(dropGravity);
-                   // fallingThings.SetSize(dropSize);
-                  //  fallingThings.SetShapesColor(Color.FromRgb(0, 0, 0), true);
-                //    fallingThings.Reset();
-                    break;
-                case Recognizer.Verbs.DoShapes:
-                //    fallingThings.SetPolies(e.Shape);
-                    break;
-                case Recognizer.Verbs.RandomColors:
-               //     fallingThings.SetShapesColor(Color.FromRgb(0, 0, 0), true);
-                    break;
-                case Recognizer.Verbs.Colorize:
-                //    fallingThings.SetShapesColor(e.RGBColor, false);
-                    break;
-                case Recognizer.Verbs.ShapesAndColors:
-                 //   fallingThings.SetPolies(e.Shape);
-               //     fallingThings.SetShapesColor(e.RGBColor, false);
-                    break;
-                case Recognizer.Verbs.More:
-                    dropRate *= 1.5;
-               //     fallingThings.SetDropRate(dropRate);
-                    break;
-                case Recognizer.Verbs.Fewer:
-                    dropRate /= 1.5;
-               //     fallingThings.SetDropRate(dropRate);
-                    break;
-                case Recognizer.Verbs.Bigger:
-                    dropSize *= 1.5;
-                    if (dropSize > MaxShapeSize)
-                        dropSize = MaxShapeSize;
-                 //   fallingThings.SetSize(dropSize);
-                    break;
-                case Recognizer.Verbs.Biggest:
-                    dropSize = MaxShapeSize;
-               //     fallingThings.SetSize(dropSize);
-                    break;
-                case Recognizer.Verbs.Smaller:
-                    dropSize /= 1.5;
-                    if (dropSize < MinShapeSize)
-                        dropSize = MinShapeSize;
-                 //   fallingThings.SetSize(dropSize);
-                    break;
-                case Recognizer.Verbs.Smallest:
-                    dropSize = MinShapeSize;
-                //    fallingThings.SetSize(dropSize);
-                    break;
-                case Recognizer.Verbs.Faster:
-                    dropGravity *= 1.25;
-                    if (dropGravity > 4.0)
-                        dropGravity = 4.0;
-                    //fallingThings.SetGravity(dropGravity);
-                    break;
-                case Recognizer.Verbs.Slower:
-                    dropGravity /= 1.25;
-                    if (dropGravity < 0.25)
-                        dropGravity = 0.25;
-                //    fallingThings.SetGravity(dropGravity);
-                    break;
+               
                 case Recognizer.Verbs.Record:
                     BeginGestureRecording();
                     break;
@@ -1039,6 +940,25 @@ namespace HomeKinection
         private void recordClick(object sender, System.Windows.RoutedEventArgs e)
         {
             BeginGestureRecording();
+        }
+
+        private void selectAllChecked(object sender, System.Windows.RoutedEventArgs e)
+        {
+        	for(int i = 0; i< BodyParts.Children.Count; i++)
+			{
+				CheckBox c = (CheckBox)(BodyParts.Children[i]);
+				c.IsChecked = SelectAll.IsChecked;
+			}
+        }
+
+        private void updateIdleGesture(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+        	gestureRecognizer.setIdleGesture((SkeletalGesture)IdleGesturePicker.SelectedItem);
+        }
+
+        private void enableIdle(object sender, System.Windows.RoutedEventArgs e)
+        {        	
+			IdleGesturePicker.IsEnabled = (bool)idleEnable.IsChecked;	
         }
     }
 }
