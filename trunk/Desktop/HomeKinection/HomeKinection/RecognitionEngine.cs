@@ -1,4 +1,6 @@
-﻿using System;
+﻿#undef GESTURE_LOGGING
+
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,10 +21,11 @@ using Microsoft.Research.Kinect.Nui;
 using HomeKinection_Speech;
 
 
+
 namespace HomeKinection
 {
     class RecognitionEngine
-    {
+    {        
         private enum spikeState
         {
             spikeStarted, spikeMinimum, spikeFinished, spikeNeutral
@@ -41,13 +44,19 @@ namespace HomeKinection
 
         private bool firstUpdate;
         
+        #if GESTURE_LOGGING
         private StreamWriter fout;
+        #endif
+
         private Dictionary<SkeletalGesture, spikeState> SpikeState;
         private Dictionary<SkeletalGesture, double> vel;
         private Dictionary<SkeletalGesture, double> prev_vel;
         private Dictionary<SkeletalGesture, double> upper_avg;
         private Dictionary<SkeletalGesture, double> lower_avg;
         private Dictionary<SkeletalGesture, bool> firstNonInfinite;
+
+        private SkeletalGesture idleGesture;
+
 
         public class SawSomethingArgs : EventArgs
         {
@@ -73,7 +82,9 @@ namespace HomeKinection
             prev_vel = new Dictionary<SkeletalGesture, double>();
             lower_avg = new Dictionary<SkeletalGesture, double>();
             upper_avg = new Dictionary<SkeletalGesture, double>();
+#if GESTURE_LOGGING
             fout = File.CreateText(System.IO.Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.FullName + "\\Gesture_Log.csv");            
+#endif
             prev_sgp = new SkeletalGesturePoint();
             firstUpdate = true;
             String gestures = "";
@@ -108,8 +119,16 @@ namespace HomeKinection
                     }
                 }
             }
+            #if GESTURE_LOGGING
             fout.WriteLine(gestures);
             fout.Close();
+            #endif
+        }
+
+
+        public void setIdleGesture(SkeletalGesture g)
+        {
+            idleGesture = g;
         }
 
         //update with our new point in time.
@@ -184,7 +203,7 @@ namespace HomeKinection
             CheckForSpikes();
             //local min ... might be unsafe if we have no min
             SkeletalGesture s = LocalMinDetect();
-            if (s != null && A[s][0] < double.PositiveInfinity)
+            if (s != null && s!= idleGesture && A[s][0] < double.PositiveInfinity)
             {
                 SawSomethingArgs args = new SawSomethingArgs();
                 args.Gesture = s;
@@ -284,19 +303,25 @@ namespace HomeKinection
             SkeletalGesture minSg = null;
             double minA = double.PositiveInfinity;
 
+            #if GESTURE_LOGGING
             fout = File.AppendText(System.IO.Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.FullName + "\\Gesture_Log.csv");
+            #endif
 
             //grab everyone at a spike min.
             foreach (SkeletalGesture s in P.Keys)
             {
+                #if GESTURE_LOGGING
                 fout.Write(A[s][0] + ", ");
+                #endif
                 if (SpikeState[s] == spikeState.spikeMinimum)
                 {
                     Mins.Add(s, A[s][0]);
                 }
             }
+            #if GESTURE_LOGGING
             fout.WriteLine("");
             fout.Close();
+            #endif
 
             //only consider our lowest spike.
             foreach (SkeletalGesture s in Mins.Keys)

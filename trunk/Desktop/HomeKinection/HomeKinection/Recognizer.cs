@@ -65,7 +65,6 @@ namespace HomeKinection_Speech
         struct WhatSaid
         {
             public Verbs verb;
-            public PolyType shape;
             public Color color;
         }
 
@@ -92,19 +91,19 @@ namespace HomeKinection_Speech
 
         Dictionary<string, WhatSaid> ShapePhrases = new Dictionary<string, WhatSaid>()
         {
-            {"7 Pointed Stars", new WhatSaid()  {verb=Verbs.DoShapes, shape=PolyType.Star7}},
-            {"Triangles", new WhatSaid()        {verb=Verbs.DoShapes, shape=PolyType.Triangle}},
-            {"Squares", new WhatSaid()          {verb=Verbs.DoShapes, shape=PolyType.Square}},
-            {"Boxes", new WhatSaid()            {verb=Verbs.DoShapes, shape=PolyType.Square}},
-            {"Hexagons", new WhatSaid()         {verb=Verbs.DoShapes, shape=PolyType.Hex}},
-            {"Pentagons", new WhatSaid()        {verb=Verbs.DoShapes, shape=PolyType.Pentagon}},
-            {"Stars", new WhatSaid()            {verb=Verbs.DoShapes, shape=PolyType.Star}},
-            {"Circles", new WhatSaid()          {verb=Verbs.DoShapes, shape=PolyType.Circle}},
-            {"Balls", new WhatSaid()            {verb=Verbs.DoShapes, shape=PolyType.Circle}},
-            {"Bubbles", new WhatSaid()          {verb=Verbs.DoShapes, shape=PolyType.Bubble}},
-            {"All Shapes", new WhatSaid()       {verb=Verbs.DoShapes, shape=PolyType.All}},
-            {"Everything", new WhatSaid()       {verb=Verbs.DoShapes, shape=PolyType.All}},
-            {"Shapes", new WhatSaid()           {verb=Verbs.DoShapes, shape=PolyType.All}},
+            {"7 Pointed Stars", new WhatSaid()  {verb=Verbs.DoShapes}},
+            {"Triangles", new WhatSaid()        {verb=Verbs.DoShapes}},
+            {"Squares", new WhatSaid()          {verb=Verbs.DoShapes}},
+            {"Boxes", new WhatSaid()            {verb=Verbs.DoShapes}},
+            {"Hexagons", new WhatSaid()         {verb=Verbs.DoShapes}},
+            {"Pentagons", new WhatSaid()        {verb=Verbs.DoShapes}},
+            {"Stars", new WhatSaid()            {verb=Verbs.DoShapes}},
+            {"Circles", new WhatSaid()          {verb=Verbs.DoShapes}},
+            {"Balls", new WhatSaid()            {verb=Verbs.DoShapes}},
+            {"Bubbles", new WhatSaid()          {verb=Verbs.DoShapes}},
+            {"All Shapes", new WhatSaid()       {verb=Verbs.DoShapes}},
+            {"Everything", new WhatSaid()       {verb=Verbs.DoShapes}},
+            {"Shapes", new WhatSaid()           {verb=Verbs.DoShapes}},
         };
 
         Dictionary<string, WhatSaid> ColorPhrases = new Dictionary<string, WhatSaid>()
@@ -150,7 +149,7 @@ namespace HomeKinection_Speech
         public class SaidSomethingArgs : EventArgs
         {
             public Verbs Verb { get; set; }
-            public PolyType Shape { get; set; }
+            
             public Color RGBColor { get; set; }
             public string Phrase { get; set; }
             public string Matched {get; set; }
@@ -274,17 +273,17 @@ namespace HomeKinection_Speech
             said.Verb = Verbs.None;
             said.Matched = "?";
             SaidSomething(new object(), said);
-            Console.WriteLine("\nSpeech Rejected");
+            //Console.WriteLine("\nSpeech Rejected");
         }
 
         void sre_SpeechHypothesized(object sender, SpeechHypothesizedEventArgs e)
         {
-            Console.Write("\rSpeech Hypothesized: \t{0}", e.Result.Text);
+           // Console.Write("\rSpeech Hypothesized: \t{0}", e.Result.Text);
         }
 
         void sre_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
         {
-            Console.Write("\rSpeech Recognized: \t{0}", e.Result.Text);
+            //Console.Write("\rSpeech Recognized: \t{0}", e.Result.Text);
             
             if (SaidSomething == null)
                 return;
@@ -303,7 +302,6 @@ namespace HomeKinection_Speech
 
             var said = new SaidSomethingArgs();
             said.RGBColor = Color.FromRgb(0, 0, 0);
-            said.Shape = 0;
             said.Verb = 0;
             said.Phrase = e.Result.Text;
 
@@ -330,7 +328,6 @@ namespace HomeKinection_Speech
                     if (e.Result.Text.Contains(phrase.Key))
                     {
                         said.Verb = phrase.Value.verb;
-                        said.Shape = phrase.Value.shape;
                         if ((said.Verb == Verbs.DoShapes) && (foundColor))
                         {
                             said.Verb = Verbs.ShapesAndColors;

@@ -16,7 +16,7 @@ using System.IO.Ports;
 namespace HomeKinection
 {
 
-    static public class NetworkProtocol{
+    public class NetworkProtocol{
 
 /*****************************************************************************
 ******************************************************************************
@@ -184,6 +184,28 @@ namespace HomeKinection
         *                                                                            *
         ******************************************************************************
         *****************************************************************************/
+        SerialPort serialPort;
+
+        public NetworkProtocol()
+        {
+            serialPort = new SerialPort();
+            serialPort.BaudRate = 38400;
+            serialPort.DataBits = 8;
+            serialPort.StopBits = StopBits.One;
+
+            if (SerialPort.GetPortNames().GetLength(0) >= 1)
+            {
+                serialPort.PortName = SerialPort.GetPortNames()[0];
+                serialPort.Parity = Parity.None;
+                serialPort.Handshake = Handshake.None;
+                serialPort.Open();
+            }
+        }
+
+
+        
+
+        private static bool UARTBusy = false;
 
         //helper function from http://www.developerfusion.com/article/84519/mastering-structs-in-c/
         private static byte[] RawSerialize(object anything)
@@ -201,28 +223,59 @@ namespace HomeKinection
             return rawdata;
         }
 
+
+
         //NEED TO DEFINE SENDING AND RECEIVING FUNCTIONS HERE!!!!!
-        public static unsafe void sendShadeMessage(SerialPort serialPort, ShadeCommandData packet)
+        public unsafe void sendShadeMessage(ShadeCommandData packet)
         {
+            if (UARTBusy) return;
+            UARTBusy = true;
             Int32 size = Marshal.SizeOf(packet);
             UsartMessagePacket toSend = new UsartMessagePacket();
             toSend.type = (byte)(NETWORK_ENDPOINT.SHADE_CONTROL);
-            toSend.shadePacket = packet; 
-            
-            if(serialPort.IsOpen)
-            serialPort.Write(RawSerialize(toSend), 0, (int)Marshal.SizeOf(toSend));
+            toSend.shadePacket = packet;
+
+            if (serialPort.IsOpen)
+            {
+                serialPort.Write(RawSerialize(toSend), 0, (int)Marshal.SizeOf(toSend));
+            }
+            UARTBusy = false;
         }
 
         
-        public static unsafe void sendHIDMessage(SerialPort serialPort, HIDCommandData packet)
+        public unsafe void sendHIDMessage(HIDCommandData packet)
         {
+            if (UARTBusy) return;
+            UARTBusy = true;
             Int32 size = Marshal.SizeOf(packet);
             UsartMessagePacket toSend = new UsartMessagePacket();
             toSend.type = (byte)(NETWORK_ENDPOINT.HID_CONTROL);
             toSend.hidPacket = packet;
 
             if (serialPort.IsOpen)
-            serialPort.Write(RawSerialize(toSend), 0, (int)Marshal.SizeOf(toSend));
+            {
+                serialPort.Write(RawSerialize(toSend), 0, (int)Marshal.SizeOf(toSend));
+            }
+            UARTBusy = false;
+
+        }
+
+        public unsafe void sendDimmerMessage(DimmerCommandData packet)
+        {
+            if (UARTBusy) return;
+            UARTBusy = true;
+            Int32 size = Marshal.SizeOf(packet);
+            UsartMessagePacket toSend = new UsartMessagePacket();
+            toSend.type = (byte)(NETWORK_ENDPOINT.DIMMER_CONTROL);
+            toSend.dimmerPacket = packet;
+
+            if (serialPort.IsOpen)
+            {
+                serialPort.Write(RawSerialize(toSend), 0, (int)Marshal.SizeOf(toSend));
+            }
+            UARTBusy = false;
+
+                
         }
 
     }

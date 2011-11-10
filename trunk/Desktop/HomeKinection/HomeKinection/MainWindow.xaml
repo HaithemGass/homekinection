@@ -7,11 +7,6 @@
 	<Window.Resources>
 		<Storyboard x:Key="Storyboard1"/>
 	</Window.Resources>
-	<Window.Triggers>
-		<EventTrigger RoutedEvent="FrameworkElement.Loaded">
-			<BeginStoryboard Storyboard="{StaticResource Storyboard1}"/>
-		</EventTrigger>
-	</Window.Triggers>
     <TabControl x:Name="tabs" Margin="0,0,0,0" Width="600" Height="520">
 		<TabItem x:Name="HomeTab" Header="Home" Margin="0">
 			<Grid x:Name="homeGrid" d:LayoutOverrides="Margin" Width="600" Height="420">
@@ -21,7 +16,7 @@
 						<Canvas x:Name="skeletalVideo" HorizontalAlignment="Left" Height="240" VerticalAlignment="Top" Width="320"/>
 					</Grid>
 					<Slider x:Name="ySlider" Margin="0,-26,-34.263,-10.167" Maximum="100" SelectionEnd="1" TickFrequency="0.01" Value="24.5" Orientation="Vertical" HorizontalAlignment="Right" Width="22.463" RenderTransformOrigin="-10.617,0.385" Height="240" d:LayoutOverrides="VerticalAlignment"/>
-					<Slider x:Name="xSlider" HorizontalAlignment="Left" Width="320" VerticalAlignment="Bottom" Margin="-26,0,0,-33.764" Maximum="100"/>
+					<Slider x:Name="xSlider" HorizontalAlignment="Left" Width="320" VerticalAlignment="Bottom" Margin="-26,0,0,-33.764" Maximum="100" TickFrequency="0.01"/>
 				</Grid>
 				<Grid x:Name="commandGrid" HorizontalAlignment="Right" Height="53.467" Margin="0,0,51.939,0" VerticalAlignment="Top" Width="151.521">
 					<TextBox x:Name="keyWordTextBox" TextWrapping="Wrap" Text="Kinect" FontStyle="Normal" d:LayoutOverrides="GridBox" Height="23.96" VerticalAlignment="Bottom" TextChanged="changeKeyword"/>
@@ -38,7 +33,7 @@
 		</TabItem>
 		<TabItem x:Name="gestureTab" Header="Gestures" Height="22.96" Width="62.26" HorizontalAlignment="Left" Margin="0.143,0,0,0" VerticalAlignment="Top">
 			<Grid x:Name="gestureGrid">
-				<StackPanel x:Name="BodyParts" Margin="0,14.734,142,0" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Top">
+				<StackPanel x:Name="BodyParts" Margin="0,94.734,142,0" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Top">
 					<CheckBox x:Name="Head" Content="Head" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
 					<CheckBox x:Name="ShoulderCenter" Content="C Shoulder" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
 					<CheckBox x:Name="RightShoulder" Content="R Shoulder" HorizontalAlignment="Left" Width="77.08" IsChecked="True"/>
@@ -81,8 +76,14 @@
 						</Canvas.Background>
 					</Canvas>
 				</Grid>
+				<CheckBox x:Name="SelectAll" Content="Select All" HorizontalAlignment="Right" Margin="0,65.04,154.92,0" VerticalAlignment="Top" Checked="selectAllChecked" Unchecked="selectAllChecked" IsChecked="True"/>
+				<ComboBox x:Name="IdleGesturePicker" Height="23" VerticalAlignment="Top" Margin="0,30,10,0" HorizontalAlignment="Right" Width="120" SelectionChanged="updateIdleGesture" IsEnabled="False"/>
+				<CheckBox x:Name="idleEnable" Content="Enable Idle Gesture" HorizontalAlignment="Right" Margin="0,10.04,11.49,0" VerticalAlignment="Top" Checked="enableIdle" Unchecked="enableIdle"/>
 			</Grid>
 		</TabItem>
 		<TabItem x:Name="activityTab" Header="Activities"/>
+		<TabItem x:Name="moduleTab" Header="Modules">
+			<Grid x:Name="modulesGrid" Background="#FFE5E5E5"/>
+		</TabItem>
 	</TabControl>
 </Window>
