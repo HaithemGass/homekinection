@@ -1,0 +1,39 @@
+﻿<UserControl
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:local="clr-namespace:HomeKinection"
+	mc:Ignorable="d"
+	x:Class="HomeKinection.ShadeControl"
+	x:Name="UserControl" Height="100" Width="400">
+
+	<UserControl.Resources>
+		<local:ShadeControlModule x:Key="dataModel" d:IsDataSource="True" />
+	</UserControl.Resources>
+   
+	<Grid x:Name="Grid" DataContext="{Binding Source={StaticResource dataModel}}">
+		<Rectangle Fill="#3D1A1A1A" Margin="8"/>
+		<Label x:Name="locationTitle" Content="Location:" HorizontalAlignment="Left" Margin="38,47.96,0,26.08" Foreground="White" d:LayoutOverrides="Height"/>
+		<Label x:Name="nameLabel" Content="{Binding name}" Foreground="White" Margin="112.459,18,70,0" RenderTransformOrigin="-0.2,0.698" Height="27.96" VerticalAlignment="Top"/>
+		<Label x:Name="locationLabel" Content="{Binding location}" Margin="112.459,47.96,70,27.08" Foreground="White"/>
+		<Label x:Name="nameTitle" Content="Name:" HorizontalAlignment="Left" Margin="40.976,0,0,55.04" Foreground="White" VerticalAlignment="Bottom"/>
+		<Rectangle Fill="#FF2B2B2B" HorizontalAlignment="Left" Margin="8,8,0,8" Width="26"/>
+		<TextBlock HorizontalAlignment="Left" Margin="-28.486,41.5,0,41.5" TextWrapping="Wrap" Text="SHADE" Width="97.273" RenderTransformOrigin="0.5,0.5" Foreground="#FF81C274" FontSize="14.667" VerticalAlignment="Center" TextAlignment="Center">
+			<TextBlock.RenderTransform>
+				<TransformGroup>
+					<ScaleTransform/>
+					<SkewTransform/>
+					<RotateTransform Angle="-90.06"/>
+					<TranslateTransform/>
+				</TransformGroup>
+			</TextBlock.RenderTransform>
+		</TextBlock>
+  <Button x:Name="UpButton" HorizontalAlignment="Right" Width="47" Margin="0,8,8,0" Height="39" VerticalAlignment="Top" Background="Black" PreviewMouseDown="UpPress" PreviewMouseUp="ButtonRelease">
+    <Path Fill="White" Data="M 0 6 L 12 6 L 6 0 Z"/>
+  </Button>
+  <Button x:Name="DownButton" HorizontalAlignment="Right" Margin="0,47,8,8.96" Width="47" Background="Black" PreviewMouseUp="ButtonRelease" PreviewMouseDown="DownPress">
+    <Path Fill="White" Data="M 0 0 L 6 6 L 12 0 Z"/>
+  </Button>
+	</Grid>
+</UserControl>

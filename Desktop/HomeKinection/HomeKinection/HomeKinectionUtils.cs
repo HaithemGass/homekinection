@@ -264,15 +264,21 @@ namespace HomeKinection
                 if (label == null)
                 {
                     label = HomeKinectionUtils.MakeSimpleLabel(text, boundsRect, brush);
-                    label.FontSize = Math.Max(20, boundsRect.Height / 30);
-                    label.Width = 10000;                    
+                    label.FontSize = Math.Max(20, boundsRect.Height / 30);                  
                     label.VerticalContentAlignment = VerticalAlignment.Bottom;
                     label.HorizontalContentAlignment = HorizontalAlignment.Center;
+                    System.Windows.Media.Effects.DropShadowEffect ds = new System.Windows.Media.Effects.DropShadowEffect();
+                    ds.Direction = 135;
+                    ds.BlurRadius = 0;
+                    ds.ShadowDepth = 3;
+                    label.Effect = ds;
                 }
 
                 renderedRect = new Rect(label.RenderSize);
+                label.SetValue(Canvas.LeftProperty, boundsRect.Width / 2 - renderedRect.Width / 2);
+                label.SetValue(Canvas.TopProperty, boundsRect.Height  - renderedRect.Height );
 
-                //opacity = (direction) ? (opacity + velocity) : (opacity - velocity);
+                opacity = (direction) ? (opacity + velocity) : (opacity - velocity);
                 if (opacity >= 1 && direction)
                     direction = !direction;
                 if (opacity <= 0 && !direction )

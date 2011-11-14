@@ -29,6 +29,7 @@ using System.Speech;
 using System.Windows.Threading;
 
 using System.IO.Ports;
+using System.IO;
 
 using Microsoft.Research.Kinect.Nui;
 using HomeKinection_Speech;
@@ -65,17 +66,7 @@ namespace HomeKinection
 
         public MainWindow()
         {
-            InitializeComponent();
-            // Restore window state to that last used
-            //Rect bounds = Properties.Settings.Default.PrevWinPosition;
-            //if (bounds.Right != bounds.Left)
-            //{
-                //this.Top = bounds.Top;
-                //this.Left = bounds.Left;
-               // this.Height = bounds.Height;
-             //   this.Width = bounds.Width;
-           // }
-            //this.WindowState = (WindowState)Properties.Settings.Default.WindowState;                            
+            InitializeComponent();                           
         }
 
         public class Player
@@ -246,6 +237,7 @@ namespace HomeKinection
         SkeletalGesture currentGesture;
         List<SkeletalGesture> gestureLibrary;
         RecognitionEngine gestureRecognizer;
+		private Dictionary<UInt64, ModuleBox> modules;
 
 
         bool runningGameThread = false;
@@ -495,6 +487,7 @@ namespace HomeKinection
             screenRect.Height = skeletalVideo.ActualHeight;
 
             BannerText.UpdateBounds(screenRect);
+            PeekingText.UpdateBounds(screenRect);
 
             playerBounds.X = 0;
             playerBounds.Width = skeletalVideo.ActualWidth;
@@ -555,14 +548,13 @@ namespace HomeKinection
             var networkThread = new Thread(NetworkThread);
             networkThread.SetApartmentState(ApartmentState.STA);
             networkThread.Start();
-
-            FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), "Shapes!");
+            
             LoadGestureLibrary();
         }
 
         private void NetworkThread()
         {
-            networkProtocol = new NetworkProtocol(); //make sure a different thread owns network protocol.
+            networkProtocol = new NetworkProtocol(this); //make sure a different thread owns network protocol.
         }
 
         private void GameThread()
@@ -604,6 +596,26 @@ namespace HomeKinection
         }
 
         private bool allowstop = false;
+
+        public void HandleNetworkJoin(NetworkProtocol.UsartMessagePacket packet)
+        {
+			if(modules == null || !(modules.ContainsKey(packet.networkPacket.deviceUID)))
+			{
+            	ModuleAddressLabel.Content = "0x"+packet.networkPacket.deviceUID.ToString("X");
+            	ModuleTypeLabel.Content = NetworkProtocol.typeString[packet.moduleType];
+            	NewModulePopup.IsOpen = true;
+				moduleToSave = new ModuleBox();
+				moduleToSave.address = packet.addr;
+				moduleToSave.uid = packet.networkPacket.deviceUID;
+				moduleToSave.type = (MODULE_TYPE)packet.moduleType;
+			}
+			else
+			{
+				//already know this guy but we rejoined... probably out short address changed when we power cycled.
+				modules[packet.networkPacket.deviceUID].address = packet.addr;
+			}
+        }
+
         private void HandleGestureRecognizerFrame(SkeletalGesturePoint sgp)
         {
             NetworkProtocol.ShadeCommandData shadePacket = new NetworkProtocol.ShadeCommandData();
@@ -637,17 +649,24 @@ namespace HomeKinection
 
                     if (ySlider.Value != yPrev)
                     {
-                       // Dispatcher.Invoke(DispatcherPriority.Send,
-                        //    new Action<NetworkProtocol.DimmerCommandData>(networkProtocol.sendDimmerMessage), dimmerPacket);
-                       // networkProtocol.sendDimmerMessage(dimmerPacket);
+                        
+                        foreach(var entry in modules)
+                        {
+
+                           if(entry.Value.type != MODULE_TYPE.DIMMER_MODULE) continue;
+							DimmerControlModule d = (DimmerControlModule)(entry.Value);
+							d.intensity = System.Convert.ToByte(ySlider.Value);
+                           // Dispatcher.Invoke(DispatcherPriority.Send,
+                           // new Action<UInt16, NetworkProtocol.DimmerCommandData>(networkProtocol.sendDimmerMessage), entry.Value.address, dimmerPacket);                         
+                        }                        
                     }
 
                     if (Math.Sqrt(Math.Pow((xSlider.Value - 50),2) + Math.Pow((ySlider.Value - 50),2)) > 10)
                     {
 
                         //NetworkProtocol.sendHIDMessage(serialPort, hidPacket);
-                        Dispatcher.Invoke(DispatcherPriority.Send,
-                            new Action<NetworkProtocol.HIDCommandData>(networkProtocol.sendHIDMessage), hidPacket);
+                       // Dispatcher.Invoke(DispatcherPriority.Send,
+                        //    new Action<UInt16, NetworkProtocol.HIDCommandData>(networkProtocol.sendHIDMessage), 0, hidPacket);
                     }
 
 
@@ -737,7 +756,7 @@ namespace HomeKinection
 
         void gestureRecognizer_SawSomething(object sender, RecognitionEngine.SawSomethingArgs e)
         {
-            PeekingText.NewPeek(e.Gesture.ToString(), screenRect, .05, Color.FromArgb(200, 255, 255, 255));
+            PeekingText.NewPeek(e.Gesture.ToString(), screenRect, .01, Color.FromArgb(200, 255, 255, 255));
             GestureTextBox.Text = GestureTextBox.Text + e.Gesture.ToString() + "\n";
         }
 
@@ -764,6 +783,7 @@ namespace HomeKinection
             isRecording = true;
             replayButton.IsEnabled = false;
             saveButton.IsEnabled = false;
+			deleteButton.IsEnabled = false;
             stopRecordButton.IsEnabled = true;
             recordButton.IsEnabled = false;
 			recordButton.Visibility = System.Windows.Visibility.Hidden;
@@ -783,6 +803,7 @@ namespace HomeKinection
             {
                 replayButton.IsEnabled = true;
                 saveButton.IsEnabled = true;
+				deleteButton.IsEnabled = true;
                 recordButton.IsEnabled = true;
                 stopRecordButton.IsEnabled = false;
 				recordButton.Visibility = System.Windows.Visibility.Visible;
@@ -928,8 +949,20 @@ namespace HomeKinection
             currentGesture = (SkeletalGesture) GestureLibraryBox.SelectedItem;
             if (currentGesture != null) replayButton.IsEnabled = true;
             replayActor.setBounds(currentGesture.playerBounds);
-            saveButton.IsEnabled = true;
+            replayButton.IsEnabled = true;
+			deleteButton.IsEnabled = true;
             NameTextBox.Text = currentGesture.name;
+        }
+
+		private void deleteGesture(object sender, System.Windows.RoutedEventArgs e)
+        {
+            currentGesture = (SkeletalGesture) GestureLibraryBox.SelectedItem;
+            if (currentGesture != null) replayButton.IsEnabled = true;
+            replayActor.setBounds(currentGesture.playerBounds);
+            replayButton.IsEnabled = false;
+			deleteButton.IsEnabled = false;
+            File.Delete(System.IO.Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.FullName + "\\Gestures\\" + currentGesture.name + ".sg");
+            LoadGestureLibrary();
         }
 
         private void stopRecordClick(object sender, System.Windows.RoutedEventArgs e)
@@ -960,5 +993,54 @@ namespace HomeKinection
         {        	
 			IdleGesturePicker.IsEnabled = (bool)idleEnable.IsChecked;	
         }
+
+        private void launchSaveDialog(object sender, System.Windows.RoutedEventArgs e)
+        {
+        	SaveDialog.IsOpen = true;
+        }
+
+        private void hideSaveDialog(object sender, System.Windows.RoutedEventArgs e)
+        {
+        	SaveDialog.IsOpen = false;
+        }
+		
+		private ModuleBox moduleToSave;
+
+        private void NewModuleSave(object sender, System.Windows.RoutedEventArgs e)
+        {
+			if(modules == null) modules = new Dictionary<UInt64,ModuleBox>();
+			
+            //add to Array here!!!
+            NewModulePopup.IsOpen = false;	
+			switch(moduleToSave.type)
+			{
+				case MODULE_TYPE.DIMMER_MODULE:
+					DimmerControl dc = 
+					new DimmerControl(networkProtocol, ModuleNameBox.Text.ToString(), ModuleLocationBox.Text.ToString(), 
+						moduleToSave.address,moduleToSave.uid, moduleToSave.type);
+			
+					ModulesList.Items.Add(dc);
+			
+					modules.Add(moduleToSave.uid, (ModuleBox)dc.FindResource("dataModel"));
+			    break;
+					
+				case MODULE_TYPE.SHADE_MODULE:
+					ShadeControl sc = 
+					new ShadeControl(networkProtocol, ModuleNameBox.Text.ToString(), ModuleLocationBox.Text.ToString(), 
+						moduleToSave.address,moduleToSave.uid, moduleToSave.type);
+			
+					ModulesList.Items.Add(sc);
+			
+					modules.Add(moduleToSave.uid, (ModuleBox)sc.FindResource("dataModel"));
+			    break;
+					
+				default:
+				break;
+			}
+			
+			
+        }
+
+        
     }
 }
