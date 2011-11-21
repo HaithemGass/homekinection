@@ -1,5 +1,5 @@
 /**************************************************************************//**
-  \file DimmerModule.c
+  \file shadeModule.c
   
   \brief Blink application.
 
@@ -42,8 +42,9 @@ static APS_DataReq_t packet; // Data transmission request
 //Global PWM Ch1
 HAL_PwmDescriptor_t pwmChannel1;
 
-static ShadeCommandPacket shadeMessage; // Dimmer Message buffer
-static StatusMessagePacket statusMessage; // Dimmer Message buffer
+//static ShadeCommandPacket shadeMessage; // shade Message buffer
+static StatusMessagePacket statusMessage; // shade Message buffer
+static NetworkJoinPacket networkPacket; // Dimmer Message buffer
 
 static ShortAddr_t myAddr;
 
@@ -108,10 +109,9 @@ void APL_TaskHandler(void)
 		break;
           
           ///APP_NETWORK_SEND_STATUS
-		case APP_NETWORK_SEND_DIMMER:
+		case APP_NETWORK_SEND_SHADE:
                 if(ableToSend)
-			 {
-		       
+			 {		       
 			   sendStatusPacket(CPU_TO_LE16(0));	 				 
 			 }else{
 			   HAL_StopAppTimer(&retryTimer);
@@ -134,15 +134,11 @@ void APL_TaskHandler(void)
 }
 
 void sendStatusPacket(ShortAddr_t addr)
-{	
-     
-			
-     statusMessage.data.deviceType = SHADE_MODULE;
+{	     			
+     statusMessage.data.deviceType = DEVICE_TYPE;
      statusMessage.data.statusMessageType = 0x0000;
      statusMessage.data.shortAddress = myAddr ;  
-	 
-	    
-	 
+	 	 	    	 
 	stuffStatusPacket((uint8_t*) &ButtonStatus, sizeof(ButtonStatus), &statusMessage)	 ;
      
 	packet.asdu = (uint8_t *)(&statusMessage.data);
@@ -159,8 +155,30 @@ void sendStatusPacket(ShortAddr_t addr)
 	packet.radius = 0x0;
 	packet.APS_DataConf = networkTransmissionConfirm;
 	APS_DataReq(&packet);
-	ableToSend = false; 	
+	ableToSend = false; 		
+}
+
+void sendNetworkPacket(ShortAddr_t addr)
+{	    		
+     networkPacket.data.deviceType = DEVICE_TYPE;		
+	networkPacket.data.shortAddr = myAddr;
+	networkPacket.data.deviceUID = CS_UID;
+	     
+	packet.asdu = (uint8_t *)(&networkPacket.data);
+	packet.asduLength = sizeof(networkPacket.data);
+	packet.profileId = 1;
+	packet.dstAddrMode = APS_SHORT_ADDRESS;
+	packet.dstAddress.shortAddress = addr;
 	
+	packet.srcEndpoint = shadeEndpoint.endpoint;
+	packet.dstEndpoint = networkJoinEndpoint.endpoint;
+  
+	packet.clusterId = CPU_TO_LE16(0);	
+	packet.txOptions.acknowledgedTransmission = 1;
+	packet.radius = 0x0;
+	packet.APS_DataConf = networkTransmissionConfirm;
+	APS_DataReq(&packet);
+	ableToSend = false; 	
 }
 
 void retryStatusPacket()
@@ -171,7 +189,7 @@ void retryStatusPacket()
 
 void retryShadePacket()
 {
-	appState = APP_NETWORK_SEND_DIMMER;
+	appState = APP_NETWORK_SEND_SHADE;
 	SYS_PostTask(APL_TASK_ID);	
 }
 
@@ -186,7 +204,10 @@ void statusMessageReceived(APS_DataInd_t* indData)
 {	
      indData = indData;       	
 }
-
+void networkJoinMessageReceived(APS_DataInd_t* indData)
+{	
+     indData = indData;       	
+}
 
 /*******************************************************************************
   Description: Callback For Handling Data Frame Reception
@@ -196,26 +217,27 @@ void statusMessageReceived(APS_DataInd_t* indData)
   Returns: nothing.
 *******************************************************************************/
 void shadeCommandReceived(APS_DataInd_t* indData)
-{		
+{	
+	
 	ShadeCommandData *data = (ShadeCommandData *)(indData->asdu);
      blindTimer.interval=data->Duration;
-     HAL_StartAppTimer(&blindTimer);
+     if(blindTimer.interval > 20) HAL_StartAppTimer(&blindTimer);
    
    
    
    if( data->ButtonMask == SHADE_DIRECTION_DOWN)// & BlindDirection.DOWN)
    {
-	setLED(LED_COLOR_CRIMSON);
+	setLEDTimed(LED_COLOR_CERULEAN, LED_TIME_FAST);
 	GPIO_4_set();
    }
    else if(data->ButtonMask == SHADE_DIRECTION_UP)
    {
-	setLED(LED_COLOR_LIME);
+	setLEDTimed(LED_COLOR_LIME, LED_TIME_FAST);
 	GPIO_3_set();
    }
    else
    {
-	setLED(LED_COLOR_WHITE);
+	setLEDTimed(LED_COLOR_RED, LED_TIME_FAST);
 	
 	GPIO_3_clr();
 	GPIO_4_clr();
@@ -256,10 +278,26 @@ static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo)
 		appState = APP_NETWORK_JOINED;
 		SYS_PostTask(APL_TASK_ID);
 		setLED(LED_COLOR_GREEN);		
-		// Configure blink timer
+		if(ableToSend)
+		{
+		     sendNetworkPacket(CPU_TO_LE16(0)) ;	
+		}
+		else
+		{
+			HAL_StopAppTimer(&retryTimer);
+			retryTimer.callback = retryNetwork;
+			retryTimer.interval = 10;
+			retryTimer.mode = TIMER_ONE_SHOT_MODE;
+			HAL_StartAppTimer(&retryTimer);			
+		}	
 	}else{
 		startLEDBlink(LED_COLOR_CRIMSON,LED_BLINK_MEDIUM);
 	}
+}
+
+void retryNetwork()
+{	
+  sendNetworkPacket(CPU_TO_LE16(0)) ;		
 }
 
 /*******************************************************************************
@@ -437,7 +475,10 @@ void initializeConfigurationServer()
 }
 
 void registerEndpoints()
-{     
+{ 
+		networkJoinEndpointParams.simpleDescriptor = &networkJoinEndpoint;
+	     networkJoinEndpointParams.APS_DataInd = networkJoinMessageReceived;			
+	     APS_RegisterEndpointReq(&networkJoinEndpointParams);    
 
 	     statusEndpointParams.simpleDescriptor = &statusEndpoint;
 	     statusEndpointParams.APS_DataInd = statusMessageReceived;			

@@ -12,10 +12,6 @@
 #define DEVICE_MESSAGE_ALL (DEVICE_MESSAGE_STATUS|DEVICE_MESSAGE_DIMMER|DEVICE_MESSAGE_SHADE|DEVICE_MESSAGE_IR|DEVICE_MESSAGE_HID)
 
 
-#define DEVICE_ENDPOINT_STATUS {MODULE_STATUS,1, 1, 1, 0, 0, NULL, 0, NULL}
-#define DEVICE_ENDPOINT_DIMMER {DIMMER_CONTROL,1, 1, 1, 0, 0, NULL, 0, NULL}
-#define DEVICE_ENDPOINT_SHADE 
-
 
 /*****************************************************************************
 ******************************************************************************
@@ -55,21 +51,33 @@ typedef enum
 	DIMMER_CONTROL,
 	SHADE_CONTROL,
 	IR_CONTROL,
-	HID_CONTROL
+	HID_CONTROL,
+	MODULE_NETWORK_JOIN
 } NETWORK_ENDPOINT;
 
 //-------------------------Status
 #if ((DEVICE_MESSAGE_SUPPORT & DEVICE_MESSAGE_STATUS) != 0)
+
 	BEGIN_PACK
 	typedef struct  
 	{
 		 uint8_t deviceType;
 		 uint8_t statusMessageType;
-		 uint16_t shortAddress;
+		 uint16_t shortAddress;		 
 		 size_t length;
 		 uint8_t message[80];
 	}PACK StatusMessageData;
 	END_PACK
+	
+	BEGIN_PACK
+	typedef struct  
+	{
+		 uint8_t deviceType;
+		 uint16_t shortAddr;
+		 uint64_t deviceUID;
+	}PACK NetworkJoinData;
+	END_PACK	
+	
 	
 	BEGIN_PACK
 	typedef struct
@@ -80,8 +88,21 @@ typedef enum
 	} PACK StatusMessagePacket;
 	END_PACK	
 	
+	
+	BEGIN_PACK
+	typedef struct
+	{
+		uint8_t header[APS_ASDU_OFFSET]; // Header
+		NetworkJoinData data; // Application data
+		uint8_t footer[APS_AFFIX_LENGTH - APS_ASDU_OFFSET]; //Footer
+	} PACK NetworkJoinPacket;
+	END_PACK	
+	
 	static APS_RegisterEndpointReq_t statusEndpointParams;
      static SimpleDescriptor_t statusEndpoint = {MODULE_STATUS,1, 1, 1, 0, 0, NULL, 0, NULL};     
+		 
+	static APS_RegisterEndpointReq_t networkJoinEndpointParams;
+     static SimpleDescriptor_t networkJoinEndpoint = {MODULE_NETWORK_JOIN,1, 1, 1, 0, 0, NULL, 0, NULL};     	 
 	
 #endif
 
@@ -90,6 +111,7 @@ typedef enum
 	BEGIN_PACK
 	typedef struct  
 	{
+		 uint8_t fadeToValue;
 		 uint8_t intensity;
 	}PACK DimmerCommandData;
 	END_PACK
@@ -164,7 +186,7 @@ typedef enum
 	BEGIN_PACK
 	typedef struct  
 	{
-		 uint8_t remoteSequenceNumber;
+		 uint8_t record;		 
 		 remoteSequence sequence;
 	}PACK IRCommandData;
 	END_PACK	
@@ -245,13 +267,28 @@ typedef enum
 
 
 #if ((DEVICE_MESSAGE_SUPPORT & DEVICE_MESSAGE_ALL) == DEVICE_MESSAGE_ALL)
+
+     typedef enum{		 
+          MESSAGE_TYPE_STATUS,
+	     MESSAGE_TYPE_CONTROL,
+	     MESSAGE_TYPE_NETWORK	  
+     } MESSAGE_TYPE;
+
      BEGIN_PACK
 	typedef struct
 	{
-		uint8_t type; // Message type... will correspond to one of our other ___MessageData structs.... use our NetworkEndpoint to decide.		
+		uint8_t messageType; // Message type... 
+		uint8_t moduleType; //  will correspond to one of our other ___MessageData structs.... use our MODULE_TYPE to decide.		
+		ShortAddr_t addr;
 	     union
 		{
-		     StatusMessageData statusPacket;	 
+			//NETWORK MESSAGE TYPESs			
+			NetworkJoinData networkPacket;
+			
+			//STATUS MESSAGE TYPES
+		     StatusMessageData statusPacket;
+			 
+			//CONTROL MESSAGE TYPES 	 
 			DimmerCommandData dimmerPacket;
 			HIDCommandData hidPacket;
 			ShadeCommandData shadePacket;

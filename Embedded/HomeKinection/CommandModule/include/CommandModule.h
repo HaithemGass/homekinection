@@ -53,6 +53,7 @@ void dimmerCommandReceived (APS_DataInd_t* indData);
 void irCommandReceived (APS_DataInd_t* indData);
 void shadeCommandReceived (APS_DataInd_t* indData);
 void statusMessageReceived (APS_DataInd_t* indData);
+void networkJoinMessageReceived (APS_DataInd_t* indData);
 
 void initializeDevice();
 void initializeConfigurationServer();
@@ -64,14 +65,17 @@ void usartReceiveComplete(uint16_t length);
 
 void sendTestMessage();
 void fakeShadeMessage();
+void fakeDimmerMessage();
 
 void retryCallback();
+void retryUSARTCallback();
 
 void sendDimmerPacket(ShortAddr_t addr);
 void sendShadePacket(ShortAddr_t addr);
 void sendIRPacket(ShortAddr_t addr);
 void sendHIDPacket(ShortAddr_t addr);
 void sendMessageToModule(ShortAddr_t addr);
+void sendMessageToDesktop(UsartMessagePacket *packet);
 
 void registerEndpoints();
 

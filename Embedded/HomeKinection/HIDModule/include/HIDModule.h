@@ -17,6 +17,9 @@
 ******************************************************************************
 *****************************************************************************/
 #define DEVICE_MESSAGE_SUPPORT (DEVICE_MESSAGE_HID | DEVICE_MESSAGE_STATUS)
+#define DEVICE_TYPE HID_MODULE
+
+
 #define WINDOWS_D {0x08,0x00,0x07}
 #define DEFAULT_KEY_SEQUENCE {1,{WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D,WINDOWS_D}}
 /******************************************************************************
@@ -58,6 +61,9 @@ static void networkTransmissionConfirm(APS_DataConf_t *result);
 
 void hidCommandReceived (APS_DataInd_t* indData);
 void statusMessageReceived (APS_DataInd_t* indData);
+void networkJoinMessageReceived (APS_DataInd_t* indData);
+
+void retryNetwork();
 
 void initializeDevice();
 void initializeConfigurationServer();
@@ -98,6 +104,7 @@ void USBHandleFakeMouse();
 void spiCompleteCallback();
 void spiStartTransmission(uint8_t *message, uint16_t length);
 
+void sendNetworkPacket(ShortAddr_t addr);
 void sendStatusPacket(ShortAddr_t addr);
 void retryStatusPacket();
 

@@ -1,5 +1,5 @@
 /**************************************************************************//**
-  \file DimmerModule.c
+  \file hidModule.c
   
   \brief Blink application.
 
@@ -62,7 +62,8 @@ static int c_children = 0;
 static bool ableToSend = true;
 
 HIDStatus statusPacket;
-static StatusMessagePacket statusMessage; // Dimmer Message buffer
+static StatusMessagePacket statusMessage; // hid Message buffer
+static NetworkJoinPacket networkPacket; // hid Message buffer
 
 static KEYBOARD_STATE usbKeyboardState;
 static uint8_t usbRWUEnabled;
@@ -188,11 +189,14 @@ void statusMessageReceived(APS_DataInd_t* indData)
 {		
      indData = indData;	 
 }
-
+void networkJoinMessageReceived(APS_DataInd_t* indData)
+{	
+     indData = indData;       	
+}
 void sendStatusPacket(ShortAddr_t addr)
 {	
 		
-     statusMessage.data.deviceType = HID_MODULE;
+     statusMessage.data.deviceType = DEVICE_TYPE;
      statusMessage.data.statusMessageType = 0x0000;
      statusMessage.data.shortAddress = myAddr ;     
 	 
@@ -209,6 +213,29 @@ void sendStatusPacket(ShortAddr_t addr)
   
 	packet.clusterId = CPU_TO_LE16(0);	
 	packet.txOptions.acknowledgedTransmission = 0;
+	packet.radius = 0x0;
+	packet.APS_DataConf = networkTransmissionConfirm;
+	APS_DataReq(&packet);
+	ableToSend = false; 	
+}
+
+void sendNetworkPacket(ShortAddr_t addr)
+{	    		
+     networkPacket.data.deviceType = DEVICE_TYPE;		
+	networkPacket.data.shortAddr = myAddr;
+	networkPacket.data.deviceUID = CS_UID;
+	     
+	packet.asdu = (uint8_t *)(&networkPacket.data);
+	packet.asduLength = sizeof(networkPacket.data);
+	packet.profileId = 1;
+	packet.dstAddrMode = APS_SHORT_ADDRESS;
+	packet.dstAddress.shortAddress = addr;
+	
+	packet.srcEndpoint = hidEndpoint.endpoint;
+	packet.dstEndpoint = networkJoinEndpoint.endpoint;
+  
+	packet.clusterId = CPU_TO_LE16(0);	
+	packet.txOptions.acknowledgedTransmission = 1;
 	packet.radius = 0x0;
 	packet.APS_DataConf = networkTransmissionConfirm;
 	APS_DataReq(&packet);
@@ -244,10 +271,28 @@ static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo)
 		myAddr = confirmInfo->shortAddr;
 		appState = APP_NETWORK_JOINED;
 		SYS_PostTask(APL_TASK_ID);
+		setLED(LED_COLOR_GREEN);
+		if(ableToSend)
+		{
+		     sendNetworkPacket(CPU_TO_LE16(0)) ;	
+		}
+		else
+		{
+			HAL_StopAppTimer(&retryTimer);
+			retryTimer.callback = retryNetwork;
+			retryTimer.interval = 10;
+			retryTimer.mode = TIMER_ONE_SHOT_MODE;
+			HAL_StartAppTimer(&retryTimer);			
+		}	
 		
 	}else{
 		startLEDBlink(LED_COLOR_RED, LED_BLINK_MEDIUM);
 	}
+}
+
+void retryNetwork()
+{	
+  sendNetworkPacket(CPU_TO_LE16(0)) ;		
 }
 
 /*******************************************************************************
@@ -1021,7 +1066,11 @@ void initializeConfigurationServer()
 
 
 void registerEndpoints()
-{          
+{   
+	networkJoinEndpointParams.simpleDescriptor = &networkJoinEndpoint;
+	networkJoinEndpointParams.APS_DataInd = networkJoinMessageReceived;			
+	APS_RegisterEndpointReq(&networkJoinEndpointParams);
+	       
 	statusEndpointParams.simpleDescriptor = &statusEndpoint;
 	statusEndpointParams.APS_DataInd = statusMessageReceived;			
 	APS_RegisterEndpointReq(&statusEndpointParams);     
