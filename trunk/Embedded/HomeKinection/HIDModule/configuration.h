@@ -182,7 +182,7 @@
 // available on all platforms. If the latter case then UID value must be provided
 // by user via this parameter. This parameter must be unique for each device in a
 // network.
-#define CS_UID 0x1LL
+#define CS_UID 0xD6465ECD47683CA3LL
 
 // Determines whether the static or automatic addressing mode will be used for the
 // short address.
@@ -306,8 +306,8 @@
 // the end device's parent suspends data delivery to the child until it receives a
 // polling request from the child; on the end device radio is only on when data is
 // being sent.
-#define CS_RX_ON_WHEN_IDLE false
-//#define CS_RX_ON_WHEN_IDLE true
+//#define CS_RX_ON_WHEN_IDLE false
+#define CS_RX_ON_WHEN_IDLE true
 
 // End device sleep period given in milliseconds.
 // 

@@ -35,6 +35,10 @@ void ledBlinkOff(){
 	HAL_StartAppTimer(&ledTimer);
 }
 
+void ledTimedOff(){	
+	setLED(LED_COLOR_OFF);
+}
+
 void startLEDBlink(uint16_t r, uint16_t g, uint16_t b, uint32_t on, uint32_t off)
 {
 	pulseB = b;
@@ -83,9 +87,7 @@ void startLEDPulse(uint16_t r, uint16_t g, uint16_t b, PulseSpeed s)
 	ledTimer.callback = ledPulseUpdate;
 	ledTimer.interval = s;
 	ledTimer.mode = TIMER_REPEAT_MODE;
-	HAL_StartAppTimer(&ledTimer);
-	
-	
+	HAL_StartAppTimer(&ledTimer);		
 }
 
 void stopLEDPulse()
@@ -104,4 +106,17 @@ void setLED(uint16_t r, uint16_t g, uint16_t b)
 	HAL_SetPwmCompareValue(&pwmChannelRed, r*10);
      HAL_SetPwmCompareValue(&pwmChannelGreen, g*10);
 	HAL_SetPwmCompareValue(&pwmChannelBlue, b*10);	
+}
+
+void setLEDTimed(uint16_t r, uint16_t g, uint16_t b, uint16_t t)
+{
+	
+	HAL_StopAppTimer(&ledTimer);
+	
+	setLED(r,g,b);
+	
+	ledTimer.callback = ledTimedOff;
+	ledTimer.interval = t;
+	ledTimer.mode = TIMER_ONE_SHOT_MODE;
+	HAL_StartAppTimer(&ledTimer);	
 }

@@ -1,5 +1,5 @@
 /**************************************************************************//**
-  \file DimmerModule.c
+  \file irModule.c
   
   \brief Blink application.
 
@@ -43,8 +43,9 @@ static APS_DataReq_t packet; // Data transmission request
 //Global PWM Ch1
 HAL_PwmDescriptor_t pwmChannel1;
 
-static IRCommandPacket irMessage; // Dimmer Message buffer
-static StatusMessagePacket statusMessage; // Dimmer Message buffer
+static IRCommandPacket irMessage; // ir Message buffer
+static StatusMessagePacket statusMessage; // ir Message buffer
+static NetworkJoinPacket networkPacket; // ir Message buffer
 
 static ShortAddr_t myAddr;
 
@@ -116,14 +117,14 @@ void APL_TaskHandler(void)
 		break;
           
           ///APP_NETWORK_SEND_STATUS
-		case APP_NETWORK_SEND_DIMMER:
+		case APP_NETWORK_SEND_IR:
                 if(ableToSend)
 			 {
 		        setLED(LED_COLOR_BLUE);
 			   sendStatusPacket(CPU_TO_LE16(0));	 				 
 			 }else{
 			   HAL_StopAppTimer(&retryTimer);
-			   retryTimer.callback = retryDimmerPacket;
+			   retryTimer.callback = retryIRPacket;
 			   retryTimer.interval = 10;
 			   retryTimer.mode = TIMER_ONE_SHOT_MODE;
 			   HAL_StartAppTimer(&retryTimer);
@@ -142,29 +143,8 @@ void APL_TaskHandler(void)
 }
 
 void sendStatusPacket(ShortAddr_t addr)
-{	
-     /*
-	uint16_t temp;
-	if(lampOn)
-	{
-		//to avoid overflow
-		if(intensity > 50)
-		{
-		  temp = (MAX_DIMMER_BRIGHTNESS * (intensity-50)/50);
-		  temp = temp + (MAX_DIMMER_BRIGHTNESS)/2; 
-		}
-		else
-		{
-		  temp = ((MAX_DIMMER_BRIGHTNESS * intensity)/100); 
-		}					
-     }
-	else
-	{
-	     temp = 0;
-	}			 
-	HAL_SetPwmCompareValue(&pwmChannel1,(MAX_DIMMER_BRIGHTNESS - temp) ); 
-	*/	
-     statusMessage.data.deviceType = DIMMER_MODULE;
+{	   	
+     statusMessage.data.deviceType = DEVICE_TYPE;
      statusMessage.data.statusMessageType = 0x0000;
      statusMessage.data.shortAddress = myAddr ;     
 	 
@@ -217,9 +197,9 @@ void retryStatusPacket()
 	SYS_PostTask(APL_TASK_ID);	
 }
 
-void retryDimmerPacket()
+void retryIRPacket()
 {
-	appState = APP_NETWORK_SEND_DIMMER;
+	appState = APP_NETWORK_SEND_IR;
 	SYS_PostTask(APL_TASK_ID);	
 }
 
@@ -235,7 +215,10 @@ void statusMessageReceived(APS_DataInd_t* indData)
      indData = indData;       	
 }
 
-
+void networkJoinMessageReceived(APS_DataInd_t* indData)
+{	
+     indData = indData;       	
+}
 /*******************************************************************************
   Description: Callback For Handling Data Frame Reception
 
@@ -245,19 +228,7 @@ void statusMessageReceived(APS_DataInd_t* indData)
 *******************************************************************************/
 void irCommandReceived(APS_DataInd_t* indData)
 {
-	/*	
-	IrCommandData *data = (StatusMessageData*)(indData->asdu);
-	uint16_t temp;
-	lampOn = true;
-	if(data->intensity > 50){
-	     temp = (MAX_DIMMER_BRIGHTNESS * (data->intensity-50)/50);
-		temp = temp + (MAX_DIMMER_BRIGHTNESS)/2; 
-	}
-	else
-	{
-		temp = ((MAX_DIMMER_BRIGHTNESS * data->intensity)/100); 
-	}			
-	HAL_SetPwmCompareValue(&pwmChannel1, MAX_DIMMER_BRIGHTNESS - temp);	*/
+     indData = indData;
 }
 
 
@@ -291,10 +262,26 @@ static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo)
 		appState = APP_NETWORK_JOINED;
 		SYS_PostTask(APL_TASK_ID);
 		setLED(LED_COLOR_GREEN);
+		if(ableToSend)
+		{
+		     sendNetworkPacket(CPU_TO_LE16(0)) ;	
+		}
+		else
+		{
+			HAL_StopAppTimer(&retryTimer);
+			retryTimer.callback = retryNetwork;
+			retryTimer.interval = 10;
+			retryTimer.mode = TIMER_ONE_SHOT_MODE;
+			HAL_StartAppTimer(&retryTimer);			
+		}	
 		// Configure blink timer
 	}else{
 		setLED(LED_COLOR_YELLOW);
 	}
+}
+void retryNetwork()
+{	
+  sendNetworkPacket(CPU_TO_LE16(0)) ;		
 }
 
 /*******************************************************************************
@@ -377,7 +364,7 @@ void initializeDevice()
 	startNetworkReq.ZDO_StartNetworkConf = networkStartConfirm;
 	ZDO_StartNetworkReq(&startNetworkReq);	     		
 	
-    initializePWM();
+     initializePWM();
 	initializeTimer();
 	initializeIR();
 	
@@ -421,17 +408,7 @@ void initializePWM()
 	pwmChannel1.polarity = PWM_POLARITY_NON_INVERTED;			
 	HAL_SetPwmFrequency(PWM_UNIT_3, PWM_FREQUENCY, PWM_PRESCALER_1 );			
 	HAL_StartPwm(&pwmChannel1);
-     HAL_SetPwmCompareValue(&pwmChannel1, PWM_FREQUENCY/2); 
-	 
-	/*HAL_OpenPwm(PWM_UNIT_1);			
-	pwmChannel1.unit = PWM_UNIT_1;
-	pwmChannel1.channel  = PWM_CHANNEL_2;
-	pwmChannel1.polarity = PWM_POLARITY_NON_INVERTED;			
-	HAL_SetPwmFrequency(PWM_UNIT_1, PWM_FREQUENCY, PWM_PRESCALER_1 );			
-	HAL_StartPwm(&pwmChannel1);	
-     HAL_SetPwmCompareValue(&pwmChannel1, PWM_FREQUENCY/2); */
-	 
-  	
+     HAL_SetPwmCompareValue(&pwmChannel1, PWM_FREQUENCY/2); 	   	
 }
 
 
@@ -470,9 +447,35 @@ void initializeConfigurationServer()
 	CS_WriteParameter(CS_UID_ID, &uid);     
 }
 
+void sendNetworkPacket(ShortAddr_t addr)
+{	    		
+     networkPacket.data.deviceType = DEVICE_TYPE;		
+	networkPacket.data.shortAddr = myAddr;
+	networkPacket.data.deviceUID = CS_UID;
+	     
+	packet.asdu = (uint8_t *)(&networkPacket.data);
+	packet.asduLength = sizeof(networkPacket.data);
+	packet.profileId = 1;
+	packet.dstAddrMode = APS_SHORT_ADDRESS;
+	packet.dstAddress.shortAddress = addr;
+	
+	packet.srcEndpoint = irEndpoint.endpoint;
+	packet.dstEndpoint = networkJoinEndpoint.endpoint;
+  
+	packet.clusterId = CPU_TO_LE16(0);	
+	packet.txOptions.acknowledgedTransmission = 1;
+	packet.radius = 0x0;
+	packet.APS_DataConf = networkTransmissionConfirm;
+	APS_DataReq(&packet);
+	ableToSend = false; 	
+}
+
 void registerEndpoints()
 {     
-
+        	networkJoinEndpointParams.simpleDescriptor = &networkJoinEndpoint;
+	     networkJoinEndpointParams.APS_DataInd = networkJoinMessageReceived;			
+	     APS_RegisterEndpointReq(&networkJoinEndpointParams);
+	
 	     statusEndpointParams.simpleDescriptor = &statusEndpoint;
 	     statusEndpointParams.APS_DataInd = statusMessageReceived;			
 	     APS_RegisterEndpointReq(&statusEndpointParams);

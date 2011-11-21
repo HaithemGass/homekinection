@@ -47,6 +47,7 @@ HAL_PwmDescriptor_t pwmChannelDimmer;
 HAL_UsartDescriptor_t usartChannel0;
 
 static HAL_AppTimer_t retryTimer;
+static HAL_AppTimer_t retryUSARTTimer;
 static HAL_AppTimer_t testTimer;
 static HAL_AppTimer_t fakeTimer;
 
@@ -63,6 +64,7 @@ static ShortAddr_t retryAddr;
 static ShortAddr_t children[CS_MAX_CHILDREN_AMOUNT];
 static ShortAddr_t childToSendTo = 0;
 static int c_children = 0;
+static UsartMessagePacket desktopPacket;
 
 /*****************************************************************************
 ******************************************************************************
@@ -171,6 +173,8 @@ void sendMessageToModule(ShortAddr_t addr)
 {
      if(ableToSend)
 	{
+		HAL_StopAppTimer(&retryTimer);
+	     setLED(LED_COLOR_BLUE);     
 		packet.profileId = 1;
 	     packet.dstAddrMode = APS_SHORT_ADDRESS;
 	     packet.dstAddress.shortAddress = addr;
@@ -185,10 +189,27 @@ void sendMessageToModule(ShortAddr_t addr)
 	 }	
 	 else
 	 {
+		setLED(LED_COLOR_RED);
 		HAL_StartAppTimer(&retryTimer);		 
 		retryAddr = addr;
 	 }
 }
+
+void sendMessageToDesktop(UsartMessagePacket* packet)
+{
+	if(usartTransmitEnable)	
+	{
+	   setLED(LED_COLOR_OFF);
+	   usartTransmitEnable = false;
+        HAL_StopAppTimer(&retryUSARTTimer);
+	   HAL_WriteUsart(&usartChannel0,(uint8_t*)packet,sizeof(*packet));	
+	}
+	else
+	{
+	   HAL_StartAppTimer(&retryUSARTTimer);
+	}
+}
+
 /*******************************************************************************
   Description: button release event handler.
 
@@ -209,18 +230,48 @@ void sendMessageToModule(ShortAddr_t addr)
 *******************************************************************************/
 void statusMessageReceived(APS_DataInd_t* indData)
 {	
-	//setLED(LED_COLOR_ORANGE);	
-     StatusMessageData *data = (StatusMessageData*)(indData->asdu);
-     
-     //if(data->deviceType == DIMMER_MODULE){
-		//uint16_t * p_intensity = (uint16_t * )(data->message);
-		//uint16_t intensity = *p_intensity;		
-          //HAL_SetPwmCompareValue(&pwmChannelDimmer, 5  * intensity);     
-     //}
+	setLED(LED_COLOR_ORANGE);
+     StatusMessageData *data = (StatusMessageData*)(indData->asdu);    	
 	
-	uint8_t message[] = "STATUS MESSAGE!\r\n";
+	desktopPacket.addr = data->shortAddress;
+	desktopPacket.moduleType = data->deviceType;
+	desktopPacket.messageType = MESSAGE_TYPE_STATUS;	
+	desktopPacket.statusPacket = *data;
 	 
-	HAL_WriteUsart(&usartChannel0, message, sizeof(message));
+	sendMessageToDesktop(&desktopPacket);	
+	setLED(LED_COLOR_OFF);
+}
+
+void networkJoinMessageReceived(APS_DataInd_t* indData)
+{	
+     NetworkJoinData *data = (NetworkJoinData*)(indData->asdu);    	
+	
+	desktopPacket.networkPacket.deviceUID = data->deviceUID;
+	desktopPacket.networkPacket.deviceType = data->deviceType;
+	desktopPacket.networkPacket.shortAddr = data->shortAddr;
+	desktopPacket.addr = data->shortAddr;
+	desktopPacket.moduleType = data->deviceType;
+	desktopPacket.messageType = MESSAGE_TYPE_NETWORK;	
+	 
+	sendMessageToDesktop(&desktopPacket);	
+}
+
+void fakeDimmerMessage()
+{
+    static DimmerCommandData data = {0};
+    static int child;
+    static bool flip = true;
+    
+     child = children[0];    
+    dimmerMessage.data = data;	
+    sendDimmerPacket(child);
+	
+    (flip) ? (data.intensity++) : (data.intensity--) ;
+    if(data.intensity >= 100 || data.intensity <= 0)
+    { 
+          flip = !flip;
+    }		
+	 	
 }
 
 void fakeShadeMessage()
@@ -382,12 +433,10 @@ static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo)
   Returns: nothing.
 *******************************************************************************/
 void ZDO_MgmtNwkUpdateNotf(ZDO_MgmtNwkUpdateNotf_t *nwkParams) 
-{  
+{     	
   if(nwkParams->status == ZDO_CHILD_JOINED_STATUS)
   {
-	 setLED(LED_COLOR_YELLOW);
-	 children[c_children] = nwkParams->childAddr.shortAddr;
-	 c_children ++;	  
+	 setLED(LED_COLOR_YELLOW);	 	 	   
   }
 }
 
@@ -445,7 +494,7 @@ void ZDO_UnbindIndication(ZDO_UnbindInd_t *unbindInd)
 void initializeDevice()
 {	
 	initializeLED();	
-	setLED(LED_COLOR_PURPLE);
+	setLED(LED_COLOR_RED);
 							
      initializeConfigurationServer();
      			     
@@ -457,42 +506,32 @@ void initializeDevice()
 	     			
 	initializeSerial();
 	//initializePWM();
-	
-	testTimer.callback = sendTestMessage;
-	testTimer.interval = 100;	
-	testTimer.mode = TIMER_REPEAT_MODE;
-	//HAL_StartAppTimer(&testTimer);
+		
 	
 	retryTimer.callback = retryCallback;
 	retryTimer.interval = 50;	
 	retryTimer.mode = TIMER_ONE_SHOT_MODE;
 	
-	fakeTimer.callback = fakeShadeMessage;
-	fakeTimer.interval = 7000;	
-	fakeTimer.mode = TIMER_REPEAT_MODE;
-	//HAL_StartAppTimer(&fakeTimer);
+	retryUSARTTimer.callback = retryUSARTCallback;
+	retryUSARTTimer.interval = 50;	
+	retryUSARTTimer.mode = TIMER_ONE_SHOT_MODE;
+}
+
+void retryUSARTCallback()
+{
+	setLED(LED_COLOR_YELLOW);
+	sendMessageToDesktop(&desktopPacket);
 }
 
 void retryCallback()
 {
+	setLED(LED_COLOR_YELLOW);
 	sendMessageToModule(retryAddr);
-}
-
-void initializePWM()
-{
-	//setup pwm
-	HAL_OpenPwm(PWM_UNIT_3);			
-	pwmChannelDimmer.unit = PWM_UNIT_3	;
-	pwmChannelDimmer.channel  = PWM_CHANNEL_0;
-	pwmChannelDimmer.polarity = PWM_POLARITY_INVERTED;			
-	HAL_SetPwmFrequency(PWM_UNIT_3, 500 , PWM_PRESCALER_64 );			
-	HAL_StartPwm(&pwmChannelDimmer);
-	HAL_SetPwmCompareValue(&pwmChannelDimmer, 100);          	
 }
 
 void initializeSerial()
 {
-	usartChannel0.baudrate = USART_BAUDRATE_9600;
+	usartChannel0.baudrate = USART_BAUDRATE_38400;
 	usartChannel0.tty = USART_CHANNEL_1;
 	usartChannel0.mode = USART_MODE_ASYNC;
 	usartChannel0.parity = USART_PARITY_NONE;
@@ -514,41 +553,46 @@ void usartReceiveComplete(uint16_t length)
 {
    if(length != sizeof(UsartMessagePacket))
    {
-	startLEDBlink(LED_COLOR_ORANGE, LED_BLINK_FAST);
+	//startLEDBlink(LED_COLOR_RED, LED_BLINK_FAST);
 	return;   
    }
    UsartMessagePacket usartPacket;
    HAL_ReadUsart(&usartChannel0, (uint8_t*)(&usartPacket),sizeof(usartPacket));
       
-   ShadeCommandData shadeData;
-   HIDCommandData hidData;
-   switch(usartPacket.type)
+   childToSendTo = usartPacket.addr;
+   switch(usartPacket.messageType)
    {
-	   case SHADE_CONTROL:	    
-	    shadeData = (usartPacket.shadePacket);
-	    shadeMessage.data.ButtonMask = shadeData.ButtonMask;
-	    (shadeData.ButtonMask == SHADE_DIRECTION_DOWN)? setLED(LED_COLOR_RED) : setLED(LED_COLOR_BLUE);
-         shadeMessage.data.Duration = shadeData.Duration;
-	    childToSendTo = children[0];
-	    appState = APP_NETWORK_SEND_SHADE;
-	    SYS_PostTask(APL_TASK_ID);	
-	    break;
+	   case MESSAGE_TYPE_CONTROL:   
+        switch(usartPacket.moduleType)
+        {
+	        case SHADE_MODULE:	    
+	         shadeMessage.data = (usartPacket.shadePacket);
+	         //shadeMessage.data.ButtonMask = shadeData.ButtonMask;
+              //shadeMessage.data.Duration = shadeData.Duration;	    
+	         sendShadePacket(childToSendTo);
+	         break;
 		
-	    case HID_CONTROL:	    
-	    hidData = (usartPacket.hidPacket);
-	    hidMessage.data.mouseData = hidData.mouseData;
-	    hidMessage.data.keySequence = hidData.keySequence;
-	    
-	    setLED(LED_COLOR_GREEN);         
-	    childToSendTo = children[0];
-	    appState = APP_NETWORK_SEND_HID;
+	         case HID_MODULE:	    
+	         hidMessage.data = (usartPacket.hidPacket);
+	         //hidMessage.data.mouseData = hidData.mouseData;
+	         //hidMessage.data.keySequence = hidData.keySequence;	           	    
+	         sendHIDPacket(childToSendTo);
+	         break;
 		
-	    SYS_PostTask(APL_TASK_ID);	
-	    break;	
-	   default:
-	    startLEDBlink(LED_COLOR_PURPLE, LED_BLINK_FAST);
-	    break;		
-   }
+	         case DIMMER_MODULE:	    
+	         dimmerMessage.data = (usartPacket.dimmerPacket);	                	    
+              sendDimmerPacket(childToSendTo);
+	         break;		
+		
+		
+	        default:
+	        setLED(LED_COLOR_PINK);
+	         break;		
+        }
+		break;
+	     default:
+		break;
+     }		
 }
 
 void initializeConfigurationServer()
@@ -564,7 +608,11 @@ void initializeConfigurationServer()
 
 
 void registerEndpoints()
-{          
+{
+     networkJoinEndpointParams.simpleDescriptor = &networkJoinEndpoint;
+	networkJoinEndpointParams.APS_DataInd = networkJoinMessageReceived;			
+	APS_RegisterEndpointReq(&networkJoinEndpointParams);
+	          
 	statusEndpointParams.simpleDescriptor = &statusEndpoint;
 	statusEndpointParams.APS_DataInd = statusMessageReceived;			
 	APS_RegisterEndpointReq(&statusEndpointParams);

@@ -18,7 +18,7 @@
 *****************************************************************************/
 
 #define DEVICE_MESSAGE_SUPPORT (DEVICE_MESSAGE_SHADE | DEVICE_MESSAGE_STATUS)
-#define MODULE_TYPE_SHADE
+#define DEVICE_TYPE SHADE_MODULE
 
 /******************************************************************************
                     Includes section
@@ -62,16 +62,18 @@ static void networkTransmissionConfirm(APS_DataConf_t *result);
 
 void dimmerCommandReceived (APS_DataInd_t* indData);
 void statusMessageReceived (APS_DataInd_t* indData);
-void retryShadePacket();
+void networkJoinMessageReceived (APS_DataInd_t* indData);
+
 
 void initializeDevice();
 void initializeConfigurationServer();
 void registerEndpoints();
 
-void sendDimmerPacket(ShortAddr_t addr);
 void sendStatusPacket(ShortAddr_t addr);
+void sendNetworkPacket(ShortAddr_t addr);
 
-void retryDimmerPacket();
+void retryShadePacket();
+void retryNetwork();
 void retryStatusPacket();
 
 void handleButtonPress(uint8_t button);

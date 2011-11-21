@@ -18,6 +18,7 @@
 *****************************************************************************/
 
 #define DEVICE_MESSAGE_SUPPORT (DEVICE_MESSAGE_DIMMER | DEVICE_MESSAGE_STATUS)
+#define DEVICE_TYPE DIMMER_MODULE
 //#define MAX_DIMMER_BRIGHTNESS 520
 #define MAX_DIMMER_BRIGHTNESS 1040
 #define MODULE_TYPE_DIMMER
@@ -55,6 +56,7 @@ static void networkTransmissionConfirm(APS_DataConf_t *result);
 
 void dimmerCommandReceived (APS_DataInd_t* indData);
 void statusMessageReceived (APS_DataInd_t* indData);
+void networkJoinMessageReceived (APS_DataInd_t* indData);
 
 void initializeDevice();
 void initializeConfigurationServer();
@@ -65,6 +67,7 @@ void registerEndpoints();
 
 void sendDimmerPacket(ShortAddr_t addr);
 void sendStatusPacket(ShortAddr_t addr);
+void sendNetworkPacket(ShortAddr_t addr);
 
 void retryDimmerPacket();
 void retryStatusPacket();
@@ -72,6 +75,8 @@ void setDimmerBrightness(uint16_t i);
 void readGreyCode();
 void readButton();
 void resetPWM();
+void retryNetwork();
+void fadeToValue();
 
 void initializeTimer();
 void resetTimer();

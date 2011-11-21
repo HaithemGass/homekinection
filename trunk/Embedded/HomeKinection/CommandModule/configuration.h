@@ -25,12 +25,6 @@
 #define APP_USE_BINDING 0
 //#define APP_USE_BINDING 1
 
-#define APP_BLINK_PERIOD 1000
-
-#define APP_MIN_BLINK_PERIOD 100
-
-#define APP_MAX_BLINK_PERIOD 10000
-
 // Enables or disables request of APS Acknowledgement for outgoing frames.
 #define APP_USE_APS_ACK 0
 //#define APP_USE_APS_ACK 1
@@ -182,7 +176,7 @@
 // available on all platforms. If the latter case then UID value must be provided
 // by user via this parameter. This parameter must be unique for each device in a
 // network.
-#define CS_UID 0x1LL
+#define CS_UID 0x98A6E63FE8FB502ALL
 
 // Determines whether the static or automatic addressing mode will be used for the
 // short address.
@@ -306,8 +300,8 @@
 // the end device's parent suspends data delivery to the child until it receives a
 // polling request from the child; on the end device radio is only on when data is
 // being sent.
-#define CS_RX_ON_WHEN_IDLE false
-//#define CS_RX_ON_WHEN_IDLE true
+//#define CS_RX_ON_WHEN_IDLE false
+#define CS_RX_ON_WHEN_IDLE true
 
 // End device sleep period given in milliseconds.
 // 
