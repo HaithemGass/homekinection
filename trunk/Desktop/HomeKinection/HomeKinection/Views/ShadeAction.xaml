@@ -1,0 +1,30 @@
+﻿<UserControl
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:local="clr-namespace:HomeKinection"
+	mc:Ignorable="d"
+	x:Class="HomeKinection.ShadeAction"
+	x:Name="UserControl" Height="102.167" Width="403.833">
+
+	<UserControl.Resources>
+		<local:ModuleAction x:Key="dataModel" d:IsDataSource="True" />	
+	</UserControl.Resources>
+
+	<Grid x:Name="Grid" DataContext="{Binding Source={StaticResource dataModel}}" Height="100" VerticalAlignment="Top" d:LayoutOverrides="HorizontalAlignment">		
+		<Rectangle Fill="#3D1A1A1A" Margin="8,8,11.833,8"/> 		
+		<Label Content="Duration:" HorizontalAlignment="Right" Margin="0,7.999,57.833,0" Foreground="White" FontSize="14.667" Width="100" VerticalAlignment="Top"/>
+		<TextBox HorizontalAlignment="Right" TextWrapping="Wrap" Margin="0,41.505,92.833,36.532" d:LayoutOverrides="Height" Width="65" TextChanged="UpdateDuration"/>
+		<Label Content="Seconds" HorizontalAlignment="Right" Margin="0,40.506,11.833,33.532" Foreground="White" Width="77"/>
+		<ToggleButton x:Name="UpButton" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,8,0,0" Height="27" Width="40" Background="Black" Foreground="White" Checked="EnsureUnchecked">
+			<Path Fill="White" Data="M 0 6 L 12 6 L 6 0 Z"/>
+		</ToggleButton>
+		<ToggleButton x:Name="StopButton" HorizontalAlignment="Left" Margin="8,36.5,0,36.5" Width="40" Background="Black" Foreground="White" Checked="EnsureUnchecked" >
+			<Path Fill="White" Data="M 2 0 L 6 4 L 10 0 L 12 0 L 12 2 L 8 6 L 12 10 L 12 12 L 10 12 L 6 8 L 2 12 L 0 12 L 0 10 L 4 6 L 0 2 L 0 0 Z" Margin="0" RenderTransformOrigin="0.5,0.5" Stretch="Fill" Width="14" Height="14" HorizontalAlignment="Left" d:LayoutOverrides="VerticalAlignment" Stroke="#8D000000"/>
+		</ToggleButton>
+		<ToggleButton x:Name="DownButton" HorizontalAlignment="Left" Margin="8,0,0,8" Width="40" Background="Black" Foreground="White" Height="27" VerticalAlignment="Bottom" Checked="EnsureUnchecked" >
+			<Path Fill="White" Data="M 0 0 L 6 6 L 12 0 Z"/>
+		</ToggleButton>  
+	</Grid>
+</UserControl>

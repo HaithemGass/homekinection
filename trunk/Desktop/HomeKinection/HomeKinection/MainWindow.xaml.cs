@@ -236,8 +236,9 @@ namespace HomeKinection
         public Player replayActor = new Player(0);
         SkeletalGesture currentGesture;
         List<SkeletalGesture> gestureLibrary;
-        RecognitionEngine gestureRecognizer;
+        public Dictionary<int, RecognitionEngine> gestureRecognizers;
 		private Dictionary<UInt64, ModuleBox> modules;
+        private Dictionary<String, Activity> activities;
 
 
         bool runningGameThread = false;
@@ -245,6 +246,95 @@ namespace HomeKinection
 
         Runtime nui = Runtime.Kinects[0];
         Recognizer recognizer = null;
+
+        void LoadActivities()
+        {
+            activities = new Dictionary<string, Activity>();
+            ActivitiesListBox.Items.Clear();
+            System.IO.DirectoryInfo modulesDir = new System.IO.DirectoryInfo(System.IO.Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.FullName + "\\Modules");
+            System.IO.FileInfo[] files = null;
+
+            // First, process all the files directly under this folder
+            try
+            {
+                files = modulesDir.GetFiles("*.ac"); //activity files.
+            }
+            // This is thrown if even one of the files requires permissions greater
+            // than the application provides.
+            catch (UnauthorizedAccessException e)
+            {
+                System.Console.WriteLine("There seems to be a problem with your file structure.\n" + e.Message);
+            }
+
+            foreach (System.IO.FileInfo fi in files)
+            {
+                Activity a = Activity.DeSerialize(fi.FullName);
+                activities.Add(a.name, a);
+            }
+            reloadActivityList();
+        }
+
+        void LoadModules()
+        {
+            modules = new Dictionary<ulong,ModuleBox>();
+            System.IO.DirectoryInfo modulesDir = new System.IO.DirectoryInfo(System.IO.Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.FullName + "\\Modules");
+            System.IO.FileInfo[] files = null;
+
+            // First, process all the files directly under this folder
+            try
+            {
+                files = modulesDir.GetFiles("*.md"); //module files.
+            }
+            // This is thrown if even one of the files requires permissions greater
+            // than the application provides.
+            catch (UnauthorizedAccessException e)
+            {
+                System.Console.WriteLine("There seems to be a problem with your file structure.\n" + e.Message);
+            }
+
+            foreach (System.IO.FileInfo fi in files)
+            {
+                ModuleBox b = ModuleBox.DeSerialize(fi.FullName);
+                switch (b.type)
+                {
+                    case MODULE_TYPE.DIMMER_MODULE:
+                        DimmerControlModule dc = (DimmerControlModule)b;
+                        DimmerControl d = new DimmerControl(ModulesList, dc.name, dc.location,
+                                dc.address, dc.uid, dc.type);
+
+                        ModulesList.Items.Add(d);
+
+                        modules.Add(dc.uid, (DimmerControlModule)d.FindResource("dataModel"));
+                        break;
+
+                    case MODULE_TYPE.SHADE_MODULE:
+                        ShadeControlModule sc = (ShadeControlModule)b;
+                        ShadeControl s = new ShadeControl(ModulesList, sc.name, sc.location,
+                                sc.address, sc.uid, sc.type);
+
+                        ModulesList.Items.Add(s);
+
+                        modules.Add(sc.uid, (ShadeControlModule)s.FindResource("dataModel"));
+                        break;
+
+                    case MODULE_TYPE.HID_MODULE:
+                        HIDControlModule hc = (HIDControlModule)b;
+                        HIDControl h = new HIDControl(ModulesList, hc.name, hc.location,
+                                hc.address, hc.uid, hc.type);
+
+                        ModulesList.Items.Add(h);
+
+                        modules.Add(hc.uid, (HIDControlModule)h.FindResource("dataModel"));
+                        break;
+
+
+                    default:
+                        break;
+                }
+            }
+
+            ModuleBox.modules = modules;
+        }
 
         void LoadGestureLibrary()
         {
@@ -275,9 +365,8 @@ namespace HomeKinection
                 GestureLibraryBox.Items.Add(sg);
 				IdleGesturePicker.Items.Add(sg);
             }
+            gestureRecognizers = new Dictionary<int, RecognitionEngine>();
 
-            gestureRecognizer = new RecognitionEngine(gestureLibrary);
-            gestureRecognizer.SawSomething += gestureRecognizer_SawSomething;
         }
 
         private Boolean isJointEnabled(JointID j)
@@ -361,7 +450,7 @@ namespace HomeKinection
                         if (firstPlayer)
                         {
                             Dispatcher.Invoke(DispatcherPriority.Send,
-                            new Action<SkeletalGesturePoint>(HandleGestureRecognizerFrame), new SkeletalGesturePoint(data, DateTime.Now));
+                            new Action<SkeletalGesturePoint, int>(HandleGestureRecognizerFrame), new SkeletalGesturePoint(data, DateTime.Now), iSkeletonSlot);
                         }
 
                         //only record Player 1?
@@ -423,6 +512,7 @@ namespace HomeKinection
                 {
                     // Player left scene since we aren't tracking it anymore, so remove from dictionary
                     players.Remove(player.Value.getId());
+                    gestureRecognizers.Remove(player.Value.getId());
                     break;
                 }
             }
@@ -506,13 +596,16 @@ namespace HomeKinection
            // }
         }
 
-
-        private NetworkProtocol networkProtocol;
+        
         private void Window_Loaded(object sender, EventArgs e)
         {
             skeletalVideo.ClipToBounds = true;
 
             UpdatePlayfieldSize();
+
+            LoadGestureLibrary();
+            LoadModules();
+            LoadActivities();
 
             if ((nui != null) && InitializeNui())
             {
@@ -521,7 +614,7 @@ namespace HomeKinection
                 
                 try
                 {
-                    recognizer = new Recognizer(keyWordTextBox.Text.Trim());
+                    recognizer = new Recognizer(keyWordTextBox.Text.Trim(), activities);
                 }
                 catch
                 {
@@ -548,13 +641,12 @@ namespace HomeKinection
             var networkThread = new Thread(NetworkThread);
             networkThread.SetApartmentState(ApartmentState.STA);
             networkThread.Start();
-            
-            LoadGestureLibrary();
+          
         }
 
         private void NetworkThread()
         {
-            networkProtocol = new NetworkProtocol(this); //make sure a different thread owns network protocol.
+            NetworkProtocol.InitializeNetworkProtocol(this); //make sure a different thread owns network protocol.
         }
 
         private void GameThread()
@@ -594,9 +686,21 @@ namespace HomeKinection
                     new Action<int>(HandleGameTimer), 0);
             }
         }
+        
 
-        private bool allowstop = false;
 
+        public void HandleStatusPacket(NetworkProtocol.UsartMessagePacket packet)
+        {
+            NetworkProtocol.StatusMessageData status = packet.statusPacket;
+            if(modules == null) return; //aww snap we have a status packet but no modules thats not good.
+            foreach (KeyValuePair<UInt64, ModuleBox> entry in modules)
+            {
+                if (entry.Value.address == status.shortAddress)
+                {
+                    entry.Value.handleStatusUpdate(status);
+                }
+            }
+        }
         public void HandleNetworkJoin(NetworkProtocol.UsartMessagePacket packet)
         {
 			if(modules == null || !(modules.ContainsKey(packet.networkPacket.deviceUID)))
@@ -613,91 +717,41 @@ namespace HomeKinection
 			{
 				//already know this guy but we rejoined... probably out short address changed when we power cycled.
 				modules[packet.networkPacket.deviceUID].address = packet.addr;
+                modules[packet.networkPacket.deviceUID].Serialize();
 			}
         }
 
-        private void HandleGestureRecognizerFrame(SkeletalGesturePoint sgp)
-        {
-            NetworkProtocol.ShadeCommandData shadePacket = new NetworkProtocol.ShadeCommandData();
-            NetworkProtocol.HIDCommandData hidPacket = new NetworkProtocol.HIDCommandData();
-            NetworkProtocol.DimmerCommandData dimmerPacket = new NetworkProtocol.DimmerCommandData();
-            shadePacket.Duration = 6000;
-            hidPacket.keySequence.length = 0;
-            
+        private void HandleGestureRecognizerFrame(SkeletalGesturePoint sgp, int player)
+        {      
+			
+            if (gestureRecognizers.ContainsKey(player))
+            {
+				bool gesturesEnabled = true;
+				foreach(ModuleBox m in modules.Values)
+				{
+					if(m.disableGestures)
+					{
+						gesturesEnabled = false;
+						m.updateAbsoluteControl(sgp);
+					}
+				}
 
-
-                if (gestureRecognizer != null)
+                if(gesturesEnabled)
+				{
+					gestureRecognizers[player].Update(SkeletalGesture.TransformPoint(sgp));
+				}
+				              
+            }
+            else
+            {
+                gestureRecognizers.Add(player, new RecognitionEngine(gestureLibrary));
+                gestureRecognizers[player].SawSomething += gestureRecognizer_SawSomething;
+                if (currentActivity != null)
                 {
-                    gestureRecognizer.Update(SkeletalGesture.TransformPoint(sgp));
-                    double yPrev = ySlider.Value;
-                    ySlider.Value = 100 * gestureRecognizer.VerticalSlider(SkeletalGesture.TransformPoint(sgp));
-
-                    double xPrev = xSlider.Value;
-                    xSlider.Value = 100 * gestureRecognizer.HorizontalSlider(SkeletalGesture.TransformPoint(sgp));
-
-                    double x, y;
-                    x = Math.Max(-127, Math.Min(128, xSlider.Value - xPrev));
-                    y = Math.Max(-127, Math.Min(128, ySlider.Value - yPrev));
-
-                    hidPacket.mouseData.Wheel = 0;
-                    hidPacket.mouseData.mouseButtons = 0;
-
-                    hidPacket.mouseData.X = (byte)(System.Convert.ToSByte(.8*(xSlider.Value-50)));
-                    hidPacket.mouseData.Y = (byte)(System.Convert.ToSByte(-.8* (ySlider.Value-50)));
-
-                    dimmerPacket.intensity = System.Convert.ToByte(ySlider.Value);
-
-                    if (ySlider.Value != yPrev)
-                    {
-                        
-                        foreach(var entry in modules)
-                        {
-
-                           if(entry.Value.type != MODULE_TYPE.DIMMER_MODULE) continue;
-							DimmerControlModule d = (DimmerControlModule)(entry.Value);
-							d.intensity = System.Convert.ToByte(ySlider.Value);
-                           // Dispatcher.Invoke(DispatcherPriority.Send,
-                           // new Action<UInt16, NetworkProtocol.DimmerCommandData>(networkProtocol.sendDimmerMessage), entry.Value.address, dimmerPacket);                         
-                        }                        
-                    }
-
-                    if (Math.Sqrt(Math.Pow((xSlider.Value - 50),2) + Math.Pow((ySlider.Value - 50),2)) > 10)
-                    {
-
-                        //NetworkProtocol.sendHIDMessage(serialPort, hidPacket);
-                       // Dispatcher.Invoke(DispatcherPriority.Send,
-                        //    new Action<UInt16, NetworkProtocol.HIDCommandData>(networkProtocol.sendHIDMessage), 0, hidPacket);
-                    }
-
-
-                    if (ySlider.Value > 85)
-                    {
-                        if (yPrev < 85)
-                        {
-                            shadePacket.ButtonMask = NetworkProtocol.SHADE_DIRECTION_UP;
-                            //NetworkProtocol.sendShadeMessage(serialPort, shadePacket);
-                            allowstop = true;
-                        }
-                    }
-                    else if (ySlider.Value < 15)
-                    {
-                        if (yPrev > 15)
-                        {
-                            shadePacket.ButtonMask = NetworkProtocol.SHADE_DIRECTION_DOWN;
-                            //NetworkProtocol.sendShadeMessage(serialPort, shadePacket);
-                            allowstop = true;
-                        }
-                    }
-                    else
-                    {
-                        if (allowstop)
-                        {
-                            shadePacket.ButtonMask = 0;
-                            //NetworkProtocol.sendShadeMessage(serialPort, shadePacket);
-                            allowstop = false;
-                        }
-                    }
+                    currentActivity.AttachGestureTriggers(gestureRecognizers[player]);
                 }
+            }
+
             
         }
 
@@ -717,25 +771,6 @@ namespace HomeKinection
         }
         private void HandleGameTimer(int param)
         {
-            // Every so often, notify what our actual framerate is
-            if ((frameCount % 100) == 0)
-               // fallingThings.SetFramerate(1000.0 / actualFrameTime);
-
-            // Advance animations, and do hit testing.
-            for (int i = 0; i < NumIntraFrames; ++i)
-            {
-                foreach (var pair in players)
-                {
-                   // HitType hit = fallingThings.LookForHits(pair.Value.segments, pair.Value.getId());
-                  //  if ((hit & HitType.Squeezed) != 0)
-                  //      squeezeSound.Play();
-                  //  else if ((hit & HitType.Popped) != 0)
-                 //       popSound.Play();
-                  //  else if ((hit & HitType.Hand) != 0)
-                   //     hitSound.Play();
-                }
-                //fallingThings.AdvanceFrame();
-            }
 
             // Draw new Wpf scene by adding all objects to canvas
             skeletalVideo.Children.Clear();
@@ -762,19 +797,21 @@ namespace HomeKinection
 
 
         void recognizer_SaidSomething(object sender, Recognizer.SaidSomethingArgs e)
-        {            
-            //FlyingText.NewFlyingText(screenRect.Width / 30, new Point(screenRect.Width / 2, screenRect.Height / 2), e.Matched);
+        {
+            PeekingText.NewPeek(e.Matched, screenRect, .01, Color.FromArgb(200, 255, 255, 255));
             AudioTextBox.Text = AudioTextBox.Text + e.Matched + "\n";
-            switch (e.Verb)
-            {
-               
-                case Recognizer.Verbs.Record:
+              
+                 if(e.Matched.Equals(Recognizer.RecordString))
                     BeginGestureRecording();
-                    break;
-                case Recognizer.Verbs.StopRecord:
+
+                 if (e.Matched.Equals(Recognizer.StopRecordString))
                     StopGestureRecording();
-                    break;
-            }
+				
+				if(activities.ContainsKey(e.Matched.Trim('.')))
+				{
+					SwitchActivityContext(activities[e.Matched.Trim('.')]);
+				}
+
         }
 
         private void BeginGestureRecording()
@@ -847,6 +884,7 @@ namespace HomeKinection
 
         private void ReplayThread()
         {
+            if (currentGesture.gestureData.Count < 1) return;
             SkeletalGesturePoint previous = currentGesture.gestureData[0]; //maybe dangerous
             
             foreach (SkeletalGesturePoint p in currentGesture.gestureData)
@@ -895,14 +933,7 @@ namespace HomeKinection
 
                 Dispatcher.Invoke(DispatcherPriority.Send,
                   new Action<int>(HandleReplayFrame), 0); // need to inform UI thread to draw stuff.
-
-                //DateTime t1 = p.timestamp;
-                //DateTime t2 = previous.timestamp;
-                //long ticks = (Math.Abs(t1.Ticks - t2.Ticks)); // should always be positive but just in case
-                //if (ticks > 0)
-                //{
-                    //Thread.Sleep((int)(ticks/10000)); //conversion
-                //}
+               
                 Thread.Sleep(22);
             }
             isRecordable = true;
@@ -928,7 +959,7 @@ namespace HomeKinection
         {
         	if (recognizer != null)
             {
-                recognizer.BuildGrammar(keyWordTextBox.Text.Trim());
+                recognizer.BuildGrammar(keyWordTextBox.Text.Trim(), activities);
             }
         }
 
@@ -986,7 +1017,11 @@ namespace HomeKinection
 
         private void updateIdleGesture(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-        	gestureRecognizer.setIdleGesture((SkeletalGesture)IdleGesturePicker.SelectedItem);
+            foreach (KeyValuePair<int, RecognitionEngine> entry in gestureRecognizers)
+            {
+                entry.Value.setIdleGesture((SkeletalGesture)IdleGesturePicker.SelectedItem);
+            }
+        	
         }
 
         private void enableIdle(object sender, System.Windows.RoutedEventArgs e)
@@ -1011,28 +1046,43 @@ namespace HomeKinection
 			if(modules == null) modules = new Dictionary<UInt64,ModuleBox>();
 			
             //add to Array here!!!
-            NewModulePopup.IsOpen = false;	
+            NewModulePopup.IsOpen = false;            
 			switch(moduleToSave.type)
 			{
 				case MODULE_TYPE.DIMMER_MODULE:
 					DimmerControl dc = 
-					new DimmerControl(networkProtocol, ModuleNameBox.Text.ToString(), ModuleLocationBox.Text.ToString(), 
+					new DimmerControl(ModulesList, ModuleNameBox.Text.ToString(), ModuleLocationBox.Text.ToString(), 
 						moduleToSave.address,moduleToSave.uid, moduleToSave.type);
 			
-					ModulesList.Items.Add(dc);
-			
-					modules.Add(moduleToSave.uid, (ModuleBox)dc.FindResource("dataModel"));
+					ModulesList.Items.Add(dc);			        
+					modules.Add(moduleToSave.uid, (DimmerControlModule)dc.FindResource("dataModel"));                    
+                    DimmerControlModule d = (DimmerControlModule)dc.FindResource("dataModel");
+					d.Serialize();
 			    break;
 					
 				case MODULE_TYPE.SHADE_MODULE:
 					ShadeControl sc = 
-					new ShadeControl(networkProtocol, ModuleNameBox.Text.ToString(), ModuleLocationBox.Text.ToString(), 
+					new ShadeControl(ModulesList, ModuleNameBox.Text.ToString(), ModuleLocationBox.Text.ToString(), 
 						moduleToSave.address,moduleToSave.uid, moduleToSave.type);
 			
 					ModulesList.Items.Add(sc);
 			
-					modules.Add(moduleToSave.uid, (ModuleBox)sc.FindResource("dataModel"));
+					modules.Add(moduleToSave.uid, (ShadeControlModule)sc.FindResource("dataModel"));
+                    ShadeControlModule s = (ShadeControlModule)sc.FindResource("dataModel");
+					s.Serialize();
 			    break;
+
+                case MODULE_TYPE.HID_MODULE:
+                HIDControl hc =
+                new HIDControl(ModulesList, ModuleNameBox.Text.ToString(), ModuleLocationBox.Text.ToString(),
+                    moduleToSave.address, moduleToSave.uid, moduleToSave.type);
+
+                ModulesList.Items.Add(hc);
+
+                modules.Add(moduleToSave.uid, (HIDControlModule)hc.FindResource("dataModel"));
+				HIDControlModule h = (HIDControlModule)hc.FindResource("dataModel");	
+                h.Serialize();
+                break;
 					
 				default:
 				break;
@@ -1040,7 +1090,386 @@ namespace HomeKinection
 			
 			
         }
+		
+		
 
-        
+		private void reloadNewIRPicker()
+		{
+			NewIRPicker.Items.Clear();
+			foreach(String s in IRControlModule.getDeviceList())
+			{
+				NewIRPicker.Items.Add(s);
+			}
+			String newItem = "New...";
+			NewIRPicker.Items.Add(newItem);
+		}
+		
+        private void AddDeviceToIRCommandList(object sender, System.Windows.RoutedEventArgs e)
+        {
+        	IRControlModule.addDevice(NewDeviceNameBox.Text);
+			NewDevicePopup.IsOpen = false;
+			reloadNewIRPicker();
+			for(int i = 0; i < NewIRPicker.Items.Count; i++)
+			{
+				if(NewIRPicker.Items[i].ToString().Equals(NewDeviceNameBox.Text))
+				{
+					NewIRPicker.SelectedIndex = i;
+				}
+			}
+        }
+
+        private void NewIRDeviceSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+        	if(NewIRPicker.SelectedIndex + 1 > IRControlModule.getDeviceList().Count)
+			{
+				NewDevicePopup.IsOpen = true;	
+			}
+        }
+
+		private IRControlModule.IRCommand IRCommandToSave;
+		
+		public void HandleNewIRCommand(IRControlModule.IRCommand command)
+        {
+			reloadNewIRPicker();
+			IRCommandToSave = command;
+			NewIRBox.Text = "";
+			IRRecordPopup.IsOpen = true;
+		}
+
+		private void SaveNewIRCommand(object sender, System.Windows.RoutedEventArgs e)
+		{
+			IRCommandToSave.name = NewIRBox.Text;
+			IRControlModule.addCommand(NewIRPicker.SelectedItem.ToString(), IRCommandToSave);
+			IRRecordPopup.IsOpen = false;
+		}
+
+		private void AddNewActivity(object sender, System.Windows.RoutedEventArgs e)
+		{
+            if (activities == null)
+            {
+                activities = new Dictionary<string, Activity>();
+            }
+            NewActivityPopup.IsOpen = true;
+			currentEditActivity = new Activity();
+			reloadTriggersList();
+			reloadEntranceActionsList();
+		}
+
+		private void SaveNewActivity(object sender, System.Windows.RoutedEventArgs e)
+		{
+			if(ActivityNameText.Text.Equals("")) return;
+			if(!activities.ContainsKey(ActivityNameText.Text))
+			{				
+				currentEditActivity.name = ActivityNameText.Text;
+				activities.Add(currentEditActivity.name, currentEditActivity);
+			}
+			else
+			{
+				//This if for editing an existing.
+				currentEditActivity = activities[ActivityNameText.Text]; 
+				reloadTriggersList();
+			}
+			
+			NewActivityPopup.IsOpen = false;
+			ActivityNameText.Text = "";
+			reloadActivityList();
+			reloadTriggersList();
+
+            if (recognizer != null)
+            {
+                recognizer.BuildGrammar(keyWordTextBox.Text.Trim(), activities);
+            }
+
+            currentEditActivity.Serialize();
+
+		}
+		
+		private Activity currentEditActivity;
+		
+		private void reloadTriggersList()
+		{
+			TriggersListBox.Items.Clear();
+			
+			foreach(ActivityTrigger t in currentEditActivity.triggers)
+			{
+				TriggersListBox.Items.Add(t.name);
+			}
+		}
+		
+		private void reloadActivityList()
+		{
+			ActivitiesListBox.Items.Clear();
+		
+			foreach(String s in activities.Keys)
+			{
+				ActivitiesListBox.Items.Add(s);
+			}
+		}
+		
+		private void reloadActionsList()
+		{
+			ActionsListBox.Items.Clear();
+		
+			foreach(ActivityAction a in currentEditTrigger.actions)
+			{
+				ActionsListBox.Items.Add(a.name);
+			}
+		}
+		
+		private void reloadEntranceActionsList()
+		{
+			EntranceActionsListBox.Items.Clear();
+		
+			foreach(ActivityAction a in currentEditActivity.entranceTrigger.actions)
+			{
+				EntranceActionsListBox.Items.Add(a.name);
+			}
+		}
+		
+		private void loadModulesToNewActionPopup()
+		{
+			NewActionModuleComboBox.Items.Clear();
+			foreach(ModuleBox mb in modules.Values)
+			{
+				NewActionModuleComboBox.Items.Add(mb);
+			}
+		}
+
+		private ActivityTrigger currentEditTrigger;
+		
+		private void AddNewTrigger(object sender, System.Windows.RoutedEventArgs e)
+		{			
+            NewTriggerPopup.IsOpen = true;
+			currentEditTrigger = new ActivityTrigger();			
+			NewTriggerVoiceToggle.IsChecked = false;
+			NewTriggerGestureToggle.IsChecked = false;
+			NewTriggerVoiceBox.Text = "";
+			NewTriggerGestureBox.Items.Clear();
+			addGesturesToTriggerBox();
+			reloadActionsList();
+		}
+		
+		private void addGesturesToTriggerBox()
+		{
+			foreach(SkeletalGesture g in gestureLibrary)
+			{
+				NewTriggerGestureBox.Items.Add(g);
+			}
+			
+		}
+
+		private void SaveNewTrigger(object sender, System.Windows.RoutedEventArgs e)
+		{			
+			currentEditTrigger.name = "";
+			if(currentEditTrigger.voiceEnable)
+			{
+				currentEditTrigger.name += "VOICE: " + currentEditTrigger.voiceCondition + " ";
+			} 
+			if(currentEditTrigger.gestureEnable)
+			{
+				currentEditTrigger.name += "GESTURE: " + currentEditTrigger.gestureCondition;
+			} 
+			currentEditActivity.triggers.Add(currentEditTrigger);
+			
+			NewTriggerPopup.IsOpen = false;			
+			reloadTriggersList();
+		}
+
+		private void EditCurrentActivity(object sender, System.Windows.RoutedEventArgs e)
+		{
+			
+			if(ActivitiesListBox.SelectedItem == null || !activities.ContainsKey(ActivitiesListBox.SelectedItem.ToString())) return;
+			//delete OLD HERE
+			
+			NewActivityPopup.IsOpen = true;			
+			currentEditActivity = activities[ActivitiesListBox.SelectedItem.ToString()];
+            activities[ActivitiesListBox.SelectedItem.ToString()].DeleteFile();
+			ActivityNameText.Text = currentEditActivity.name;			
+			reloadTriggersList();
+		}
+
+		private void DeleteTrigger(object sender, System.Windows.RoutedEventArgs e)
+		{
+			if(TriggersListBox.SelectedIndex < 0 || TriggersListBox.SelectedIndex > currentEditActivity.triggers.Count) return;
+			currentEditActivity.triggers.RemoveAt(TriggersListBox.SelectedIndex);				
+			reloadTriggersList();
+
+		}
+
+		private void DeleteActivity(object sender, System.Windows.RoutedEventArgs e)
+		{
+		  // TODO: Delete off file system as well... once we actually get that working
+			if(ActivitiesListBox.SelectedItem == null || !activities.ContainsKey(ActivitiesListBox.SelectedItem.ToString())) return;
+            activities[ActivitiesListBox.SelectedItem.ToString()].DeleteFile();
+			activities.Remove(ActivitiesListBox.SelectedItem.ToString());
+			reloadActivityList();
+		}
+
+		private ActivityAction currentEditTriggerAction;
+		
+		
+		private void addNewTriggerAction(object sender, System.Windows.RoutedEventArgs e)
+		{
+			NewActionPopup.IsOpen = true;
+			currentEditTriggerAction = new ActivityAction();
+            NewActionItemControl.Items.Clear();	
+			NewActionSaveButton.Visibility = System.Windows.Visibility.Hidden;
+			loadModulesToNewActionPopup();
+		}
+
+		private void DeleteAction(object sender, System.Windows.RoutedEventArgs e)
+		{
+			if(ActionsListBox.SelectedIndex < 0 || ActionsListBox.SelectedIndex > currentEditTrigger.actions.Count) return;
+			currentEditTrigger.actions.RemoveAt(ActionsListBox.SelectedIndex);				
+			reloadActionsList();
+		}
+
+		private void SaveNewAction(object sender, System.Windows.RoutedEventArgs e)
+		{
+			currentEditTriggerAction.name = currentEditModule.name;
+			currentEditTriggerAction.packet = currentEditModuleAction.packet;
+            currentEditTriggerAction.absoluteControl = currentEditModuleAction.enableAbsoluteControl;
+            currentEditTriggerAction.module = currentEditModule;
+			currentEditTrigger.actions.Add(currentEditTriggerAction);
+			NewActionPopup.IsOpen = false;			
+			reloadActionsList();
+			reloadEntranceActionsList(); // just in case
+		}
+
+		private ModuleBox currentEditModule;
+		private ModuleAction currentEditModuleAction; 
+		private void UpdateActionModule(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+		{
+			if(NewActionModuleComboBox.SelectedItem == null) return;
+			currentEditModule = (ModuleBox)NewActionModuleComboBox.SelectedItem;
+			NewActionItemControl.Items.Clear();		
+			currentEditModuleAction = new ModuleAction();
+			NewActionSaveButton.Visibility = System.Windows.Visibility.Visible;
+			switch(currentEditModule.type)
+			{
+				case MODULE_TYPE.DIMMER_MODULE:
+					DimmerAction da = new DimmerAction(currentEditModule.address);
+					NewActionItemControl.Items.Add(da);
+					currentEditModuleAction = da.action;
+					break;
+				
+				case MODULE_TYPE.SHADE_MODULE:
+					ShadeAction sa = new ShadeAction(currentEditModule.address);
+					NewActionItemControl.Items.Add(sa);
+					currentEditModuleAction = sa.action;
+					break;
+					
+				case MODULE_TYPE.HID_MODULE:
+					HIDAction ha = new HIDAction(currentEditModule.address);
+					NewActionItemControl.Items.Add(ha);
+					currentEditModuleAction = ha.action;
+					break;
+					
+				default:
+					break;
+			}
+			
+			
+		}
+
+		private void SetTriggerVoiceEnable(object sender, System.Windows.RoutedEventArgs e)
+		{
+			currentEditTrigger.voiceEnable = true;
+		}
+		private void ClearTriggerVoiceEnable(object sender, System.Windows.RoutedEventArgs e)
+		{
+			currentEditTrigger.voiceEnable = false;
+		}
+		private void SetTriggerGestureEnable(object sender, System.Windows.RoutedEventArgs e)
+		{
+			currentEditTrigger.gestureEnable =  true;  
+		}
+		private void ClearTriggerGestureEnable(object sender, System.Windows.RoutedEventArgs e)
+		{
+			currentEditTrigger.gestureEnable = false;
+		}
+
+		private void UpdateTriggerVoiceText(object sender, System.Windows.Controls.TextChangedEventArgs e)
+		{
+			currentEditTrigger.voiceCondition = NewTriggerVoiceBox.Text;
+		}
+		private void UpdateTriggerGestureText(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+		{
+			if(NewTriggerGestureBox.SelectedItem == null) return;
+			currentEditTrigger.gestureCondition = NewTriggerGestureBox.SelectedItem.ToString();
+		}
+
+		
+		private Activity currentActivity;
+		
+		private void StartActivityContext(object sender, System.Windows.RoutedEventArgs e)
+		{
+			if(ActivitiesListBox.SelectedItem == null) return;
+			
+			SwitchActivityContext(activities[ActivitiesListBox.SelectedItem.ToString()]);
+           
+			
+		}
+		private void SwitchActivityContext(Activity a)
+		{
+			if(currentActivity != null)
+			{
+				currentActivity.exitTrigger.ActivateActions();
+                foreach(RecognitionEngine re in gestureRecognizers.Values)
+                {
+                    currentActivity.DetachGestureTriggers(re);
+                }
+                currentActivity.DetachVoiceTriggers(recognizer);
+			}
+			currentActivity = a;
+            foreach (RecognitionEngine re in gestureRecognizers.Values)
+            {
+                currentActivity.AttachGestureTriggers(re);
+            }
+            currentActivity.AttachVoiceTriggers(recognizer);
+			currentActivity.entranceTrigger.ActivateActions();
+		}
+
+		private void EditTrigger(object sender, System.Windows.RoutedEventArgs e)
+		{			
+			if(TriggersListBox.SelectedIndex < 0 || TriggersListBox.SelectedIndex > currentEditActivity.triggers.Count) return;
+			currentEditTrigger = currentEditActivity.triggers[TriggersListBox.SelectedIndex];
+			currentEditActivity.triggers.RemoveAt(TriggersListBox.SelectedIndex);
+			NewTriggerPopup.IsOpen = true;			
+			NewTriggerVoiceToggle.IsChecked = currentEditTrigger.voiceEnable;
+			NewTriggerGestureToggle.IsChecked = currentEditTrigger.gestureEnable;
+			NewTriggerVoiceBox.Text = currentEditTrigger.voiceCondition;
+			NewTriggerGestureBox.Items.Clear();
+			addGesturesToTriggerBox();
+			foreach(Object o in NewTriggerGestureBox.Items)
+			{
+				if(o.ToString().Equals(currentEditTrigger.gestureCondition))
+				{
+					NewTriggerGestureBox.SelectedItem = o;
+				}
+					
+			}
+			reloadActionsList();
+			
+		}
+
+		private void AddNewEntranceAction(object sender, System.Windows.RoutedEventArgs e)
+		{
+			currentEditTrigger = currentEditActivity.entranceTrigger;
+			addNewTriggerAction(sender, e);
+		}  
+		private void AddNewExitAction(object sender, System.Windows.RoutedEventArgs e)
+		{
+			currentEditTrigger = currentEditActivity.exitTrigger;
+			addNewTriggerAction(sender, e);
+		}
+
+		private void DeleteEntranceAction(object sender, System.Windows.RoutedEventArgs e)
+		{
+			
+			if(EntranceActionsListBox.SelectedIndex < 0 || EntranceActionsListBox.SelectedIndex > currentEditActivity.entranceTrigger.actions.Count) return;
+			currentEditActivity.entranceTrigger.actions.RemoveAt(EntranceActionsListBox.SelectedIndex);				
+			reloadEntranceActionsList();
+		} 
     }
 }

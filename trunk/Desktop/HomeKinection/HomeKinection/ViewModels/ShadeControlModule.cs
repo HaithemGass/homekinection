@@ -6,10 +6,10 @@ using System.ComponentModel;
 
 namespace HomeKinection
 {
+    [Serializable]
     public class ShadeControlModule : ModuleBox
-	{
-		
-		public NetworkProtocol network;
+	{	
+        [NonSerialized]
 		private NetworkProtocol.ShadeCommandData Packet;		
 		public NetworkProtocol.ShadeCommandData packet{
             get
@@ -19,7 +19,7 @@ namespace HomeKinection
             set
             {
                 Packet = value;
-				if(network != null) network.sendShadeMessage(address, Packet);
+                if (NetworkProtocol.Initialized) NetworkProtocol.sendShadeMessage(address, Packet);
                 NotifyPropertyChanged("packet");
             }						
         }

@@ -24,7 +24,7 @@ using HomeKinection_Speech;
 
 namespace HomeKinection
 {
-    class RecognitionEngine
+    public class RecognitionEngine
     {        
         private enum spikeState
         {
@@ -414,23 +414,37 @@ namespace HomeKinection
             return dist;
         }
 		
-		private double JointDistance(KinectJoint j1, KinectJoint j2)
+		private static double JointDistance(KinectJoint j1, KinectJoint j2)
 		{
 			return Math.Sqrt(Math.Pow(j1.Position.X - j2.Position.X,2) + Math.Pow(j1.Position.Y - j2.Position.Y,2) + Math.Pow(j1.Position.Z - j2.Position.Z,2));
 		}
 		
-        public double VerticalSlider(SkeletalGesturePoint sgp)
+		private static double JointAngle(KinectJoint j1, KinectJoint j2, KinectJoint j3)
+		{
+			double a = JointDistance(j1,j3);
+			double b = JointDistance(j2,j3);
+			double c = JointDistance(j2,j1);
+			return Math.Acos((Math.Pow(b,2) + Math.Pow(c,2) - Math.Pow(a,2))/(2*b*c));
+		}
+		
+        static public double VerticalExtent(SkeletalGesturePoint sgp)
         {
 			double armSpan = JointDistance(sgp.skeletalData.Joints[JointID.WristRight], sgp.skeletalData.Joints[JointID.ElbowRight]) + JointDistance(sgp.skeletalData.Joints[JointID.ShoulderRight], sgp.skeletalData.Joints[JointID.ElbowRight]);			
             return Math.Min( 1, Math.Max(0, (sgp.skeletalData.Joints[JointID.HandRight].Position.Y - (sgp.skeletalData.Joints[JointID.ShoulderRight].Position.Y - armSpan)/
                 (2*armSpan))));  
         }
 		
-		public double HorizontalSlider(SkeletalGesturePoint sgp)
+		static public double HorizontalExtent(SkeletalGesturePoint sgp)
         {
             double armSpan = JointDistance(sgp.skeletalData.Joints[JointID.WristRight], sgp.skeletalData.Joints[JointID.ElbowRight]) + JointDistance(sgp.skeletalData.Joints[JointID.ShoulderRight], sgp.skeletalData.Joints[JointID.ElbowRight]);			
             return Math.Min( 1, Math.Max(0, (sgp.skeletalData.Joints[JointID.HandRight].Position.X - (sgp.skeletalData.Joints[JointID.ShoulderRight].Position.X - armSpan)/
                 (2*armSpan))));  
+        }
+		
+		static public bool ForwardFlick(SkeletalGesturePoint sgp)
+        {
+            double angle = JointAngle(sgp.skeletalData.Joints[JointID.HandRight], sgp.skeletalData.Joints[JointID.WristRight], sgp.skeletalData.Joints[JointID.ElbowRight]);			
+			return false;
         }
     }
 }

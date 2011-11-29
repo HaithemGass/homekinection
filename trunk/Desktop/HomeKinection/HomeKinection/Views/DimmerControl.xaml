@@ -6,7 +6,7 @@
 	xmlns:local="clr-namespace:HomeKinection"
 	mc:Ignorable="d"
 	x:Class="HomeKinection.DimmerControl"
-	x:Name="UserControl" Height="100" Width="400">
+	x:Name="UserControl" Height="120" Width="400">
 
 	<UserControl.Resources>
 		<local:DimmerControlModule x:Key="dataModel" d:IsDataSource="True" />	
@@ -14,17 +14,20 @@
 	
 
 	
-	<Grid x:Name="Grid" DataContext="{Binding Source={StaticResource dataModel}}">
-		<Rectangle Fill="#3D1A1A1A" Margin="8"/>
-		<Label x:Name="locationTitle" Content="Location:" HorizontalAlignment="Left" Margin="38,37.96,0,36.08" Foreground="White" d:LayoutOverrides="Height"/>
-		<Label x:Name="nameLabel" Content="{Binding name}" Foreground="White" Margin="112.459,8,8,0" RenderTransformOrigin="-0.2,0.698" VerticalAlignment="Top" Height="27.96"/>
-		<Label x:Name="locationLabel" Content="{Binding location}" Margin="112.459,37.96,8,37.08" Foreground="White"/>
-		<Label x:Name="nameTitle" Content="Name:" HorizontalAlignment="Left" Margin="40.976,0,0,65.04" Foreground="White" VerticalAlignment="Bottom"/>
-		<Label x:Name="intensityTitle" Content="Intensity:" HorizontalAlignment="Left" Margin="38,0,0,12.12" Foreground="White" RenderTransformOrigin="0.554,2.775" VerticalAlignment="Bottom"/>
-		<Label x:Name="intensityLabel" Content="{Binding intensity}" HorizontalAlignment="Left" Foreground="White" Margin="112.459,0,0,10" RenderTransformOrigin="-0.2,0.698" VerticalAlignment="Bottom"/>
-		<Slider x:Name="intensitySlider" Margin="198,0,9,11.08" Maximum="100" Value="{Binding intensity, FallbackValue=0, Source={StaticResource dataModel}}" SmallChange="1" TickPlacement="BottomRight" TickFrequency="5" LargeChange="5" VerticalAlignment="Bottom"/>
-		<Rectangle Fill="#FF2B2B2B" HorizontalAlignment="Left" Margin="8,8,0,8" Width="26"/>
-		<TextBlock HorizontalAlignment="Left" Margin="-28.486,41.5,0,41.5" TextWrapping="Wrap" Text="DIMMER" Width="97.273" RenderTransformOrigin="0.5,0.5" Foreground="#FF81C274" FontSize="14.667" VerticalAlignment="Center" TextAlignment="Center">
+	<Grid x:Name="Grid" DataContext="{Binding Source={StaticResource dataModel}}" Height="120">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="0*"/>
+			<ColumnDefinition/>
+		</Grid.ColumnDefinitions>
+		<Rectangle Fill="#3D1A1A1A" Margin="8" Grid.Column="1"/>
+		<Label x:Name="locationTitle" Content="Location:" HorizontalAlignment="Left" Margin="37.866,42,0,48" Foreground="White" Grid.Column="1" FontWeight="Bold" FontSize="14.667" Height="30"/>
+		<Label x:Name="nameLabel" Content="{Binding name}" Foreground="#FFA586CC" Margin="112.459,9.334,152.541,0" RenderTransformOrigin="-0.2,0.698" Height="28" VerticalAlignment="Top" FontFamily="Segoe UI Light" FontSize="14.667" Width="135" Grid.Column="1" d:LayoutOverrides="GridBox"/>
+		<Label x:Name="locationLabel" Content="{Binding location}" Margin="112.459,42,152.541,48" Foreground="#FFA586CC" FontFamily="Segoe UI Light" FontSize="14.667" Width="135" Height="28" Grid.Column="1" d:LayoutOverrides="GridBox"/>
+		<Label x:Name="nameTitle" Content="Name:" HorizontalAlignment="Left" Margin="37.866,0,0,82" Foreground="White" VerticalAlignment="Bottom" Grid.Column="1" FontWeight="Bold" FontSize="14.667" Height="30"/>
+		<Label x:Name="intensityLabel" Content="{Binding intensity}" Foreground="White" RenderTransformOrigin="-0.2,0.698" VerticalAlignment="Bottom" Grid.Column="1" Padding="2" HorizontalAlignment="Right" Width="29" Margin="0,0,170,4.762" d:LayoutOverrides="HorizontalAlignment" FontSize="9.333"/>
+		<Slider x:Name="intensitySlider" Margin="199.133,79.96,8,0" Maximum="100" Value="{Binding intensity, FallbackValue=0}" SmallChange="1" TickPlacement="BottomRight" TickFrequency="5" LargeChange="5" VerticalAlignment="Top" Grid.Column="1" Height="22" Width="190" ValueChanged="adjustNumberPosition"/>
+		<Rectangle Fill="#FF2B2B2B" HorizontalAlignment="Left" Margin="8,8,0,8" Width="26" Grid.Column="1"/>
+		<TextBlock HorizontalAlignment="Left" Margin="-28.486,41.5,0,41.5" TextWrapping="Wrap" Text="DIMMER" Width="97.273" RenderTransformOrigin="0.5,0.5" Foreground="#FF81C274" FontSize="14.667" VerticalAlignment="Center" TextAlignment="Center" Grid.Column="1">
 			<TextBlock.RenderTransform>
 				<TransformGroup>
 					<ScaleTransform/>
@@ -34,5 +37,26 @@
 				</TransformGroup>
 			</TextBlock.RenderTransform>
 		</TextBlock>
+		<CheckBox Content="Fade  " Margin="256.247,17.689,17.866,44.371" RenderTransformOrigin="0.092,1.441" Foreground="White" IsChecked="{Binding fadeToValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource CheckBoxStyle1}" Grid.Column="1" d:LayoutOverrides="Width">
+			<CheckBox.RenderTransform>
+				<TransformGroup>
+					<ScaleTransform ScaleX="0.85" ScaleY="0.85"/>
+					<SkewTransform/>
+					<RotateTransform/>
+					<TranslateTransform X="0.9" Y="0.9"/>
+				</TransformGroup>
+			</CheckBox.RenderTransform>
+		</CheckBox>
+		  <Button x:Name="DeleteButton" Margin="0,3.356,3.202,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" d:LayoutOverrides="VerticalAlignment" HorizontalAlignment="Right" Width="20" Grid.Column="1" Click="DeleteModule">  	
+  			<Path Fill="White" Data="M 2 0 L 6 4 L 10 0 L 12 0 L 12 2 L 8 6 L 12 10 L 12 12 L 10 12 L 6 8 L 2 12 L 0 12 L 0 10 L 4 6 L 0 2 L 0 0 Z" Margin="0" RenderTransformOrigin="0.5,0.5" Stretch="Fill" Width="14" Height="14" HorizontalAlignment="Left" d:LayoutOverrides="VerticalAlignment" Stroke="#8D000000"/>
+  		  </Button>
+		  <Button x:Name="SaveButton" Margin="0,3.356,3.202,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" d:LayoutOverrides="VerticalAlignment" Grid.Column="1" Visibility="Hidden" Click="SaveModule">  	
+  	<Path Fill="White" Data="M 12 0 L 12 2 L 5 12 L 0 8 L 2 6 L 5 8 Z" Margin="0" RenderTransformOrigin="0.5,0.5" Stretch="Fill" Width="14" Height="14" HorizontalAlignment="Left" d:LayoutOverrides="VerticalAlignment" Stroke="#8D000000"/>
+  </Button>
+  <Button x:Name="EditButton" Margin="0,24.02,3.202,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" d:LayoutOverrides="VerticalAlignment" Grid.Column="1" Click="EditModule">  	
+  	<Path Fill="White" Data="M 5 7 L 3 7 L 1 5 L 1 3 L 2 4 L 3 5  L 5 3 L 3 1 L 5 1 L 7 3 L 7 5 L 10 8 L 12 8 L 14 10 L 14 12 L 12 10 L 10 12 L 12 14 L 10 14 L 8 12 L 8 10 Z" Margin="0" RenderTransformOrigin="0.5,0.5" Stretch="Fill" Width="14" Height="14" HorizontalAlignment="Left" d:LayoutOverrides="VerticalAlignment" Stroke="#8D000000"/>
+  </Button>
+  <TextBox x:Name="NameTextBox" Grid.Column="1" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Margin="112.948,10.667,0,0" Height="30" Width="135" Text="{Binding name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Background="#FF2B2A2A" Foreground="#FFA586CC" FontFamily="Segoe UI Light" FontSize="14.667" Visibility="Hidden"/>
+  <TextBox x:Name="LocationTextBox" Grid.Column="1" TextWrapping="Wrap" Text="{Binding location, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="112.948,44.667,152.052,45.333" Background="#FF2B2A2A" Foreground="#FFA586CC" FontFamily="Segoe UI Light" FontSize="14.667" Visibility="Hidden"/>  
 	</Grid>
 </UserControl>

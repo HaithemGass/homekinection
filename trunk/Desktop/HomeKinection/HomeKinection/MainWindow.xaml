@@ -9,10 +9,11 @@
 	</Window.Resources>
     <Grid>
     	<Grid.ColumnDefinitions>
-    		<ColumnDefinition Width="0.187*"/>
-    		<ColumnDefinition Width="0.813*"/>
+    		<ColumnDefinition Width="0*"/>
+    		<ColumnDefinition/>
+    		<ColumnDefinition Width="0*"/>
     	</Grid.ColumnDefinitions>
-		<TabControl x:Name="tabs" Margin="0,0,-1,0.5" Width="600" Height="520" Background="#FF3F3F3F" Grid.ColumnSpan="2">
+		<TabControl x:Name="tabs" Margin="0,0,-1,0.5" Width="600" Height="520" Background="#FF3F3F3F" Grid.ColumnSpan="2" Grid.Column="1">
 			<TabItem x:Name="HomeTab" Header="Home" Margin="0" FontStyle="Normal" FontWeight="Bold" Width="148" Height="25">
 				<Grid x:Name="homeGrid" d:LayoutOverrides="Margin" Width="600" Height="420">
 					<Grid x:Name="liveGrid" Margin="39.479,34.167,274.781,182">
@@ -102,17 +103,117 @@
 					</Popup>
 				</Grid>
 			</TabItem>
-			<TabItem x:Name="activityTab" Header="Activities" FontWeight="Bold" FontStyle="Normal" Margin="0,0.04,0,-0.04" d:LayoutOverrides="HorizontalAlignment" Width="148"/>
+			<TabItem x:Name="activityTab" Header="Activities" FontWeight="Bold" FontStyle="Normal" Margin="0,0.04,0,-0.04" d:LayoutOverrides="HorizontalAlignment" Width="148">
+				<Grid>
+					<Popup x:Name="NewActivityPopup" Placement="Center" AllowsTransparency="True" PopupAnimation="Fade" Visibility="Visible">
+						<Grid x:Name="NewActivityGrid" Background="#DB1F1D25" Height="549" Width="294.5">
+							<Label Content="Name" Margin="20,49,0,0" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+							<Label Content="Triggers" Margin="20,228.96,0,0" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+							<Button x:Name="NewActivitySaveButton" Content="Save" Margin="0,0,8.5,8" Background="Black" Foreground="White" Click="SaveNewActivity" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="75"/>
+							<Label Content="Activity" Margin="118,8,113.556,0" VerticalAlignment="Top" Foreground="White" FontSize="14.667" d:LayoutOverrides="Width"/>
+							<TextBox x:Name="ActivityNameText" Margin="67.423,53,32.5,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+							<ListBox x:Name="TriggersListBox" Margin="41,257,32.5,199.96"/>
+							<Button x:Name="AddTriggerButton" Margin="0,257.92,8.5,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" Content="+" Padding="1,-4,1,0" FontSize="16" Click="AddNewTrigger"/>
+							<Button x:Name="RemoveTriggerButton" Margin="0,301.92,8.5,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" Content="-" FontSize="16" Padding="1,-5,1,1" Click="DeleteTrigger"/>
+							<Button x:Name="EditTriggerButton" Margin="0,279.754,8.5,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" FontSize="16" Padding="1,-5,1,1" Click="EditTrigger">
+							   <Path Fill="White" Data="M 5 7 L 3 7 L 1 5 L 1 3 L 2 4 L 3 5  L 5 3 L 3 1 L 5 1 L 7 3 L 7 5 L 10 8 L 12 8 L 14 10 L 14 12 L 12 10 L 10 12 L 12 14 L 10 14 L 8 12 L 8 10 Z" Margin="0,6,0,0" RenderTransformOrigin="0.5,0.5" Stretch="Fill" Width="14" Height="14" HorizontalAlignment="Left" d:LayoutOverrides="VerticalAlignment" Stroke="#8D000000"/>
+						    </Button>
+							<Popup x:Name="NewTriggerPopup" Placement="Center" AllowsTransparency="True" PopupAnimation="Fade" Margin="0,0,60.5,0" Height="300" VerticalAlignment="Top">
+								<Grid Background="#DB1F1D25" Height="303" Width="270">
+									<Label Content="Trigger" HorizontalAlignment="Left" Margin="111,-2,0,0" VerticalAlignment="Top" Foreground="White" FontSize="14.667"/>
+									<Label Content="Condition:" Margin="14,29.506,0,0" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+									<Button x:Name="NewTriggerSaveButton" Content="Save" Margin="0,0,8,10" VerticalAlignment="Bottom" Background="Black" Foreground="White" HorizontalAlignment="Right" Width="75" Click="SaveNewTrigger"/>
+									<CheckBox x:Name="NewTriggerVoiceToggle" Content="Voice" Margin="24.246,34.355,119.864,0" RenderTransformOrigin="0.092,1.441" Foreground="White" IsChecked="{Binding fadeToValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource CheckBoxStyle1}" d:LayoutOverrides="HorizontalAlignment, Width" Height="57.94" VerticalAlignment="Top" Checked="SetTriggerVoiceEnable" Unchecked="ClearTriggerVoiceEnable">
+										<CheckBox.RenderTransform>
+											<TransformGroup>
+												<ScaleTransform ScaleX="0.85" ScaleY="0.85"/>
+												<SkewTransform/>
+												<RotateTransform/>
+												<TranslateTransform X="0.9" Y="0.9"/>
+											</TransformGroup>
+										</CheckBox.RenderTransform>
+									</CheckBox>
+									<CheckBox x:Name="NewTriggerGestureToggle" Content="Gesture" Margin="14.739,69.688,116.821,0" RenderTransformOrigin="0.092,1.441" Foreground="White" IsChecked="{Binding fadeToValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{DynamicResource CheckBoxStyle1}" Height="57.94" VerticalAlignment="Top" d:LayoutOverrides="HorizontalAlignment" Checked="SetTriggerGestureEnable" Unchecked="ClearTriggerGestureEnable">
+										<CheckBox.RenderTransform>
+											<TransformGroup>
+												<ScaleTransform ScaleX="0.85" ScaleY="0.85"/>
+												<SkewTransform/>
+												<RotateTransform/>
+												<TranslateTransform X="0.9" Y="0.9"/>
+											</TransformGroup>
+										</CheckBox.RenderTransform>
+									</CheckBox>
+									<TextBox x:Name="NewTriggerVoiceBox" HorizontalAlignment="Right" TextWrapping="Wrap" VerticalAlignment="Top" Margin="0,62,8,0" Width="120" d:LayoutOverrides="HorizontalAlignment" IsEnabled="{Binding IsChecked, ElementName=NewTriggerVoiceToggle}" TextChanged="UpdateTriggerVoiceText"/>
+									<ComboBox x:Name="NewTriggerGestureBox" HorizontalAlignment="Right" VerticalAlignment="Top" Width="120" Margin="0,96.666,8,0" IsEnabled="{Binding IsChecked, ElementName=NewTriggerGestureToggle}" SelectionChanged="UpdateTriggerGestureText"/>
+									<ListBox x:Name="ActionsListBox" Margin="14,0,42,46.333" Height="100" VerticalAlignment="Bottom"/>
+									<Button x:Name="AddActionButton" Margin="0,156.667,18,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" Content="+" Padding="1,-4,1,0" FontSize="16" RenderTransformOrigin="0.604,0.262" Click="addNewTriggerAction"/>
+									<Button x:Name="RemoveActionButton" Margin="0,180.667,18,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" Content="-" FontSize="16" Padding="1,-5,1,1" Click="DeleteAction"/>
+									<Label Content="Actions:" Margin="14,126.707,0,150.333" Foreground="White" HorizontalAlignment="Left" d:LayoutOverrides="Height"/>
+								</Grid>
+							</Popup>
+							<Label Content="Entrance Actions" Margin="8,108.96,0,0" Foreground="White" HorizontalAlignment="Left" Width="118" VerticalAlignment="Top"/>
+							<ListBox x:Name="EntranceActionsListBox" Margin="41,137,32.5,0" Height="92.04" VerticalAlignment="Top"/>
+							<Button x:Name="AddEntranceActionButton" Margin="0,137.92,8.5,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" Content="+" Padding="1,-4,1,0" FontSize="16" Click="AddNewEntranceAction" d:LayoutOverrides="VerticalAlignment"/>
+							<Button x:Name="RemoveEntranceActionButton" Margin="0,181.92,8.5,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" Content="-" FontSize="16" Padding="1,-5,1,1" Click="DeleteEntranceAction" d:LayoutOverrides="VerticalAlignment"/>
+							<Button x:Name="EditEntranceActionButton" Margin="0,159.754,8.5,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" FontSize="16" Padding="1,-5,1,1" Click="EditTrigger" d:LayoutOverrides="VerticalAlignment">
+								<Path Fill="White" Data="M 5 7 L 3 7 L 1 5 L 1 3 L 2 4 L 3 5  L 5 3 L 3 1 L 5 1 L 7 3 L 7 5 L 10 8 L 12 8 L 14 10 L 14 12 L 12 10 L 10 12 L 12 14 L 10 14 L 8 12 L 8 10 Z" Margin="0,6,0,0" RenderTransformOrigin="0.5,0.5" Stretch="Fill" Width="14" Height="14" HorizontalAlignment="Left" d:LayoutOverrides="VerticalAlignment" Stroke="#8D000000"/>
+							</Button>
+							<Label Content="Exit Actions" Margin="8,0,0,170.743" Foreground="White" HorizontalAlignment="Left" Width="118" VerticalAlignment="Bottom"/>
+							<ListBox x:Name="ExitActionsListBox" Margin="41,0,32.5,76.62" Height="92.04" VerticalAlignment="Bottom"/>
+							<Button x:Name="AddExitActionButton" Margin="0,381.26,8.5,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" Content="+" Padding="1,-4,1,0" FontSize="16" Click="AddNewExitAction"/>
+							<Button x:Name="RemoveExitActionButton" Margin="0,425.26,8.5,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" Content="-" FontSize="16" Padding="1,-5,1,1" Click="DeleteTrigger"/>
+							<Button x:Name="EditExitActionButton" Margin="0,403.094,8.5,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" FontSize="16" Padding="1,-5,1,1" Click="EditTrigger">
+								<Path Fill="White" Data="M 5 7 L 3 7 L 1 5 L 1 3 L 2 4 L 3 5  L 5 3 L 3 1 L 5 1 L 7 3 L 7 5 L 10 8 L 12 8 L 14 10 L 14 12 L 12 10 L 10 12 L 12 14 L 10 14 L 8 12 L 8 10 Z" Margin="0,6,0,0" RenderTransformOrigin="0.5,0.5" Stretch="Fill" Width="14" Height="14" HorizontalAlignment="Left" d:LayoutOverrides="VerticalAlignment" Stroke="#8D000000"/>
+							</Button>
+							<Popup x:Name="NewActionPopup" Placement="Center" AllowsTransparency="True" PopupAnimation="Fade" Margin="0,0,60.5,0" Height="225" VerticalAlignment="Top">
+								<Grid Background="#DB1F1D25" Height="227.667" Width="450">
+									<Button x:Name="NewActionSaveButton" Content="Save" Margin="0,0,17,10" VerticalAlignment="Bottom" Background="Black" Foreground="White" Click="SaveNewAction" HorizontalAlignment="Right" Width="75"/>
+									<Label Content="Action" HorizontalAlignment="Left" Margin="202,8,0,0" VerticalAlignment="Top" Foreground="White" FontSize="14.667"/>
+									<Label Content="Module:" Margin="14,41.504,0,0" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+									<ItemsControl x:Name="NewActionItemControl" Margin="14,72.667,17,35.96"/>
+									<ComboBox x:Name="NewActionModuleComboBox" VerticalAlignment="Top" Margin="74.667,45.504,222.333,0" SelectionChanged="UpdateActionModule"/>
+								</Grid>
+							</Popup>
+						</Grid>
+					</Popup>
+					<Grid x:Name="libraryGrid_Copy" Height="450" Margin="19.779,20,0,0" VerticalAlignment="Top" Width="275" HorizontalAlignment="Left">
+						<Label Content="Activities:" HorizontalAlignment="Left" Margin="0.5,-21.226,0,0" Width="100" d:LayoutOverrides="HorizontalAlignment" VerticalAlignment="Top" Foreground="White"/>
+						<ListBox x:Name="ActivitiesListBox" Margin="0.779,0,-0.779,29.96" Width="275"/>
+					</Grid>
+					<Button x:Name="AddActivityButton" Content="Add" HorizontalAlignment="Right" VerticalAlignment="Top" Width="75" Margin="0,20,185,0" Click="AddNewActivity"/>
+					<Button x:Name="DeleteActivityButton" Content="Delete" HorizontalAlignment="Right" VerticalAlignment="Top" Width="75" Margin="0,71.92,185,0" Click="DeleteActivity"/>
+					<Button x:Name="StartActivityButton" Content="Start" HorizontalAlignment="Right" VerticalAlignment="Top" Width="75" Margin="0,97.88,185,0" Click="StartActivityContext"/>
+					<Button x:Name="EditActivityButton" Content="Edit" HorizontalAlignment="Right" VerticalAlignment="Top" Width="75" Margin="0,45.96,185,0" Click="EditCurrentActivity"/>
+				</Grid>
+			</TabItem>
 			<TabItem x:Name="moduleTab" Header="Modules" FontWeight="Bold" FontStyle="Normal" Width="148" HorizontalAlignment="Right" Margin="0,-0.02,0,0.02" Height="25">
 				<Grid x:Name="modulesGrid">
 					<Label Content="System Modules:" HorizontalAlignment="Left" Margin="8,8,0,0" VerticalAlignment="Top" FontSize="16" FontWeight="Bold" Foreground="White"/>
 					<ScrollViewer Margin="21,37.04,102,8" ScrollViewer.VerticalScrollBarVisibility="Auto">
 						<ItemsControl x:Name="ModulesList"/>
 					</ScrollViewer>
+					<Popup x:Name="IRRecordPopup" Placement="Center" AllowsTransparency="True" PopupAnimation="Fade">
+						<Grid x:Name="IRRecordGrid" Background="#DB1F1D25" Height="163" Width="234">
+							<TextBox x:Name="NewIRBox" Margin="93,0,24,48.54" TextWrapping="Wrap" VerticalAlignment="Bottom"/>
+							<Label Content="Device:" Margin="20,49,0,0" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+							<Label Content="Command:" Margin="20,0,0,46.54" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+							<ComboBox x:Name="NewIRPicker" Margin="90,50,24,0" VerticalAlignment="Top" SelectionChanged="NewIRDeviceSelectionChanged"/>
+							<Button x:Name="NewIRSaveButton" Content="Save" Margin="116,0,43,16" VerticalAlignment="Bottom" Background="Black" Foreground="White" Click="SaveNewIRCommand"/>
+							<Label Content="New IR Command Detected" HorizontalAlignment="Left" Margin="16,8,0,0" VerticalAlignment="Top" Foreground="White" FontSize="14.667"/>
+							<Popup x:Name="NewDevicePopup" Placement="Center" AllowsTransparency="True" PopupAnimation="Fade">
+								<Grid Background="#DB1F1D25" Height="111" Width="246">
+									<Label Content="Add New Device" HorizontalAlignment="Left" Margin="66,8,0,0" VerticalAlignment="Top" Foreground="White" FontSize="14.667"/>
+									<TextBox x:Name="NewDeviceNameBox" Margin="68,45,17,44.04" TextWrapping="Wrap" d:LayoutOverrides="Height"/>
+									<Label Content="Name:" Margin="14,44,0,41.04" Foreground="White" HorizontalAlignment="Left" d:LayoutOverrides="Height"/>
+									<Button x:Name="NewDeviceSaveButton" Content="Save" Margin="98,0,73,11.04" VerticalAlignment="Bottom" Background="Black" Foreground="White" Click="AddDeviceToIRCommandList"/>
+								</Grid>
+							</Popup>
+						</Grid>
+					</Popup>
 				</Grid>
 			</TabItem>
 		</TabControl>
-		<Popup x:Name="NewModulePopup" Placement="Center" PopupAnimation="Fade" AllowsTransparency="True" Margin="0,0,0,28.5" Grid.ColumnSpan="2">
+		<Popup x:Name="NewModulePopup" Placement="Center" PopupAnimation="Fade" AllowsTransparency="True" Margin="0,0,0,28.5" Grid.Column="1">
 			<Popup.Effect>
 				<BlurEffect Radius="12" KernelType="Box"/>
 			</Popup.Effect>

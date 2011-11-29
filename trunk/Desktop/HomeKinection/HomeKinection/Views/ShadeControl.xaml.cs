@@ -19,19 +19,19 @@ namespace HomeKinection
 	public partial class ShadeControl : UserControl
 	{
 		private ShadeControlModule module;
-		public ShadeControl(NetworkProtocol net, String n, String l, UInt16 sa, UInt64 u, MODULE_TYPE t)
+		private ItemsControl UIModuleList;
+		public ShadeControl(ItemsControl uml, String n, String l, UInt16 sa, UInt64 u, MODULE_TYPE t)
 		{
 			this.InitializeComponent();
 			module = (ShadeControlModule)this.FindResource("dataModel");
 			
 			module.address = sa;
-			module.name = n;
-			module.network = net;
+			module.name = n;			
 			module.location = l;
 			module.uid = u;
 			module.type = t;
-						
 			
+			UIModuleList = uml;
 		}
 
 		private void UpPress(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -55,6 +55,31 @@ namespace HomeKinection
 			packet.Duration = 0;
 			packet.ButtonMask = NetworkProtocol.SHADE_DIRECTION_DOWN;
 			module.packet = packet;
+		}
+
+		private void EditModule(object sender, System.Windows.RoutedEventArgs e)
+		{
+			this.NameTextBox.Visibility = System.Windows.Visibility.Visible;
+			this.LocationTextBox.Visibility = System.Windows.Visibility.Visible;
+            this.SaveButton.Visibility = System.Windows.Visibility.Visible;
+
+            module.DeleteModuleFile();
+		}
+
+		private void SaveModule(object sender, System.Windows.RoutedEventArgs e)
+		{
+			this.NameTextBox.Visibility = System.Windows.Visibility.Hidden;
+			this.LocationTextBox.Visibility = System.Windows.Visibility.Hidden;
+			this.SaveButton.Visibility = System.Windows.Visibility.Hidden;
+
+            module.Serialize();
+		}
+
+		private void DeleteModule(object sender, System.Windows.RoutedEventArgs e)
+		{
+            module.DeleteModuleFile();
+            ModuleBox.modules.Remove(module.uid);
+            UIModuleList.Items.Remove(this);
 		}
 	}
 }
