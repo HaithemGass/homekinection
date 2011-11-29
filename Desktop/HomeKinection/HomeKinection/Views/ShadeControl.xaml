@@ -12,12 +12,12 @@
 		<local:ShadeControlModule x:Key="dataModel" d:IsDataSource="True" />
 	</UserControl.Resources>
    
-	<Grid x:Name="Grid" DataContext="{Binding Source={StaticResource dataModel}}">
-		<Rectangle Fill="#3D1A1A1A" Margin="8"/>
-		<Label x:Name="locationTitle" Content="Location:" HorizontalAlignment="Left" Margin="38,47.96,0,26.08" Foreground="White" d:LayoutOverrides="Height"/>
-		<Label x:Name="nameLabel" Content="{Binding name}" Foreground="White" Margin="112.459,18,70,0" RenderTransformOrigin="-0.2,0.698" Height="27.96" VerticalAlignment="Top"/>
-		<Label x:Name="locationLabel" Content="{Binding location}" Margin="112.459,47.96,70,27.08" Foreground="White"/>
-		<Label x:Name="nameTitle" Content="Name:" HorizontalAlignment="Left" Margin="40.976,0,0,55.04" Foreground="White" VerticalAlignment="Bottom"/>
+	<Grid x:Name="Grid" DataContext="{Binding Source={StaticResource dataModel}}">		
+		<Rectangle Fill="#3D1A1A1A" Margin="8"/>		
+		<Label x:Name="locationTitle" Content="Location:" HorizontalAlignment="Left" Margin="38,47.96,0,22.04" Foreground="White" FontWeight="Bold" FontSize="14.667" Height="30"/>
+		<Label x:Name="nameLabel" Content="{Binding name}" Foreground="#FFA586CC" Margin="115.083,14.02,94.916,0" RenderTransformOrigin="-0.2,0.698" Height="30" VerticalAlignment="Top" FontFamily="Segoe UI Light" FontSize="14.667" Width="190"/>
+		<Label x:Name="locationLabel" Content="{Binding location}" Margin="115.083,47.96,94.916,22.04" Foreground="#FFA586CC" FontFamily="Segoe UI Light" FontSize="14.667" Height="30" Width="190"/>
+		<Label x:Name="nameTitle" Content="Name:" HorizontalAlignment="Left" Margin="38,0,0,56.04" Foreground="White" VerticalAlignment="Bottom" FontWeight="Bold" FontSize="14.667" Height="30"/>
 		<Rectangle Fill="#FF2B2B2B" HorizontalAlignment="Left" Margin="8,8,0,8" Width="26"/>
 		<TextBlock HorizontalAlignment="Left" Margin="-28.486,41.5,0,41.5" TextWrapping="Wrap" Text="SHADE" Width="97.273" RenderTransformOrigin="0.5,0.5" Foreground="#FF81C274" FontSize="14.667" VerticalAlignment="Center" TextAlignment="Center">
 			<TextBlock.RenderTransform>
@@ -28,12 +28,23 @@
 					<TranslateTransform/>
 				</TransformGroup>
 			</TextBlock.RenderTransform>
-		</TextBlock>
-  <Button x:Name="UpButton" HorizontalAlignment="Right" Width="47" Margin="0,8,8,0" Height="39" VerticalAlignment="Top" Background="Black" PreviewMouseDown="UpPress" PreviewMouseUp="ButtonRelease">
-    <Path Fill="White" Data="M 0 6 L 12 6 L 6 0 Z"/>
-  </Button>
-  <Button x:Name="DownButton" HorizontalAlignment="Right" Margin="0,47,8,8.96" Width="47" Background="Black" PreviewMouseUp="ButtonRelease" PreviewMouseDown="DownPress">
+		</TextBlock> 
+  <Button x:Name="UpButton" HorizontalAlignment="Right" Width="40" Margin="0,21.461,44.328,48.539" Background="Black" PreviewMouseDown="UpPress" PreviewMouseUp="ButtonRelease">
+  		<Path Fill="White" Data="M 0 6 L 12 6 L 6 0 Z"/>
+  </Button> 
+  <Button x:Name="DownButton" HorizontalAlignment="Right" Margin="0,51.144,44.328,18.855" Width="40" Background="Black" PreviewMouseUp="ButtonRelease" PreviewMouseDown="DownPress" Height="30" d:LayoutOverrides="VerticalMargin">
     <Path Fill="White" Data="M 0 0 L 6 6 L 12 0 Z"/>
   </Button>
+  <Button x:Name="DeleteButton" Margin="0,3.356,3.202,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" d:LayoutOverrides="VerticalAlignment" HorizontalAlignment="Right" Width="20" Click="DeleteModule">  	
+  	<Path Fill="White" Data="M 2 0 L 6 4 L 10 0 L 12 0 L 12 2 L 8 6 L 12 10 L 12 12 L 10 12 L 6 8 L 2 12 L 0 12 L 0 10 L 4 6 L 0 2 L 0 0 Z" Margin="0" RenderTransformOrigin="0.5,0.5" Stretch="Fill" Width="14" Height="14" HorizontalAlignment="Left" d:LayoutOverrides="VerticalAlignment" Stroke="#8D000000"/>
+  </Button>
+  <Button x:Name="SaveButton" Margin="0,3.356,3.202,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" d:LayoutOverrides="VerticalAlignment" Visibility="Hidden" Click="SaveModule">  	
+  	<Path Fill="White" Data="M 12 0 L 12 2 L 5 12 L 0 8 L 2 6 L 5 8 Z" Margin="0" RenderTransformOrigin="0.5,0.5" Stretch="Fill" Width="14" Height="14" HorizontalAlignment="Left" d:LayoutOverrides="VerticalAlignment" Stroke="#8D000000"/>
+  </Button>
+  <Button x:Name="EditButton" Margin="0,24.02,3.202,0" Background="#FF494949" BorderBrush="#FFA59F9F" Foreground="White" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="20" d:LayoutOverrides="VerticalAlignment" Click="EditModule">  	
+  	<Path Fill="White" Data="M 5 7 L 3 7 L 1 5 L 1 3 L 2 4 L 3 5  L 5 3 L 3 1 L 5 1 L 7 3 L 7 5 L 10 8 L 12 8 L 14 10 L 14 12 L 12 10 L 10 12 L 12 14 L 10 14 L 8 12 L 8 10 Z" Margin="0" RenderTransformOrigin="0.5,0.5" Stretch="Fill" Width="14" Height="14" HorizontalAlignment="Left" d:LayoutOverrides="VerticalAlignment" Stroke="#8D000000"/>
+  </Button>
+  <TextBox x:Name="NameTextBox" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Margin="115.282,16,0,0" Height="30" Width="190.801" Text="{Binding name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Background="#FF2B2A2A" Foreground="#FFA586CC" FontFamily="Segoe UI Light" FontSize="14.667" Visibility="Hidden"/>
+  <TextBox x:Name="LocationTextBox" TextWrapping="Wrap" Text="{Binding location, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="115.282,0,93.917,20" Background="#FF2B2A2A" Foreground="#FFA586CC" FontFamily="Segoe UI Light" FontSize="14.667" Visibility="Hidden" Height="30" VerticalAlignment="Bottom"/>  
 	</Grid>
 </UserControl>

@@ -6,38 +6,47 @@ using System.ComponentModel;
 
 namespace HomeKinection
 {
+    [Serializable]
     public class DimmerControlModule : ModuleBox
-	{
-        private int inten;
-		public NetworkProtocol network;
+	{   
+        [NonSerialized]
 		private NetworkProtocol.DimmerCommandData packet;
 		public int intensity{
             get
             {
-                return inten;
+                return packet.intensity;
+            }
+            set
+            {                
+				packet.intensity = System.Convert.ToByte(value);
+                if (NetworkProtocol.Initialized && updateModule) NetworkProtocol.sendDimmerMessage(address, packet);
+                NotifyPropertyChanged("intensity");
+            }						
+        }
+		
+		public bool fadeToValue{
+            get
+            {
+                return (packet.fadeToValue == 1);
             }
             set
             {
-                inten = value;
-				packet.intensity = System.Convert.ToByte(value);
-				if(network != null) network.sendDimmerMessage(address, packet);
-                NotifyPropertyChanged("intensity");
+                packet.fadeToValue = (value) ? ((byte)1) : ((byte)0);				
+                NotifyPropertyChanged("fadeToValue");
             }						
         }
 		
 		
 		public DimmerControlModule()
 		{
+			updateModule = true;
 		}
-		public DimmerControlModule(NetworkProtocol net, String n, String l, UInt16 sa, UInt64 u, MODULE_TYPE t)
-		{
-            network = net;
-            name = n;
-            location = l;
-            address = sa;
-            uid = u;
-            type = t;
 
-		}
+        public override unsafe void handleStatusUpdate(NetworkProtocol.StatusMessageData packet)
+        {
+            updateModule = false;
+            intensity = packet.message[0];
+            updateModule = true;
+        }
 	}
 }

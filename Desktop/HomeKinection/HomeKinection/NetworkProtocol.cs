@@ -16,14 +16,35 @@ using System.Threading;
 using System.Windows.Threading;
 using System.Windows.Data;
 using System.ComponentModel;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace HomeKinection
 {
-
+    [Serializable]
     public class ModuleBox : INotifyPropertyChanged
     {
+        protected static string commonFilePath = System.IO.Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.FullName + "\\Modules\\";
         private String Name;
+		public static Dictionary<UInt64, ModuleBox> modules;
+		public bool updateModule;
+		public bool DisableGestures = false;
+		
+		public bool disableGestures
+        {
+            get
+            {
+                return DisableGestures;
+            }
 
+            set
+            {
+                DisableGestures = value;
+                NotifyPropertyChanged("disableGestures");
+            }
+        }
+		
         public String name
         {
             get
@@ -55,10 +76,23 @@ namespace HomeKinection
         }
         public UInt16 address{get;set;}
         public UInt64 uid{get;set;}
-        public MODULE_TYPE type{get;set;}  
-      
+        public MODULE_TYPE type{get;set;}
 
+        public virtual unsafe void handleStatusUpdate(NetworkProtocol.StatusMessageData packet)
+        {
+        }
+		
+		public virtual unsafe void updateAbsoluteControl(SkeletalGesturePoint point)
+        {
+        }
+      
+		public override String ToString()
+		{
+			return name;
+		}
+		
         #region INotifyPropertyChanged
+        [field: NonSerialized]
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void NotifyPropertyChanged(String info)
@@ -69,6 +103,31 @@ namespace HomeKinection
             }
         }
         #endregion
+
+        public void Serialize()
+        {
+            String filename =  commonFilePath + name + ".md"; //use a .md file for modules
+            Stream stream = File.Open(filename, FileMode.Create);
+            BinaryFormatter bFormatter = new BinaryFormatter();
+            bFormatter.Serialize(stream, this);
+            stream.Close();
+        }
+
+        public static ModuleBox DeSerialize(string filename)
+        {
+            ModuleBox objectToSerialize;
+            Stream stream = File.Open(filename, FileMode.Open);
+            BinaryFormatter bFormatter = new BinaryFormatter();
+            objectToSerialize = (ModuleBox)bFormatter.Deserialize(stream);
+            stream.Close();
+            return objectToSerialize;
+        }
+
+        public void DeleteModuleFile()
+        {
+            File.Delete(commonFilePath + name + ".md");
+        }
+
     }
 
 
@@ -82,7 +141,7 @@ namespace HomeKinection
         MODULE_TYPE_MAX
     };
 
-    public class NetworkProtocol{
+    public static class NetworkProtocol{
 
 /*****************************************************************************
 ******************************************************************************
@@ -120,7 +179,7 @@ namespace HomeKinection
 	        HID_CONTROL
         };
 
-        enum MESSAGE_TYPE
+        public enum MESSAGE_TYPE
         {
             MESSAGE_TYPE_STATUS,
             MESSAGE_TYPE_CONTROL,
@@ -128,6 +187,7 @@ namespace HomeKinection
         };
 
         [StructLayout(LayoutKind.Explicit, Pack = 1)]
+        [Serializable]
         public unsafe struct UsartMessagePacket
         {
             [FieldOffset(0)]
@@ -151,6 +211,7 @@ namespace HomeKinection
         } ;
 
         [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 11)]
+        [Serializable]
         public unsafe struct NetworkJoinData
         {
             [FieldOffset(0)]
@@ -162,6 +223,7 @@ namespace HomeKinection
         } ;
 
         [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 86)]
+        [Serializable]
 	    public unsafe struct StatusMessageData
 	    {
             [FieldOffset(0)]
@@ -173,19 +235,23 @@ namespace HomeKinection
             [FieldOffset(4)]
              public UInt16 length;
             [FieldOffset(6)]
+            [field: NonSerialized]
              public fixed byte message[80];
 	    } ;		 	        
 	
-        [StructLayout(LayoutKind.Sequential,Pack=1)]        
+        [StructLayout(LayoutKind.Sequential,Pack=1)]
+        [Serializable]
 	    public struct DimmerCommandData  
 	    {
-            public byte intensity;
+            public byte fadeToValue;
+			public byte intensity;
 	    };
 
         public const byte SHADE_DIRECTION_DOWN  = 2;
 	    public const byte SHADE_DIRECTION_UP =  1;
 
-        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 3)]  
+        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 3)]
+        [Serializable]
 	    public struct ShadeCommandData 
 	    {
             [FieldOffset(0)]
@@ -194,7 +260,8 @@ namespace HomeKinection
             public UInt16 Duration; // ms
 	    };
 
-        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 2)]  
+        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 2)]
+        [Serializable]
 	    public struct ShadeButtonStatus 
 	    {
             [FieldOffset(0)]
@@ -204,51 +271,57 @@ namespace HomeKinection
 	    } ;
     	
         [StructLayout(LayoutKind.Sequential,Pack=1)]
+		[Serializable]
         public struct remoteTransition  
 	    {
             public UInt16 duration;
 	    } ;
 
         [StructLayout(LayoutKind.Explicit,Pack=1, Size= 129)]
+		[Serializable]
         public unsafe struct remoteSequence
 	    {
             [FieldOffset(0)]
             public byte length;
             [FieldOffset(1)]
-            public remoteTransition *transitions;            
+			[field: NonSerialized]
+            public fixed ushort  transitions[64];            
 	    } ;
 
-        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 130)]  
+        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 130)]
+        [Serializable]
 	    public unsafe struct IRCommandData  
 	    {
             [FieldOffset(0)]
-            public byte remoteSequenceNumber;
+            public byte record;
             [FieldOffset(1)]
             public remoteSequence sequence;
 	    };
 
-        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 3)]  
+        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 2)]
+        [Serializable]
 	    public struct Key
 	    {
             [FieldOffset(0)]
             public byte shiftcode;
             [FieldOffset(1)]
-            public byte blank;//should always be 0x00
-            [FieldOffset(2)]
             public byte character;		
 	    } ;	        	
 
-	    [StructLayout(LayoutKind.Explicit,Pack=1, Size=61)] 
+	    [StructLayout(LayoutKind.Explicit,Pack=1, Size=61)]
+        [Serializable]
 	    public unsafe struct KeySequence
 	    {
             [FieldOffset(0)]
             public byte length;
 
             [FieldOffset(1)]
-            public Key *keys;
+			[field: NonSerialized]
+            public fixed ushort keys[30];
 	    };
 
-        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 4)]  
+        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 4)]
+        [Serializable]
 	    public struct MouseData
 	    {
             [FieldOffset(0)]
@@ -262,7 +335,8 @@ namespace HomeKinection
 	    };
 
 
-        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 65)]  
+        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 65)]
+        [Serializable]
 	    public unsafe struct HIDCommandData 
 	    {
             [FieldOffset(0)]
@@ -272,7 +346,8 @@ namespace HomeKinection
 	    };
 
 
-        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 4)]    
+        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 4)]
+        [Serializable]
 	    public struct HIDStatus 
 	    {
             [FieldOffset(0)]
@@ -294,10 +369,21 @@ namespace HomeKinection
         *                                                                            *
         ******************************************************************************
         *****************************************************************************/
-        SerialPort serialPort;
-        MainWindow mw;
+        private static SerialPort serialPort;
+        private static MainWindow mw;
+		
+		public static ushort translateKey(NetworkProtocol.Key k)
+		{
+			ushort toRet = 0;
+			
+			toRet += (ushort)(k.shiftcode); //MAY BE WRONG ORDER!!!!
+			toRet += (ushort)(k.character << 8);
+			
+			return toRet;
+		}
+		
 
-        public NetworkProtocol(MainWindow m)
+        public static void InitializeNetworkProtocol(MainWindow m)
         {
             mw = m;
             serialPort = new SerialPort();
@@ -310,18 +396,20 @@ namespace HomeKinection
                 serialPort.PortName = SerialPort.GetPortNames()[0];
                 serialPort.Parity = Parity.None;
                 serialPort.Handshake = Handshake.None;
-                serialPort.DataReceived += new SerialDataReceivedEventHandler(dataReceivedHandler); ;
+                serialPort.DataReceived += new SerialDataReceivedEventHandler(dataReceivedHandler); 
                 serialPort.Open();
             }
+            Initialized = true;
         }
 
 
         
 
         private static bool UARTBusy = false;
+        public static bool Initialized = false;
 
 
-        public void dataReceivedHandler(object sender,
+        public static void dataReceivedHandler(object sender,
                         SerialDataReceivedEventArgs e)
         {
             UsartMessagePacket packet;
@@ -339,6 +427,18 @@ namespace HomeKinection
             {
                 mw.Dispatcher.Invoke(DispatcherPriority.Send,
                  new Action<UsartMessagePacket>(mw.HandleNetworkJoin), packet); // need to inform UI thread to make our popup;
+            }
+
+            //now to handle it.
+            if (packet.messageType == (byte)MESSAGE_TYPE.MESSAGE_TYPE_STATUS)
+            {
+                mw.Dispatcher.Invoke(DispatcherPriority.Send,
+                 new Action<UsartMessagePacket>(mw.HandleStatusPacket), packet); // need to inform UI thread to make our popup;
+				
+				
+				//mw.Dispatcher.Invoke(DispatcherPriority.Send,
+                 //new Action<IRControlModule.IRCommand>(mw.HandleNewIRCommand), new IRControlModule.IRCommand()); // need to inform UI thread to make our popup;
+								
             }
 
         }
@@ -361,7 +461,7 @@ namespace HomeKinection
         }
 
         //helper function from http://www.developerfusion.com/article/84519/mastering-structs-in-c/
-        public T ReadStruct<T>(byte[] buffer)
+        public static T ReadStruct<T>(byte[] buffer)
         {            
             GCHandle handle =
                 GCHandle.Alloc(buffer,
@@ -376,7 +476,26 @@ namespace HomeKinection
 
 
         //NEED TO DEFINE SENDING AND RECEIVING FUNCTIONS HERE!!!!!
-        public unsafe void sendShadeMessage(UInt16 addr, ShadeCommandData packet)
+        public unsafe static void sendMessageToModule(UInt16 addr, UsartMessagePacket packet)
+        {
+            switch ((MODULE_TYPE)packet.moduleType)
+            {
+                case MODULE_TYPE.DIMMER_MODULE:
+                    sendDimmerMessage(addr, packet.dimmerPacket);
+                    break;
+                case MODULE_TYPE.SHADE_MODULE:
+                    sendShadeMessage(addr, packet.shadePacket);
+                    break;
+                case MODULE_TYPE.HID_MODULE:
+                    sendHIDMessage(addr, packet.hidPacket);
+                    break;
+                default:
+                    break;
+            }
+
+        }
+
+        public unsafe static void sendShadeMessage(UInt16 addr, ShadeCommandData packet)
         {
             if (UARTBusy) return;
             UARTBusy = true;
@@ -393,9 +512,27 @@ namespace HomeKinection
             }
             UARTBusy = false;
         }
+		
+		public unsafe static void sendIRMessage(UInt16 addr, IRCommandData packet)
+        {
+            if (UARTBusy) return;
+            UARTBusy = true;
+            Int32 size = Marshal.SizeOf(packet);
+            UsartMessagePacket toSend = new UsartMessagePacket();
+            toSend.messageType = (byte)(MESSAGE_TYPE.MESSAGE_TYPE_CONTROL);
+            toSend.moduleType = (byte)(MODULE_TYPE.IR_MODULE);
+            toSend.irPacket = packet;
+            toSend.addr = addr;    
+
+            if (serialPort.IsOpen)
+            {
+                serialPort.Write(RawSerialize(toSend), 0, (int)Marshal.SizeOf(toSend));
+            }
+            UARTBusy = false;
+        }
 
 
-        public unsafe void sendHIDMessage(UInt16 addr, HIDCommandData packet)
+        public unsafe static void sendHIDMessage(UInt16 addr, HIDCommandData packet)
         {
             if (UARTBusy) return;
             UARTBusy = true;
@@ -414,7 +551,7 @@ namespace HomeKinection
 
         }
 
-        public unsafe void sendDimmerMessage(UInt16 addr, DimmerCommandData packet)
+        public unsafe static void sendDimmerMessage(UInt16 addr, DimmerCommandData packet)
         {
             if (UARTBusy) return;
             UARTBusy = true;
@@ -430,7 +567,6 @@ namespace HomeKinection
                 serialPort.Write(RawSerialize(toSend), 0, (int)Marshal.SizeOf(toSend));
             }
             UARTBusy = false;
-
                 
         }
 
