@@ -126,7 +126,7 @@
 // formed (for the coordinator) or joined (for a router or an end device). For a
 // router or an end device the parameter can equal 0 allowing them to join the
 // first suitable network that they discover.
-#define CS_EXT_PANID 0xBEEFBEEFBEEFBEEFLL
+#define CS_EXT_PANID 0x00LL
 
 // Enables or disables use of predefined PAN ID. Actual PAN ID is specified via
 // CS_NWK_PANID parameter. If predefined PAN ID is disabled then PAN ID is selected
@@ -156,9 +156,9 @@
 // before network start \n <b>Persistent:</b> Yes
 //#define CS_DEVICE_TYPE DEVICE_TYPE_ROUTER
 //Device is a coordinator.
-#define CS_DEVICE_TYPE DEVICE_TYPE_COORDINATOR
+//#define CS_DEVICE_TYPE DEVICE_TYPE_COORDINATOR
 //Device is an end device.
-//#define CS_DEVICE_TYPE DEVICE_TYPE_ENDDEVICE
+#define CS_DEVICE_TYPE DEVICE_TYPE_END_DEVICE
 
 // While scanning channels during network join the node keeps listening to each
 // channel specified by the ::CS_CHANNEL_MASK for a period of time calculated
@@ -182,7 +182,7 @@
 // available on all platforms. If the latter case then UID value must be provided
 // by user via this parameter. This parameter must be unique for each device in a
 // network.
-#define CS_UID 0xB75E470E9998CD6FLL
+#define CS_UID 0xAC4DD7EACC8C3469LL
 
 // Determines whether the static or automatic addressing mode will be used for the
 // short address.
