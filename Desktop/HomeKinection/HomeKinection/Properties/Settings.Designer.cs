@@ -31,7 +31,7 @@ namespace HomeKinection.Properties {
                 return ((global::System.Windows.Rect)(this["PrevWinPosition"]));
             }
             set {
-                this["PrevWinPosition"] = value;
+              //  this["PrevWinPosition"] = value;
             }
         }
         
@@ -43,7 +43,7 @@ namespace HomeKinection.Properties {
                 return ((int)(this["WindowState"]));
             }
             set {
-                this["WindowState"] = value;
+                //this["WindowState"] = value;
             }
         }
     }

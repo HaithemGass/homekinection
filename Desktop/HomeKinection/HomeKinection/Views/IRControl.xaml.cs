@@ -73,10 +73,20 @@ namespace HomeKinection
 		private void DeviceBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
 		{
 			
-			CommandBox.Items.Clear();			
+			CommandBox.Items.Clear();
+            if (DeviceBox.SelectedItem == null) return;
 			foreach (String command in IRControlModule.getCommandsForDevice(DeviceBox.SelectedItem.ToString()))
 			{
 				CommandBox.Items.Add(command);
+			}
+		}
+
+		private void ReloadDeviceList(object sender, System.EventArgs e)
+		{
+			DeviceBox.Items.Clear();			
+			foreach (String device in IRControlModule.getDeviceList())
+			{
+				DeviceBox.Items.Add(device);
 			}
 		}
 	}

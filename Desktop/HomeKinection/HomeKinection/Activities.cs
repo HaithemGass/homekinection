@@ -263,8 +263,8 @@ namespace HomeKinection
         }
 		
 		public void voiceRecognizer_SaidSomething(object sender, Recognizer.SaidSomethingArgs e)
-        {
-        	if(voiceEnable && e.Matched.Trim('.').Equals(VoiceCondition))
+        {            
+        	if(voiceEnable && e.Matched.Trim().Trim('.').Trim().Equals(VoiceCondition))
 			{
 				this.ActivateActions();				
 			}	
@@ -312,33 +312,62 @@ namespace HomeKinection
                 NotifyPropertyChanged("absoluteControl");
             }
         }
-		
+       
 		public override String ToString()
         {
             return Name;
         }
-		
-        public ModuleBox module;
-        public NetworkProtocol.UsartMessagePacket packet;
 
-        public void Execute()
+        public UInt64 moduleID;
+        public Dictionary<UInt64, ModuleBox> moduleList;
+        private NetworkProtocol.UsartMessagePacket Packet;
+        private UInt16[] transitions;
+        public unsafe NetworkProtocol.UsartMessagePacket packet
         {
-            if (module.disableGestures)
+            get{
+                return Packet;
+            }
+            set{
+                Packet = value;
+                NetworkProtocol.IRCommandData irPack = Packet.irPacket;
+                if (Packet.moduleType == (byte)MODULE_TYPE.IR_MODULE)
+                {
+                    transitions = new UInt16[128];
+                    for (int i = 0; i < transitions.Length; i++)
+                    {
+                        transitions[i] = irPack.sequence.transitions[i];
+                    }
+                }
+            }
+        }
+
+        public unsafe void Execute()
+        {
+            if (moduleList[moduleID].disableGestures)
             {
                 if (!absoluteControl)
                 {
-                    module.disableGestures = false;
+                    moduleList[moduleID].disableGestures = false;
                 }
             }
             else
             {
                 if (!absoluteControl)
                 {
-                    NetworkProtocol.sendMessageToModule(module.address, packet);
+                    NetworkProtocol.IRCommandData irPack = Packet.irPacket;
+                    if (Packet.moduleType == (byte)MODULE_TYPE.IR_MODULE)
+                    {                        
+                        for (int i = 0; i < transitions.Length; i++)
+                        {
+                            irPack.sequence.transitions[i] = transitions[i];
+                        }
+                    }
+                    Packet.irPacket = irPack;
+                    NetworkProtocol.sendMessageToModule(moduleList[moduleID].address, Packet);
                 }
                 else
                 {
-                    module.disableGestures = true;
+                    moduleList[moduleID].disableGestures = true;
                 }
             }
             
