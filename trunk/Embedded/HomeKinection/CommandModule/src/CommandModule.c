@@ -140,6 +140,8 @@ void sendShadePacket(ShortAddr_t addr)
 	packet.asdu = (uint8_t *)(&shadeMessage.data);
 	packet.asduLength = sizeof(shadeMessage.data);
 	packet.dstEndpoint = shadeEndpoint.endpoint;
+	packet.txOptions.acknowledgedTransmission = 0;
+	packet.txOptions.fragmentationPermitted = 0;
 	sendMessageToModule(addr);
 }
 
@@ -149,14 +151,19 @@ void sendHIDPacket(ShortAddr_t addr)
 	packet.asdu = (uint8_t *)(&hidMessage.data);
 	packet.asduLength = sizeof(hidMessage.data);
 	packet.dstEndpoint = hidEndpoint.endpoint;
+	packet.txOptions.acknowledgedTransmission = 0;
+	packet.txOptions.fragmentationPermitted = 0;
 	sendMessageToModule(addr);	
 }
 
 void sendIRPacket(ShortAddr_t addr)
 {
+	setLED(LED_COLOR_CRIMSON);
 	packet.asdu = (uint8_t *)(&irMessage.data);
 	packet.asduLength = sizeof(irMessage.data);
 	packet.dstEndpoint = irEndpoint.endpoint;
+	packet.txOptions.acknowledgedTransmission = 1;
+	packet.txOptions.fragmentationPermitted = 1;
 	sendMessageToModule(addr);	
 }
 
@@ -165,6 +172,8 @@ void sendDimmerPacket(ShortAddr_t addr)
 	packet.asdu = (uint8_t *)(&dimmerMessage.data);
 	packet.asduLength = sizeof(dimmerMessage.data);
      packet.dstEndpoint = dimmerEndpoint.endpoint;
+	packet.txOptions.acknowledgedTransmission = 0;
+	packet.txOptions.fragmentationPermitted = 0;
 	sendMessageToModule(addr);
 	
 }
@@ -180,8 +189,7 @@ void sendMessageToModule(ShortAddr_t addr)
 	     packet.dstAddress.shortAddress = addr;
   
 	     packet.clusterId = CPU_TO_LE16(0);
-	     packet.srcEndpoint = 1;
-	     packet.txOptions.acknowledgedTransmission = 0;
+	     packet.srcEndpoint = 1;	     
 	     packet.radius = 0x0;
 	     packet.APS_DataConf = networkTransmissionConfirm;
 		ableToSend = false;
@@ -249,7 +257,7 @@ void networkJoinMessageReceived(APS_DataInd_t* indData)
 	desktopPacket.networkPacket.deviceUID = data->deviceUID;
 	desktopPacket.networkPacket.deviceType = data->deviceType;
 	desktopPacket.networkPacket.shortAddr = data->shortAddr;
-	desktopPacket.addr = data->shortAddr;
+	desktopPacket.addr = indData->srcAddress.shortAddress;
 	desktopPacket.moduleType = data->deviceType;
 	desktopPacket.messageType = MESSAGE_TYPE_NETWORK;	
 	 
@@ -369,8 +377,15 @@ void dimmerCommandReceived(APS_DataInd_t* indData)
 *******************************************************************************/
 void irCommandReceived(APS_DataInd_t* indData)
 {	
-	setLED(LED_COLOR_PINK);
-     indData = indData;
+	setLEDTimed(LED_COLOR_PINK, LED_TIME_MEDIUM);
+	IRCommandData *data = (IRCommandData*)(indData->asdu);    	
+	
+	desktopPacket.addr = indData->srcAddress.shortAddress;
+	desktopPacket.moduleType = IR_MODULE;
+	desktopPacket.messageType = MESSAGE_TYPE_CONTROL;	
+	desktopPacket.irPacket = *data;     
+	
+	sendMessageToDesktop(&desktopPacket);		
 }
 
 
@@ -402,7 +417,28 @@ static void networkTransmissionConfirm(APS_DataConf_t *result)
 {			
 	//Empty Function just to make sure stuff doesn't explode... theoretically we could retry here.
 	ableToSend = true;
-	setLED(LED_COLOR_OFF);     
+	switch(result->status)
+	{
+		case APS_SUCCESS_STATUS:		
+	          setLED(LED_COLOR_OFF);     	
+			break;
+		case APS_NO_SHORT_ADDRESS_STATUS:		
+	          setLED(LED_COLOR_ORANGE);    	
+			break;
+		case APS_DEFRAG_DEFERRED_STATUS:
+	          setLED(LED_COLOR_PINK);    	
+			break;
+		case APS_NO_ACK_STATUS:
+	          setLED(LED_COLOR_PURPLE);    	
+			break;
+		case APS_ASDU_TOO_LONG_STATUS:
+		     setLED(LED_COLOR_YELLOW);
+			 break;	
+		default:
+		     setLED(result->status,result->status,result->status);
+		break;
+	}
+	
 }
 
 /*******************************************************************************
@@ -583,6 +619,11 @@ void usartReceiveComplete(uint16_t length)
 	         dimmerMessage.data = (usartPacket.dimmerPacket);	                	    
               sendDimmerPacket(childToSendTo);
 	         break;		
+		
+		    case IR_MODULE:	    
+	         irMessage.data = (usartPacket.irPacket);	                	    
+              sendIRPacket(childToSendTo);
+	         break;	 
 		
 		
 	        default:

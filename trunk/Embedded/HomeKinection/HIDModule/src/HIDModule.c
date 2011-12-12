@@ -187,7 +187,7 @@ void hidCommandReceived(APS_DataInd_t* indData)
 
 void statusMessageReceived(APS_DataInd_t* indData)
 {		
-     indData = indData;	 
+          indData = indData;	 
 }
 void networkJoinMessageReceived(APS_DataInd_t* indData)
 {	

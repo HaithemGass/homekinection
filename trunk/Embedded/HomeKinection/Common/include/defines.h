@@ -179,7 +179,7 @@ typedef enum
      typedef struct  
 	{
 		uint8_t length;
-		remoteTransition transitions[64];		
+		uint16_t transitions[128];		
 	}PACK remoteSequence;
 	END_PACK
 	 
@@ -209,8 +209,7 @@ typedef enum
      BEGIN_PACK
 	typedef struct  
 	{		
-		uint8_t shiftcode;
-		uint8_t blank;//should always be 0x00
+		uint8_t shiftcode;		
 		uint8_t character;		
 	}PACK Key;
 	END_PACK
