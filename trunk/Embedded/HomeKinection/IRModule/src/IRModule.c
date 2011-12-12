@@ -54,7 +54,6 @@ static HAL_AppTimer_t remoteTimer;
 
 static uint16_t intensity = 0;
 static bool ableToSend = true;
-static bool lampOn = true;
 static uint8_t sequenceIndex = 0;
 static bool recording = false;
 static bool waitingForFirstPulse = false;
@@ -142,13 +141,37 @@ void APL_TaskHandler(void)
   
 }
 
+void sendNetworkPacket(ShortAddr_t addr)
+{	    		
+     networkPacket.data.deviceType = DEVICE_TYPE;		
+	networkPacket.data.shortAddr = myAddr;
+	networkPacket.data.deviceUID = CS_UID;
+	     
+	packet.asdu = (uint8_t *)(&networkPacket.data);
+	packet.asduLength = sizeof(networkPacket.data);
+	packet.profileId = 1;
+	packet.dstAddrMode = APS_SHORT_ADDRESS;
+	packet.dstAddress.shortAddress = addr;
+	
+	packet.srcEndpoint = irEndpoint.endpoint;
+	packet.dstEndpoint = networkJoinEndpoint.endpoint;
+  
+	packet.clusterId = CPU_TO_LE16(0);	
+	packet.txOptions.acknowledgedTransmission = 1;
+	packet.txOptions.fragmentationPermitted = 1;
+	packet.radius = 0x0;
+	packet.APS_DataConf = networkTransmissionConfirm;
+	APS_DataReq(&packet);
+	ableToSend = false; 	
+}
+
 void sendStatusPacket(ShortAddr_t addr)
 {	   	
      statusMessage.data.deviceType = DEVICE_TYPE;
      statusMessage.data.statusMessageType = 0x0000;
      statusMessage.data.shortAddress = myAddr ;     
 	 
-	stuffStatusPacket((uint8_t*) &intensity, sizeof(intensity), &statusMessage)	 ;
+	stuffStatusPacket((uint8_t*) &currentSequence, sizeof(currentSequence), &statusMessage)	 ;
      
 	packet.asdu = (uint8_t *)(&statusMessage.data);
 	packet.asduLength = sizeof(statusMessage.data);
@@ -171,18 +194,20 @@ void sendStatusPacket(ShortAddr_t addr)
 void sendIRPacket(ShortAddr_t addr)
 {	     
  
-     
+    irMessage.data.sequence=currentSequence;
 	packet.asdu = (uint8_t *)(&irMessage.data);
 	packet.asduLength = sizeof(irMessage.data);
 	packet.profileId = 1;
 	packet.dstAddrMode = APS_SHORT_ADDRESS;
 	packet.dstAddress.shortAddress = addr;
 
+
      packet.srcEndpoint = irEndpoint.endpoint;
 	packet.dstEndpoint = irEndpoint.endpoint;
   
 	packet.clusterId = CPU_TO_LE16(0);	
-	packet.txOptions.acknowledgedTransmission = 0;
+	packet.txOptions.acknowledgedTransmission = 1;
+	packet.txOptions.fragmentationPermitted = 1;
 	packet.radius = 0x0;
 	packet.APS_DataConf = networkTransmissionConfirm;
 	
@@ -212,12 +237,14 @@ void retryIRPacket()
 *******************************************************************************/
 void statusMessageReceived(APS_DataInd_t* indData)
 {	
-     indData = indData;       	
+     indData = indData;     
+	 setLED(LED_COLOR_BLUE)  ;	
 }
 
 void networkJoinMessageReceived(APS_DataInd_t* indData)
 {	
-     indData = indData;       	
+     indData = indData;   
+	 setLED(LED_COLOR_PURPLE);    	
 }
 /*******************************************************************************
   Description: Callback For Handling Data Frame Reception
@@ -228,7 +255,35 @@ void networkJoinMessageReceived(APS_DataInd_t* indData)
 *******************************************************************************/
 void irCommandReceived(APS_DataInd_t* indData)
 {
-     indData = indData;
+	setLED(LED_COLOR_YELLOW);
+	IRCommandData *data = (IRCommandData *)(indData->asdu);
+	uint8_t record = (uint8_t) data->record;		 
+	
+	if(record)
+	{
+		// start recording
+		EIMSK |= (0x02);
+		waitingForFirstPulse=true;
+		sequenceIndex=0;		
+		setLED(LED_COLOR_CRIMSON);
+	}
+	else
+	{
+		// send enclosed command
+		remoteSequence sequence = data->sequence;
+		uint8_t length = sequence.length;
+		remoteTransition *transitions =  sequence.transitions ;	
+
+		currentSequence.length=length;				
+		for(uint8_t i = 0; i< currentSequence.length; i++)
+		{
+			currentSequence.transitions[i] = transitions[i];			
+		}
+		startLEDBlink(LED_COLOR_GREEN,LED_BLINK_FAST);
+		playIR();	
+	}
+	
+	
 }
 
 
@@ -243,8 +298,38 @@ static void networkTransmissionConfirm(APS_DataConf_t *result)
 {			
 	//Empty Function just to make sure stuff doesn't explode... theoretically we could retry here.			
      result = result;
-	setLED(LED_COLOR_OFF);
+	//setLED(LED_COLOR_OFF);
 	ableToSend = true;
+	switch(result->status)
+       {
+              case APS_SUCCESS_STATUS:         
+                 startLEDBlink(LED_COLOR_GREEN,LED_BLINK_SLOW_HEARTBEAT);        
+                     break;
+              case APS_NO_SHORT_ADDRESS_STATUS:       
+                 setLED(LED_COLOR_ORANGE);     
+                     break;
+              case APS_DEFRAG_DEFERRED_STATUS:
+                 setLED(LED_COLOR_PINK);       
+                     break;
+              case APS_NOT_SUPPORTED_STATUS:
+                 setLED(LED_COLOR_PURPLE);     
+                     break;
+              case APS_ASDU_TOO_LONG_STATUS:
+                   setLED(LED_COLOR_YELLOW);
+                     break;     
+				case APS_SECURED_LINK_KEY_STATUS:
+					setLED(LED_COLOR_CERULEAN);
+					break; 
+              default:
+                   setLED(result->status,result->status,result->status);
+              break;
+       }
+	
+}
+
+void retryNetwork()
+{
+	sendNetworkPacket(CPU_TO_LE16(0)) ;	
 }
 
 /*******************************************************************************
@@ -257,14 +342,15 @@ static void networkTransmissionConfirm(APS_DataConf_t *result)
 static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo)
 {
 	
-	if (ZDO_SUCCESS_STATUS == confirmInfo->status) {
+if (ZDO_SUCCESS_STATUS == confirmInfo->status) {
           myAddr = confirmInfo->shortAddr;
 		appState = APP_NETWORK_JOINED;
 		SYS_PostTask(APL_TASK_ID);
-		setLED(LED_COLOR_GREEN);
+        startLEDBlink(LED_COLOR_GREEN, LED_BLINK_SLOW_HEARTBEAT);	
 		if(ableToSend)
 		{
-		     sendNetworkPacket(CPU_TO_LE16(0)) ;	
+		     sendNetworkPacket(CPU_TO_LE16(0)) ;
+			   
 		}
 		else
 		{
@@ -272,17 +358,15 @@ static void networkStartConfirm(ZDO_StartNetworkConf_t *confirmInfo)
 			retryTimer.callback = retryNetwork;
 			retryTimer.interval = 10;
 			retryTimer.mode = TIMER_ONE_SHOT_MODE;
-			HAL_StartAppTimer(&retryTimer);			
-		}	
-		// Configure blink timer
+			HAL_StartAppTimer(&retryTimer);
+			
+		}				  
+		
 	}else{
-		setLED(LED_COLOR_YELLOW);
+		startLEDBlink(LED_COLOR_RED, LED_BLINK_MEDIUM);
 	}
 }
-void retryNetwork()
-{	
-  sendNetworkPacket(CPU_TO_LE16(0)) ;		
-}
+
 
 /*******************************************************************************
   Description: just a stub.
@@ -350,10 +434,8 @@ void ZDO_UnbindIndication(ZDO_UnbindInd_t *unbindInd)
 void initializeDevice()
 {
 	
-	initializeLED();
-	BSP_OpenButtons(onButtonDown,onStartRecording);
+	initializeLED();	
 	setLED(LED_COLOR_RED);
-	
 
 	                      		
      initializeConfigurationServer();
@@ -378,8 +460,8 @@ void initializeDevice()
 void initializeIR()
 {  
   // IRQ pin is input ... need to set D1, D2, and D3 as inputs
-  DDRD &= ~(0x01 << 2);
-  PORTD |= (0x01 << 2);
+  DDRD &= ~(0x01 << 1);
+  PORTD |= (0x01 << 1);
   
   //Disable our interrupts before messing with ISn    
   EIMSK &= ~(0x0E);
@@ -388,13 +470,15 @@ void initializeIR()
   EICRA &= ~(0xFC);
   
   // Setup corresponding interrupt sense control .. any edge should trigger it for RE and falling edge trigger for Button
-  EICRA |= (0x10);
+  EICRA |= (0x04);
   
   //Clear the INTn interrupt flag
   EIFR |= (0x0E);
   
   //Go ahead and enable them    
-  EIMSK |= (0x04);
+  //EIMSK |= (0x02);
+  
+  
 }
 
 void initializePWM()
@@ -409,13 +493,15 @@ void initializePWM()
 	HAL_SetPwmFrequency(PWM_UNIT_3, PWM_FREQUENCY, PWM_PRESCALER_1 );			
 	HAL_StartPwm(&pwmChannel1);
      HAL_SetPwmCompareValue(&pwmChannel1, PWM_FREQUENCY/2); 	   	
+	 
+	 TCCRnA((&pwmChannel1)->unit) &= ~((1 << COMnx1((&pwmChannel1))) | (1 << COMnx0((&pwmChannel1))));	 //turn of to start
 }
 
 
 
 void playIR()
 {
-	startLEDBlink(LED_COLOR_GREEN, LED_BLINK_FAST);
+	//startLEDBlink(LED_COLOR_GREEN, LED_BLINK_FAST);
 	if(!playingIR) 
 	{
 	sequenceIndex=0;
@@ -431,9 +517,11 @@ void playIR()
 
 void initializeTimer()
 {	
+	//TCCR5B = (1 << CS51);
 	TCCR5B = (1 << CS51);
 	OCR5C = RECORD_TIMEOUT;
 	TIMSK5 |= (1 << 3);
+	TCNT5=0x0000;
 }
 
 void initializeConfigurationServer()
@@ -447,35 +535,14 @@ void initializeConfigurationServer()
 	CS_WriteParameter(CS_UID_ID, &uid);     
 }
 
-void sendNetworkPacket(ShortAddr_t addr)
-{	    		
-     networkPacket.data.deviceType = DEVICE_TYPE;		
-	networkPacket.data.shortAddr = myAddr;
-	networkPacket.data.deviceUID = CS_UID;
-	     
-	packet.asdu = (uint8_t *)(&networkPacket.data);
-	packet.asduLength = sizeof(networkPacket.data);
-	packet.profileId = 1;
-	packet.dstAddrMode = APS_SHORT_ADDRESS;
-	packet.dstAddress.shortAddress = addr;
-	
-	packet.srcEndpoint = irEndpoint.endpoint;
-	packet.dstEndpoint = networkJoinEndpoint.endpoint;
-  
-	packet.clusterId = CPU_TO_LE16(0);	
-	packet.txOptions.acknowledgedTransmission = 1;
-	packet.radius = 0x0;
-	packet.APS_DataConf = networkTransmissionConfirm;
-	APS_DataReq(&packet);
-	ableToSend = false; 	
-}
+
 
 void registerEndpoints()
 {     
-        	networkJoinEndpointParams.simpleDescriptor = &networkJoinEndpoint;
-	     networkJoinEndpointParams.APS_DataInd = networkJoinMessageReceived;			
-	     APS_RegisterEndpointReq(&networkJoinEndpointParams);
-	
+	networkJoinEndpointParams.simpleDescriptor = &networkJoinEndpoint;
+	networkJoinEndpointParams.APS_DataInd = networkJoinMessageReceived;			
+	APS_RegisterEndpointReq(&networkJoinEndpointParams);
+
 	     statusEndpointParams.simpleDescriptor = &statusEndpoint;
 	     statusEndpointParams.APS_DataInd = statusMessageReceived;			
 	     APS_RegisterEndpointReq(&statusEndpointParams);
@@ -520,7 +587,10 @@ void handleIRChange()
 	{
 		waitingForFirstPulse = false;
 		recording = true;
-		TCNT5 = 0x0000;
+		resetTimer();
+//		TCCRnA((&pwmChannel1)->unit) |=
+//    ((1 << COMnx1((&pwmChannel1))) | (1 << COMnx0((&pwmChannel1))));
+		setLED(LED_COLOR_CRIMSON);
 	}
 	else if(recording)
 	{
@@ -533,14 +603,14 @@ void handleIRChange()
 
 void readButton()
 {		
-	lampOn = !lampOn;
+	
 	appState = APP_NETWORK_SEND_STATUS;
 	SYS_PostTask(APL_TASK_ID);				
 }
 
 
 
-ISR(INT2_vect)
+ISR(INT1_vect)
 {
   //lets cancel our interrupts while we service
 //  EIMSK &= ~(0x0E);
@@ -557,9 +627,10 @@ ISR(TIMER5_COMPC_vect)
 	// TCNT5 = 0x0000;
 	if(recording)
 	{
-	currentSequence.length=sequenceIndex;
-	setLED(LED_COLOR_OFF);
-	recording=false;
+		currentSequence.length=sequenceIndex;				
+		EIMSK &= ~(0x02);
+		recording=false;
+		sendIRPacket(CPU_TO_LE16(0));
 	}
 	else if(playingIR)
 	{
@@ -577,9 +648,10 @@ ISR(TIMER5_COMPC_vect)
 		if(++sequenceIndex == currentSequence.length)
 		{
 			playingIR=false;
-			stopLEDBlink();
+		//	stopLEDBlink();
 		TCCRnA((&pwmChannel1)->unit) &= ~((1 << COMnx1((&pwmChannel1))) | (1 << COMnx0((&pwmChannel1))));	
 			pwmOn=false;
+			startLEDBlink(LED_COLOR_GREEN, LED_BLINK_SLOW_HEARTBEAT);
 		}
 		else
 		{
@@ -592,9 +664,12 @@ ISR(TIMER5_COMPC_vect)
 
 }
 
+
+
 void resetTimer()
 {
-	 // halMoveWordToRegister(&TCNTn(TIMER_UNIT_5), 0x0000);	
+	 // halMoveWordToRegister(&TCNTn(TIMER_UNIT_5), 0x0000);
+	 OCR5C = (RECORD_TIMEOUT);	
 	 TCNT5= 0x0000; 
 }
 

@@ -21,8 +21,10 @@
 #define DEVICE_TYPE IR_MODULE
 
 #define PWM_FREQUENCY 104
+#define MODULE_TYPE_IR
 #define TIMER_UNIT_5 0x120
-#define RECORD_TIMEOUT 0x1388;
+#define RECORD_TIMEOUT 50000
+#define DEVICE_TYPE IR_MODULE
 
 /******************************************************************************
                     Includes section
@@ -31,6 +33,7 @@
 #include "buttons.h"
 #include "leds.h"
 #include "defines.h"
+#include "helpers.h"
 #include <halIrq.h>
 
 

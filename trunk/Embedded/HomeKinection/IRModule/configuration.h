@@ -18,8 +18,8 @@
 #define APP_INTERFACE_UART 0x04
 
 // Enables or disables APS Fragmentation support.
-#define APP_FRAGMENTATION 0
-//#define APP_FRAGMENTATION 1
+//#define APP_FRAGMENTATION 0
+#define APP_FRAGMENTATION 1
 
 // Enables or disables binding support.
 #define APP_USE_BINDING 0
@@ -32,8 +32,8 @@
 #define APP_MAX_BLINK_PERIOD 10000
 
 // Enables or disables request of APS Acknowledgement for outgoing frames.
-#define APP_USE_APS_ACK 0
-//#define APP_USE_APS_ACK 1
+//#define APP_USE_APS_ACK 0
+#define APP_USE_APS_ACK 1
 
 // Defines primary serial interface type to be used by application.
 #define APP_INTERFACE APP_INTERFACE_USART
