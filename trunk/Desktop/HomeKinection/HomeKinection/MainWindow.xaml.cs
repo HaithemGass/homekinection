@@ -251,7 +251,7 @@ namespace HomeKinection
         {
             activities = new Dictionary<string, Activity>();
             ActivitiesListBox.Items.Clear();
-            System.IO.DirectoryInfo modulesDir = new System.IO.DirectoryInfo(System.IO.Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.FullName + "\\Modules");
+            System.IO.DirectoryInfo modulesDir = new System.IO.DirectoryInfo(System.IO.Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.FullName + "\\Activities");
             System.IO.FileInfo[] files = null;
 
             // First, process all the files directly under this folder
@@ -270,6 +270,21 @@ namespace HomeKinection
             {
                 Activity a = Activity.DeSerialize(fi.FullName);
                 activities.Add(a.name, a);
+                foreach (ActivityTrigger t in a.triggers)
+                {
+                    foreach (ActivityAction aa in t.actions)
+                    {
+                        aa.moduleList = modules;
+                    }
+                }
+                foreach (ActivityAction aa in a.exitTrigger.actions)
+                {
+                    aa.moduleList = modules;
+                }
+                foreach (ActivityAction aa in a.entranceTrigger.actions)
+                {
+                    aa.moduleList = modules;
+                }
             }
             reloadActivityList();
         }
@@ -325,6 +340,18 @@ namespace HomeKinection
                         ModulesList.Items.Add(h);
 
                         modules.Add(hc.uid, (HIDControlModule)h.FindResource("dataModel"));
+                        break;
+
+                    case MODULE_TYPE.IR_MODULE:
+                        IRControlModule.DeSerializeCommandList();
+                        IRControlModule ic = (IRControlModule)b;
+                        IRControl ir = new IRControl(ModulesList, ic.name, ic.location,
+                                ic.address, ic.uid, ic.type);
+
+                        ModulesList.Items.Add(ir);
+
+                        modules.Add(ic.uid, (IRControlModule)ir.FindResource("dataModel"));
+                        
                         break;
 
 
@@ -538,10 +565,14 @@ namespace HomeKinection
         {
             UninitializeNui();
             if (nui == null)
-                return false;
+                nui = Runtime.Kinects[0];
             try
             {
                 nui.Initialize(RuntimeOptions.UseDepthAndPlayerIndex | RuntimeOptions.UseSkeletalTracking | RuntimeOptions.UseColor);
+                nui.DepthStream.Open(ImageStreamType.Depth, 2, ImageResolution.Resolution320x240, ImageType.DepthAndPlayerIndex);
+                nui.VideoStream.Open(ImageStreamType.Video, 2, ImageResolution.Resolution640x480, ImageType.Color);
+                nui.SkeletonEngine.TransformSmooth = true;
+                nuiInitialized = true;
             }
             catch (Exception _Exception)
             {
@@ -549,10 +580,7 @@ namespace HomeKinection
                 return false;
             }
 
-            nui.DepthStream.Open(ImageStreamType.Depth, 2, ImageResolution.Resolution320x240, ImageType.DepthAndPlayerIndex);
-            nui.VideoStream.Open(ImageStreamType.Video, 2, ImageResolution.Resolution640x480, ImageType.Color);
-            nui.SkeletonEngine.TransformSmooth = true;
-            nuiInitialized = true;
+            
             return true;
         }
 
@@ -721,6 +749,7 @@ namespace HomeKinection
 			}
         }
 
+		private bool skipFrame = false;
         private void HandleGestureRecognizerFrame(SkeletalGesturePoint sgp, int player)
         {      
 			
@@ -732,11 +761,15 @@ namespace HomeKinection
 					if(m.disableGestures)
 					{
 						gesturesEnabled = false;
-						m.updateAbsoluteControl(sgp);
+					    if(skipFrame)
+						{ 
+							m.updateAbsoluteControl(sgp);
+						}
+						skipFrame = !skipFrame;
 					}
 				}
 
-                if(gesturesEnabled)
+                if (gesturesEnabled && gestureRecognitionEnable)
 				{
 					gestureRecognizers[player].Update(SkeletalGesture.TransformPoint(sgp));
 				}
@@ -795,7 +828,7 @@ namespace HomeKinection
             GestureTextBox.Text = GestureTextBox.Text + e.Gesture.ToString() + "\n";
         }
 
-
+        private bool gestureRecognitionEnable = true;
         void recognizer_SaidSomething(object sender, Recognizer.SaidSomethingArgs e)
         {
             PeekingText.NewPeek(e.Matched, screenRect, .01, Color.FromArgb(200, 255, 255, 255));
@@ -806,6 +839,11 @@ namespace HomeKinection
 
                  if (e.Matched.Equals(Recognizer.StopRecordString))
                     StopGestureRecording();
+
+                 if (e.Matched.Trim().Trim('.').Trim().Equals(Recognizer.GestureDisableString))
+                     gestureRecognitionEnable = false;
+                 if (e.Matched.Trim().Trim('.').Trim().Equals(Recognizer.GestureEnableString))
+                     gestureRecognitionEnable = true; 
 				
 				if(activities.ContainsKey(e.Matched.Trim('.')))
 				{
@@ -973,6 +1011,8 @@ namespace HomeKinection
             }
             SkeletalGesture.Serialize(System.IO.Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.FullName + "\\Gestures\\", currentGesture);
             LoadGestureLibrary();
+            SaveDialog.IsOpen = false;
+
         }
 
         private void loadGesture(object sender, System.Windows.RoutedEventArgs e)
@@ -1083,6 +1123,18 @@ namespace HomeKinection
 				HIDControlModule h = (HIDControlModule)hc.FindResource("dataModel");	
                 h.Serialize();
                 break;
+
+                case MODULE_TYPE.IR_MODULE:
+                IRControl ic =
+                new IRControl(ModulesList, ModuleNameBox.Text.ToString(), ModuleLocationBox.Text.ToString(),
+                    moduleToSave.address, moduleToSave.uid, moduleToSave.type);
+
+                ModulesList.Items.Add(ic);
+
+                modules.Add(moduleToSave.uid, (IRControlModule)ic.FindResource("dataModel"));
+                IRControlModule ir = (IRControlModule)ic.FindResource("dataModel");
+                ir.Serialize();
+                break;
 					
 				default:
 				break;
@@ -1153,6 +1205,7 @@ namespace HomeKinection
 			currentEditActivity = new Activity();
 			reloadTriggersList();
 			reloadEntranceActionsList();
+            reloadExitActionsList();
 		}
 
 		private void SaveNewActivity(object sender, System.Windows.RoutedEventArgs e)
@@ -1225,6 +1278,16 @@ namespace HomeKinection
 				EntranceActionsListBox.Items.Add(a.name);
 			}
 		}
+
+        private void reloadExitActionsList()
+        {
+            ExitActionsListBox.Items.Clear();
+
+            foreach (ActivityAction a in currentEditActivity.exitTrigger.actions)
+            {
+                ExitActionsListBox.Items.Add(a.name);
+            }
+        }
 		
 		private void loadModulesToNewActionPopup()
 		{
@@ -1329,11 +1392,13 @@ namespace HomeKinection
 			currentEditTriggerAction.name = currentEditModule.name;
 			currentEditTriggerAction.packet = currentEditModuleAction.packet;
             currentEditTriggerAction.absoluteControl = currentEditModuleAction.enableAbsoluteControl;
-            currentEditTriggerAction.module = currentEditModule;
+            currentEditTriggerAction.moduleID = currentEditModule.uid;
+            currentEditTriggerAction.moduleList = modules;
 			currentEditTrigger.actions.Add(currentEditTriggerAction);
 			NewActionPopup.IsOpen = false;			
 			reloadActionsList();
 			reloadEntranceActionsList(); // just in case
+            reloadExitActionsList(); // just in case
 		}
 
 		private ModuleBox currentEditModule;
@@ -1363,6 +1428,12 @@ namespace HomeKinection
 					HIDAction ha = new HIDAction(currentEditModule.address);
 					NewActionItemControl.Items.Add(ha);
 					currentEditModuleAction = ha.action;
+					break;
+					
+				case MODULE_TYPE.IR_MODULE:
+					IRAction ia = new IRAction(currentEditModule.address);
+					NewActionItemControl.Items.Add(ia);
+					currentEditModuleAction = ia.action;
 					break;
 					
 				default:
@@ -1470,6 +1541,13 @@ namespace HomeKinection
 			if(EntranceActionsListBox.SelectedIndex < 0 || EntranceActionsListBox.SelectedIndex > currentEditActivity.entranceTrigger.actions.Count) return;
 			currentEditActivity.entranceTrigger.actions.RemoveAt(EntranceActionsListBox.SelectedIndex);				
 			reloadEntranceActionsList();
-		} 
+		}
+        private void DeleteExitAction(object sender, System.Windows.RoutedEventArgs e)
+        {
+
+            if (ExitActionsListBox.SelectedIndex < 0 || ExitActionsListBox.SelectedIndex > currentEditActivity.entranceTrigger.actions.Count) return;
+            currentEditActivity.entranceTrigger.actions.RemoveAt(ExitActionsListBox.SelectedIndex);
+            reloadExitActionsList();
+        } 
     }
 }

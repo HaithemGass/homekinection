@@ -172,7 +172,7 @@ namespace HomeKinection
         enum NETWORK_ENDPOINT
         {
 	        RESERVED,
-             MODULE_STATUS,
+            MODULE_STATUS,
 	        DIMMER_CONTROL,
 	        SHADE_CONTROL,
 	        IR_CONTROL,
@@ -285,10 +285,10 @@ namespace HomeKinection
             public byte length;
             [FieldOffset(1)]
 			[field: NonSerialized]
-            public fixed ushort  transitions[64];            
+            public fixed ushort  transitions[128];            
 	    } ;
 
-        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 130)]
+        [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 194)]
         [Serializable]
 	    public unsafe struct IRCommandData  
 	    {
@@ -415,10 +415,14 @@ namespace HomeKinection
             UsartMessagePacket packet;
             SerialPort sp = (SerialPort)sender;
             int cBytes = sp.BytesToRead;
-            if (cBytes < Marshal.SizeOf(new UsartMessagePacket())) return;
-            byte[] buffer = new byte[cBytes];
-            sp.Read(buffer, 0, cBytes);
+            if (cBytes < Marshal.SizeOf(new UsartMessagePacket()))
+            {
+                return;
+            }
+            byte[] buffer = new byte[Marshal.SizeOf(new UsartMessagePacket())];
 
+            sp.Read(buffer,0, Marshal.SizeOf(new UsartMessagePacket()));
+            
             //alright now to deserialize;
             packet = ReadStruct<UsartMessagePacket>(buffer);
 
@@ -441,6 +445,21 @@ namespace HomeKinection
 								
             }
 
+            //now to handle it.
+            if (packet.messageType == (byte)MESSAGE_TYPE.MESSAGE_TYPE_CONTROL && packet.moduleType == (byte)MODULE_TYPE.IR_MODULE)
+            {
+                IRControlModule.IRCommand irCommand = new IRControlModule.IRCommand(packet.irPacket.sequence);                
+                mw.Dispatcher.Invoke(DispatcherPriority.Send,
+                 new Action<IRControlModule.IRCommand>(mw.HandleNewIRCommand), irCommand); // need to inform UI thread to make our popup;
+            }
+
+            try
+            {
+                sp.Read(buffer, Marshal.SizeOf(new UsartMessagePacket()) - 1, cBytes - Marshal.SizeOf(new UsartMessagePacket()));
+            }
+            catch(Exception err)
+            {
+            }
         }
     
 
@@ -488,6 +507,9 @@ namespace HomeKinection
                     break;
                 case MODULE_TYPE.HID_MODULE:
                     sendHIDMessage(addr, packet.hidPacket);
+                    break;
+                case MODULE_TYPE.IR_MODULE:
+                    sendIRMessage(addr, packet.irPacket);
                     break;
                 default:
                     break;

@@ -42,6 +42,8 @@ namespace HomeKinection_Speech
     {
         public static string RecordString = "Record Gesture";
         public static string StopRecordString = "Recording Finished";
+        public static string GestureEnableString = "Enable Gestures";
+        public static string GestureDisableString = "Disable Gestures";
 
         public class SaidSomethingArgs : EventArgs
         {            
@@ -86,6 +88,8 @@ namespace HomeKinection_Speech
             var single = new Choices();
             single.Add(RecordString);
             single.Add(StopRecordString);
+            single.Add(GestureEnableString);
+            single.Add(GestureDisableString);
 
             foreach (KeyValuePair<String, Activity> entry in activities)
             {
@@ -128,6 +132,7 @@ namespace HomeKinection_Speech
             kinectSource.SystemMode = SystemMode.OptibeamArrayOnly;
             kinectSource.FeatureMode = true;
             kinectSource.AutomaticGainControl = false;
+            kinectSource.NoiseSuppression = true;
             kinectSource.MicArrayMode = MicArrayMode.MicArrayAdaptiveBeam;
             var kinectStream = kinectSource.Start();
             sre.SetInputToAudioStream(kinectStream, new SpeechAudioFormatInfo(

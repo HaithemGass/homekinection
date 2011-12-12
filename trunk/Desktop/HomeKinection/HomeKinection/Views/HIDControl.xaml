@@ -41,7 +41,7 @@
 		<TextBox x:Name="NameTextBox" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Margin="117.203,17,0,0" Height="30" Width="159.797" Text="{Binding name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Background="#FF2B2A2A" Foreground="#FFA586CC" FontFamily="Segoe UI Light" FontSize="14.667" Visibility="Hidden"/>
 		<TextBox x:Name="LocationTextBox" TextWrapping="Wrap" Text="{Binding location, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="117.203,0,123,19" Background="#FF2B2A2A" Foreground="#FFA586CC" FontFamily="Segoe UI Light" FontSize="14.667" Visibility="Hidden" Height="30" VerticalAlignment="Bottom"/>
 		<Button Content="Alt - Tab" HorizontalAlignment="Right" Margin="0,36.92,37,41.12" Width="75" Background="Black" Foreground="White" d:LayoutOverrides="Height" Click="SwitchApplications"/>
-		<Button Content="Ctrl - D" HorizontalAlignment="Right" Margin="0,0,37,19" Width="75" Background="Black" Foreground="White" VerticalAlignment="Bottom" Click="ShowDesktop"/>
+		<Button Content="Window - D" HorizontalAlignment="Right" Margin="0,0,37,19" Width="75" Background="Black" Foreground="White" VerticalAlignment="Bottom" Click="ShowDesktop"/>
 		<ToggleButton x:Name="MouseCaptureButton" Content="Mouse" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14.96,37,0" Width="75" Background="Black" Foreground="White" IsChecked="{Binding disableGestures}"/>
 	</Grid>
 </UserControl>

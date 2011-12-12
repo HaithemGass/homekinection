@@ -21,19 +21,37 @@ namespace HomeKinection
 		{
 			public IRCommand()
 			{
-				
+			    sequence = new UInt16[128];	
 			}
-			public IRCommand(String n, NetworkProtocol.remoteSequence c)
+			public IRCommand(String n, UInt16[] s, byte l)
 			{
 				name = n;
-				command = c;
+				sequence = s;
+                length = l;
 			}
+
+            public unsafe IRCommand(NetworkProtocol.remoteSequence command)
+            {
+
+                sequence = new UInt16[128];
+                for (int i = 0; i < command.length; i++)
+                {
+                    sequence[i] = command.transitions[i];
+                }
+                length = command.length;
+            }
+
+            public unsafe IRCommand(String n, NetworkProtocol.remoteSequence command)
+            {
+                name = n;
+                for (int i = 0; i < command.length; i++)
+                {
+                   sequence[i] = command.transitions[i];
+                }
+                length = command.length;
+            }
 			
-			public NetworkProtocol.remoteSequence command
-			{
-				get;
-				set;
-			}
+			public UInt16[] sequence;
 			public String name
 			{
 				get;
@@ -44,10 +62,16 @@ namespace HomeKinection
 			{
 				return name;
 			}
+
+            public byte length
+            {
+                get;
+                set;
+            }
 		}
 		
 		
-		private static Dictionary<String, Dictionary<String, IRCommand>> CommandList = new Dictionary<String, Dictionary<String, IRCommand>>();	
+		public static Dictionary<String, Dictionary<String, IRCommand>> CommandList = new Dictionary<String, Dictionary<String, IRCommand>>();	
 		
 		public Dictionary<String, Dictionary<String, IRCommand>>.KeyCollection DeviceList
 		{
@@ -113,20 +137,30 @@ namespace HomeKinection
             }						
         }
 		
-		public void sendCommand(IRCommand command)
+		public unsafe void sendCommand(IRCommand command)
 		{
 			NetworkProtocol.IRCommandData packet = new NetworkProtocol.IRCommandData();
-			packet.sequence = command.command;
+            for (int i = 0; i < command.sequence.Length; i++)
+            {
+                packet.sequence.transitions[i] = command.sequence[i];
+            }
+            packet.sequence.length = command.length;
+			
 			packet.record = System.Convert.ToByte(0);
             if (NetworkProtocol.Initialized) NetworkProtocol.sendIRMessage(address, packet);
 		}
 		
-		public void sendCommand(String device, String command)
+		public unsafe void sendCommand(String device, String command)
 		{
 			NetworkProtocol.IRCommandData packet = new NetworkProtocol.IRCommandData();
 			if(CommandList.ContainsKey(device) && CommandList[device].ContainsKey(command))
 			{
-				packet.sequence = CommandList[device][command].command;
+                for (int i = 0; i < CommandList[device][command].sequence.Length; i++)
+                {
+                    packet.sequence.transitions[i] = CommandList[device][command].sequence[i];
+                }
+                packet.sequence.length = CommandList[device][command].length;
+
 				packet.record = System.Convert.ToByte(0);
                 if (NetworkProtocol.Initialized) NetworkProtocol.sendIRMessage(address, packet);
 			}			
@@ -153,11 +187,18 @@ namespace HomeKinection
         public static void DeSerializeCommandList()
         {
 			String filename =  commonFilePath + "\\IRLibrary\\Library.cl";
-            
-            Stream stream = File.Open(filename, FileMode.Open);
-            BinaryFormatter bFormatter = new BinaryFormatter();
-            CommandList = (Dictionary<String, Dictionary<String, IRCommand>>)bFormatter.Deserialize(stream);
-            stream.Close();
+
+            try
+            {
+                Stream stream = File.Open(filename, FileMode.Open);
+                BinaryFormatter bFormatter = new BinaryFormatter();
+                CommandList = (Dictionary<String, Dictionary<String, IRCommand>>)bFormatter.Deserialize(stream);
+                stream.Close();
+            }catch(Exception e)
+            {
+
+            }
+
         }		
 		
 		public IRControlModule()
