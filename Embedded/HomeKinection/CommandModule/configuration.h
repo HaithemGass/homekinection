@@ -18,16 +18,16 @@
 #define APP_INTERFACE_UART 0x04
 
 // Enables or disables APS Fragmentation support.
-#define APP_FRAGMENTATION 0
-//#define APP_FRAGMENTATION 1
+//#define APP_FRAGMENTATION 0
+#define APP_FRAGMENTATION 1
 
 // Enables or disables binding support.
 #define APP_USE_BINDING 0
 //#define APP_USE_BINDING 1
 
 // Enables or disables request of APS Acknowledgement for outgoing frames.
-#define APP_USE_APS_ACK 0
-//#define APP_USE_APS_ACK 1
+//#define APP_USE_APS_ACK 0
+#define APP_USE_APS_ACK 1
 
 // Defines primary serial interface type to be used by application.
 #define APP_INTERFACE APP_INTERFACE_USART
@@ -609,7 +609,7 @@
   // CS_APS_MAX_BLOCKS_AMOUNT are also used to determine an amount of memory
   // allocated for a special buffer that keeps parts of incoming fragmented message
   // until all of them are received.
-  #define CS_APS_BLOCK_SIZE 0
+  #define CS_APS_BLOCK_SIZE APS_MAX_ASDU_SIZE
 #endif
 
 // The parameter determines how many pieces of a fragmented message are sent before

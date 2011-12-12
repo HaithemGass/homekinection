@@ -23,15 +23,15 @@
     <RootNamespace>CommandModule</RootNamespace>
     <avrtool>com.atmel.avrdbg.tool.avrdragon</avrtool>
     <com_atmel_avrdbg_tool_avrdragon>
-      <ToolType xmlns="">com.atmel.avrdbg.tool.avrdragon</ToolType>
-      <ToolName xmlns="">AVR Dragon</ToolName>
-      <ToolNumber xmlns="">00A20002162B</ToolNumber>
-      <Channel xmlns="">
+      <ToolType>com.atmel.avrdbg.tool.avrdragon</ToolType>
+      <ToolName>AVR Dragon</ToolName>
+      <ToolNumber>00A20002162B</ToolNumber>
+      <Channel>
         <host>127.0.0.1</host>
-        <port>61545</port>
+        <port>26714</port>
         <ssl>False</ssl>
       </Channel>
-      <ToolOptions xmlns="">
+      <ToolOptions>
         <InterfaceName>JTAG</InterfaceName>
         <InterfaceProperties>
           <JtagDbgClock>1000000</JtagDbgClock>
@@ -46,7 +46,7 @@
         </InterfaceProperties>
       </ToolOptions>
     </com_atmel_avrdbg_tool_avrdragon>
-    <avrtoolinterface />
+    <avrtoolinterface>JTAG</avrtoolinterface>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
